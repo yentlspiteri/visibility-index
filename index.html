@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Visibility Index — Von Peach FutureMakers</title>
-<meta name="description" content="Paste your LinkedIn URL. Get a forensic read on your executive visibility against the levers that move the needle. 60 seconds. Zero forms." />
+<meta name="description" content="Paste your LinkedIn URL. Get a forensic read on your executive visibility. 60 seconds. Zero forms." />
 
 <!-- General Sans (body). Aileron should be self-hosted from brand assets in v1. -->
 <link rel="preconnect" href="https://api.fontshare.com" />
@@ -13,13 +13,7 @@
 <style>
   /* ──────────────────────────────────────────────────────────
      VON PEACH — FUTUREMAKERS PALETTE (personal branding)
-     #0B0359  deep navy
-     #3F36B2  indigo (primary action)
-     #8683E5  lavender
-     #EBF0FF  ice
-     Neutrals: #FCFCFC / #0F0F0F / #666666 / #ADADAD
      ────────────────────────────────────────────────────────── */
-
   :root {
     --vp-navy:      #0B0359;
     --vp-indigo:    #3F36B2;
@@ -50,14 +44,15 @@
   /* ── Layout ── */
   .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
   .container-narrow { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 32px; }
+  .container-action { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 32px; }
 
   /* ── Type ── */
   .display {
     font-family: var(--font-display);
     font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
-    font-size: clamp(40px, 6vw, 80px);
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    font-size: clamp(48px, 8vw, 96px);
   }
   .h2 {
     font-family: var(--font-display);
@@ -107,53 +102,260 @@
   .btn-arrow::after { content: "→"; font-size: 18px; transition: transform .2s ease; }
   .btn-arrow:hover::after { transform: translateX(4px); }
   .btn[disabled] { opacity: .5; cursor: not-allowed; }
-  .btn[disabled]:hover { transform: none; }
 
   /* ── Nav ── */
   nav.top {
     position: sticky; top: 0; z-index: 50;
     backdrop-filter: blur(14px);
-    background: rgba(11,3,89,0.65);
-    border-bottom: 1px solid rgba(252,252,252,0.08);
+    background: rgba(11,3,89,0.55);
+    border-bottom: 1px solid rgba(252,252,252,0.06);
   }
   nav.top .container {
-    display: flex; justify-content: space-between; align-items: center; height: 76px;
+    display: flex; justify-content: space-between; align-items: center; height: 72px;
   }
-  .logo { height: 32px; width: auto; }
+  .logo { height: 28px; width: auto; }
   .logo svg { height: 100%; width: auto; }
-  nav .nav-meta {
-    font-size: 13px; color: var(--vp-lavender);
-    letter-spacing: 0.06em; text-transform: uppercase;
+  nav .nav-right { display: flex; gap: 28px; align-items: center; }
+  nav .nav-link {
+    color: rgba(252,252,252,0.65);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color .15s ease;
   }
+  nav .nav-link:hover { color: var(--vp-white); }
 
-  /* ── HERO ── */
-  .hero { position: relative; padding: 100px 0 120px; overflow: hidden; }
+  /* ──────────────── HERO (AI-app pattern) ──────────────── */
+  .hero {
+    position: relative;
+    padding: 80px 0 100px;
+    overflow: hidden;
+    text-align: center;
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
   .hero::before {
-    content: ""; position: absolute; top: -20%; left: 50%;
+    content: ""; position: absolute; top: -10%; left: 50%;
     transform: translateX(-50%);
-    width: 1200px; height: 1200px;
-    background: radial-gradient(closest-side, rgba(63,54,178,0.55), rgba(11,3,89,0) 70%);
+    width: 1400px; height: 1400px;
+    background:
+      radial-gradient(closest-side, rgba(63,54,178,0.55), rgba(11,3,89,0) 65%),
+      radial-gradient(closest-side at 30% 80%, rgba(134,131,229,0.18), transparent 50%);
     pointer-events: none; z-index: 0;
   }
-  .hero .container { position: relative; z-index: 1; }
+  .hero .container-action { position: relative; z-index: 1; }
 
-  .eyebrow-row { display: flex; align-items: center; gap: 14px; margin-bottom: 36px; }
-  .eyebrow-row .dot {
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(134,131,229,0.12);
+    border: 1px solid rgba(134,131,229,0.3);
+    margin-bottom: 28px;
+  }
+  .hero-eyebrow .dot {
     width: 6px; height: 6px; border-radius: 50%;
     background: var(--vp-lavender);
     box-shadow: 0 0 12px var(--vp-lavender);
   }
+  .hero-eyebrow .eyebrow { color: var(--vp-lavender); }
 
-  .hero h1 { margin-bottom: 28px; max-width: 16ch; }
-  .hero .lede { margin-bottom: 48px; }
-  .hero-cta-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
-  .hero-trust {
-    margin-top: 64px;
-    display: flex; flex-wrap: wrap; gap: 32px;
-    color: rgba(252,252,252,0.55);
-    font-size: 13px; letter-spacing: 0.05em;
+  .hero h1 {
+    margin-bottom: 24px;
+    max-width: 14ch;
+    margin-left: auto; margin-right: auto;
   }
-  .hero-trust .sep { color: rgba(252,252,252,0.2); }
+  .hero .lede {
+    margin-bottom: 40px;
+    max-width: 580px;
+    margin-left: auto; margin-right: auto;
+    color: rgba(252,252,252,0.72);
+  }
+
+  /* The action card — the centerpiece */
+  .action-card {
+    background: var(--vp-white);
+    color: var(--vp-black);
+    padding: 16px;
+    border-radius: 22px;
+    box-shadow: 0 32px 80px rgba(11,3,89,0.5),
+                0 0 0 1px rgba(134,131,229,0.18);
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    min-height: 80px;
+    transition: min-height .35s cubic-bezier(.4,0,.2,1);
+  }
+  .action-card.is-loading { min-height: 380px; padding: 28px; }
+
+  /* INPUT panel */
+  .input-panel { display: block; }
+  .input-panel.hidden { display: none; }
+
+  .url-row {
+    display: flex; gap: 8px; align-items: stretch;
+  }
+  .url-row .calc-input {
+    flex: 1;
+    height: 56px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 14px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--vp-black);
+    background: rgba(15,15,15,0.04);
+    outline: none;
+    transition: background .15s ease, box-shadow .15s ease;
+  }
+  .url-row .calc-input:focus {
+    background: rgba(63,54,178,0.06);
+    box-shadow: 0 0 0 2px rgba(63,54,178,0.25) inset;
+  }
+  .url-row .calc-input::placeholder { color: var(--vp-grey-1); }
+  .url-row button {
+    height: 56px; padding: 0 22px;
+    border: 0; border-radius: 14px;
+    background: var(--vp-indigo);
+    color: var(--vp-white);
+    font-family: var(--font-body);
+    font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .url-row button:hover { background: var(--vp-navy); transform: translateY(-1px); }
+  .url-row button::after { content: "↵"; font-size: 16px; opacity: .7; }
+  @media (max-width: 540px) {
+    .url-row { flex-direction: column; gap: 10px; }
+    .url-row button::after { content: "→"; }
+  }
+
+  /* LOADING panel — in-place inside action card */
+  .loading-panel { display: none; }
+  .loading-panel.active { display: block; }
+
+  .loading-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--vp-black);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .loading-subtitle { color: var(--vp-grey-2); font-size: 13px; margin-bottom: 18px; }
+
+  .loading-list {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 6px;
+  }
+  .loading-row {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: var(--vp-grey-2);
+    font-size: 13px;
+    opacity: 0.4;
+    transition: opacity .35s ease, color .35s ease, background .35s ease;
+  }
+  .loading-row.running {
+    opacity: 1; color: var(--vp-black);
+    background: rgba(63,54,178,0.06);
+  }
+  .loading-row.done {
+    opacity: 1; color: var(--vp-grey-2);
+  }
+  .loading-icon {
+    width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .loading-icon::before {
+    content: "";
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(15,15,15,0.18);
+    background: transparent;
+    transition: all .3s ease;
+  }
+  .loading-row.running .loading-icon::before {
+    border-color: var(--vp-indigo);
+    border-top-color: transparent;
+    animation: spin .8s linear infinite;
+  }
+  .loading-row.done .loading-icon::before {
+    background: var(--vp-indigo);
+    border-color: var(--vp-indigo);
+  }
+  .loading-row.done .loading-icon::after {
+    content: "✓";
+    position: absolute;
+    color: var(--vp-white);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Pills under the input ── */
+  .pills-row {
+    margin-top: 22px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center;
+    align-items: center;
+  }
+  .pills-row-label {
+    font-size: 13px;
+    color: rgba(252,252,252,0.45);
+    margin-right: 4px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: rgba(252,252,252,0.05);
+    border: 1px solid rgba(252,252,252,0.12);
+    color: rgba(252,252,252,0.85);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-family: var(--font-body);
+  }
+  .pill:hover {
+    background: rgba(134,131,229,0.16);
+    border-color: rgba(134,131,229,0.5);
+    color: var(--vp-white);
+    transform: translateY(-1px);
+  }
+
+  /* ── Trust line under everything ── */
+  .hero-trust-line {
+    margin-top: 32px;
+    display: flex; flex-wrap: wrap; gap: 18px;
+    justify-content: center;
+    color: rgba(252,252,252,0.45);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .hero-trust-line .sep { color: rgba(252,252,252,0.18); }
+
+  /* Quiet "scroll for more" hint */
+  .scroll-hint {
+    margin-top: 56px;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: rgba(252,252,252,0.4);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .scroll-hint::after { content: "↓"; font-size: 14px; }
 
   /* ── PILLARS ── */
   .pillars {
@@ -176,146 +378,6 @@
     .pillar:last-child { border-bottom: 0; }
   }
 
-  /* ── CALCULATOR (light section) ── */
-  .calc-wrap {
-    background: var(--vp-ice);
-    color: var(--vp-black);
-    padding: 120px 0;
-  }
-  .calc-wrap .eyebrow { color: var(--vp-indigo); }
-  .calc-wrap .lede { color: rgba(15,15,15,0.65); max-width: 540px; }
-
-  .calc-card {
-    margin-top: 56px;
-    background: var(--vp-white);
-    border: 1px solid rgba(15,15,15,0.06);
-    border-radius: 24px;
-    box-shadow: 0 32px 80px rgba(11,3,89,0.08);
-    padding: 48px;
-    position: relative;
-    overflow: hidden;
-    min-height: 320px;
-  }
-
-  .input-panel { display: block; }
-  .input-panel.hidden { display: none; }
-
-  .calc-q {
-    font-family: var(--font-display);
-    font-size: clamp(24px, 3vw, 32px);
-    font-weight: 700;
-    line-height: 1.2;
-    color: var(--vp-black);
-    margin-bottom: 8px;
-    letter-spacing: -0.015em;
-  }
-  .calc-help { color: var(--vp-grey-2); font-size: 14px; margin-bottom: 28px; }
-
-  .url-row { display: flex; gap: 12px; align-items: stretch; }
-  @media (max-width: 600px) { .url-row { flex-direction: column; } }
-
-  .calc-input {
-    flex: 1;
-    height: 56px;
-    padding: 0 20px;
-    border: 1px solid rgba(15,15,15,0.12);
-    border-radius: 14px;
-    font-family: var(--font-body);
-    font-size: 16px;
-    color: var(--vp-black);
-    background: var(--vp-white);
-    outline: none;
-    transition: border-color .15s ease, box-shadow .15s ease;
-  }
-  .calc-input:focus {
-    border-color: var(--vp-indigo);
-    box-shadow: 0 0 0 4px rgba(63,54,178,0.12);
-  }
-  .calc-input::placeholder { color: var(--vp-grey-1); }
-
-  .calc-foot {
-    margin-top: 22px;
-    display: flex; align-items: center; gap: 12px;
-    color: var(--vp-grey-2); font-size: 13px;
-  }
-  .calc-foot .lock { font-size: 14px; }
-
-  /* ── Loading panel ── */
-  .loading-panel { display: none; }
-  .loading-panel.active { display: block; }
-
-  .loading-title {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--vp-black);
-    margin-bottom: 8px;
-    letter-spacing: -0.01em;
-  }
-  .loading-subtitle { color: var(--vp-grey-2); font-size: 14px; margin-bottom: 28px; }
-
-  .loading-list {
-    list-style: none; margin: 0; padding: 0;
-    display: grid; gap: 8px;
-  }
-  .loading-row {
-    display: grid;
-    grid-template-columns: 22px 1fr;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    border: 1px solid rgba(15,15,15,0.06);
-    border-radius: 12px;
-    background: rgba(63,54,178,0.02);
-    color: var(--vp-grey-2);
-    font-size: 14px;
-    opacity: 0.4;
-    transition: opacity .35s ease, color .35s ease, background .35s ease, border-color .35s ease;
-  }
-  .loading-row.running {
-    opacity: 1;
-    color: var(--vp-black);
-    background: rgba(63,54,178,0.06);
-    border-color: rgba(63,54,178,0.18);
-  }
-  .loading-row.done {
-    opacity: 1;
-    color: var(--vp-grey-2);
-    background: var(--vp-white);
-    border-color: rgba(15,15,15,0.06);
-  }
-  .loading-icon {
-    width: 22px; height: 22px;
-    display: inline-flex; align-items: center; justify-content: center;
-    position: relative;
-  }
-  .loading-icon::before {
-    content: "";
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(15,15,15,0.18);
-    background: transparent;
-    transition: all .3s ease;
-  }
-  .loading-row.running .loading-icon::before {
-    border-color: var(--vp-indigo);
-    border-top-color: transparent;
-    animation: spin .8s linear infinite;
-  }
-  .loading-row.done .loading-icon::before {
-    background: var(--vp-indigo);
-    border-color: var(--vp-indigo);
-  }
-  .loading-row.done .loading-icon::after {
-    content: "✓";
-    position: absolute;
-    color: var(--vp-white);
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 1;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
   /* ── RESULTS ── */
   .results-wrap {
     background: var(--vp-navy);
@@ -332,6 +394,15 @@
     pointer-events: none;
   }
   .results-wrap .container { position: relative; z-index: 1; }
+
+  .results-eyebrow-row {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 36px;
+  }
+  .results-eyebrow-row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--vp-lavender);
+    box-shadow: 0 0 12px var(--vp-lavender);
+  }
 
   .result-headline {
     display: grid;
@@ -411,7 +482,6 @@
   .tier-cta-btn::after { content: "→"; font-size: 18px; transition: transform .2s ease; }
   .tier-cta-btn:hover::after { transform: translateX(4px); }
 
-  /* Sub-scores: 6 cards, each X / 3 */
   .subscores {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -442,10 +512,7 @@
     margin-bottom: 12px;
     letter-spacing: -0.02em;
   }
-  .subscore-value-suffix {
-    font-size: 14px;
-    color: rgba(252,252,252,0.45);
-  }
+  .subscore-value-suffix { font-size: 14px; color: rgba(252,252,252,0.45); }
   .subscore-bar {
     height: 4px;
     background: rgba(252,252,252,0.08);
@@ -460,13 +527,8 @@
     width: 0%;
     transition: width 1.4s cubic-bezier(.4,0,.2,1);
   }
-  .subscore-context {
-    font-size: 12px;
-    color: rgba(252,252,252,0.55);
-    line-height: 1.4;
-  }
+  .subscore-context { font-size: 12px; color: rgba(252,252,252,0.55); line-height: 1.4; }
 
-  /* Leaderboard + email gate */
   .leaderboard-wrap { position: relative; }
   .leaderboard-card {
     background: rgba(252,252,252,0.03);
@@ -492,13 +554,9 @@
     background: rgba(63,54,178,0.18);
     border-color: rgba(134,131,229,0.45);
   }
-  .leaderboard-rank {
-    font-family: var(--font-display); font-weight: 700; color: var(--vp-lavender);
-  }
+  .leaderboard-rank { font-family: var(--font-display); font-weight: 700; color: var(--vp-lavender); }
   .leaderboard-meta { color: rgba(252,252,252,0.78); font-size: 14px; }
-  .leaderboard-score {
-    font-family: var(--font-display); font-weight: 600; font-size: 18px;
-  }
+  .leaderboard-score { font-family: var(--font-display); font-weight: 600; font-size: 18px; }
   .leaderboard-row.you .leaderboard-meta { color: var(--vp-white); font-weight: 500; }
   .leaderboard-row.you .leaderboard-score { color: var(--vp-white); }
 
@@ -537,18 +595,11 @@
     letter-spacing: -0.01em;
     line-height: 1.2;
   }
-  .gate-card p {
-    font-size: 14px;
-    color: rgba(252,252,252,0.7);
-    margin-bottom: 22px;
-    line-height: 1.5;
-  }
+  .gate-card p { font-size: 14px; color: rgba(252,252,252,0.7); margin-bottom: 22px; line-height: 1.5; }
   .gate-form { display: grid; gap: 12px; }
   .gate-label {
-    font-size: 12px;
-    color: rgba(252,252,252,0.6);
-    letter-spacing: 0.04em;
-    margin-bottom: -6px;
+    font-size: 12px; color: rgba(252,252,252,0.6);
+    letter-spacing: 0.04em; margin-bottom: -6px;
   }
   .gate-form input,
   .gate-form select {
@@ -562,8 +613,7 @@
     font-family: var(--font-body);
     font-size: 14px;
     outline: none;
-    appearance: none;
-    -webkit-appearance: none;
+    appearance: none; -webkit-appearance: none;
   }
   .gate-form input:focus,
   .gate-form select:focus { border-color: var(--vp-lavender); }
@@ -575,16 +625,10 @@
   }
   .gate-form select option { color: var(--vp-black); }
   .gate-form button {
-    height: 52px;
-    margin-top: 6px;
-    padding: 0 20px;
-    border-radius: 999px;
-    border: 0;
-    background: var(--vp-white);
-    color: var(--vp-navy);
-    font-family: var(--font-body);
-    font-weight: 500;
-    font-size: 15px;
+    height: 52px; margin-top: 6px; padding: 0 20px;
+    border-radius: 999px; border: 0;
+    background: var(--vp-white); color: var(--vp-navy);
+    font-family: var(--font-body); font-weight: 500; font-size: 15px;
     cursor: pointer;
     transition: transform .18s ease, background .18s ease;
   }
@@ -615,13 +659,18 @@
   .circle-wrap .container { position: relative; z-index: 1; }
 
   .circle-grid {
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap: 80px;
-    align-items: start;
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: start;
   }
   @media (max-width: 880px) { .circle-grid { grid-template-columns: 1fr; gap: 48px; } }
 
+  .circle-eyebrow-row {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 24px;
+  }
+  .circle-eyebrow-row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--vp-lavender);
+    box-shadow: 0 0 12px var(--vp-lavender);
+  }
   .circle-h2 { margin-bottom: 24px; }
   .circle-lede { color: rgba(252,252,252,0.78); margin-bottom: 36px; max-width: 480px; }
 
@@ -633,16 +682,11 @@
     background: rgba(134,131,229,0.16);
     color: var(--vp-lavender);
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 14px;
+    font-family: var(--font-display); font-weight: 600; font-size: 14px;
   }
   .perk strong {
-    font-family: var(--font-display);
-    font-weight: 600;
-    display: block;
-    margin-bottom: 4px;
-    font-size: 17px;
+    font-family: var(--font-display); font-weight: 600;
+    display: block; margin-bottom: 4px; font-size: 17px;
   }
   .perk span { color: rgba(252,252,252,0.7); font-size: 14px; line-height: 1.5; }
 
@@ -654,11 +698,8 @@
     padding: 32px;
   }
   .stat-num {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 56px;
-    letter-spacing: -0.02em;
-    line-height: 1;
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 56px; letter-spacing: -0.02em; line-height: 1;
     margin-bottom: 8px;
   }
   .stat-label {
@@ -672,17 +713,12 @@
     border-top: 1px solid rgba(252,252,252,0.08);
     padding: 80px 0;
   }
-  details.method {
-    border-bottom: 1px solid rgba(252,252,252,0.08);
-    padding: 24px 0;
-  }
+  details.method { border-bottom: 1px solid rgba(252,252,252,0.08); padding: 24px 0; }
   details.method summary {
     cursor: pointer;
     display: flex; justify-content: space-between; align-items: center;
     list-style: none;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 18px;
+    font-family: var(--font-display); font-weight: 600; font-size: 18px;
   }
   details.method summary::-webkit-details-marker { display: none; }
   details.method summary::after {
@@ -693,8 +729,7 @@
   details.method .method-body {
     padding: 18px 0 4px;
     color: rgba(252,252,252,0.72);
-    font-size: 15px;
-    line-height: 1.6;
+    font-size: 15px; line-height: 1.6;
     max-width: 720px;
   }
   details.method .method-body table {
@@ -709,10 +744,8 @@
   }
   details.method .method-body th {
     color: var(--vp-lavender);
-    font-weight: 600;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-weight: 600; font-size: 12px;
+    letter-spacing: 0.06em; text-transform: uppercase;
   }
 
   /* ── FOOTER ── */
@@ -752,38 +785,84 @@
         </g>
       </svg>
     </a>
-    <span class="nav-meta">FutureMakers · Visibility Index</span>
+    <div class="nav-right">
+      <a href="#methodology" class="nav-link">Methodology</a>
+      <a href="#circle" class="nav-link">The Circle</a>
+    </div>
   </div>
 </nav>
 
-<!-- ─────────── HERO ─────────── -->
+<!-- ─────────── HERO (action-first) ─────────── -->
 <section class="hero">
-  <div class="container">
-    <div class="eyebrow-row">
+  <div class="container-action">
+
+    <div class="hero-eyebrow">
       <span class="dot"></span>
       <span class="eyebrow">FutureMakers · Visibility Index</span>
     </div>
+
     <h1 class="display">How visible<br/>are you, really?</h1>
+
     <p class="lede">
-      Paste your LinkedIn URL. We run a forensic read against the six dimensions that move executive visibility.
-      One number. One tier. The roadmap to the next one. Sixty seconds, zero forms.
+      Paste your LinkedIn. We run a forensic audit against the six dimensions that
+      move executive visibility — and place you in your tier.
     </p>
-    <div class="hero-cta-row">
-      <a href="#calculator" class="btn btn-primary btn-arrow">Calculate my score</a>
-      <a href="#circle" class="btn btn-ghost">About the Circle</a>
+
+    <!-- THE ACTION CARD — input + loading happen here, in place -->
+    <div class="action-card" id="action-card">
+
+      <div class="input-panel" id="input-panel">
+        <div class="url-row">
+          <input type="url" class="calc-input" id="input-linkedin"
+                 placeholder="linkedin.com/in/your-handle"
+                 autocomplete="off"
+                 spellcheck="false"
+                 autofocus />
+          <button id="btn-calculate">Audit</button>
+        </div>
+      </div>
+
+      <div class="loading-panel" id="loading-panel">
+        <div class="loading-title">Running the audit…</div>
+        <div class="loading-subtitle">Six dimensions, public signals only.</div>
+        <ul class="loading-list" id="loading-list">
+          <li class="loading-row" data-step="0"><span class="loading-icon"></span><span>Verifying LinkedIn profile</span></li>
+          <li class="loading-row" data-step="1"><span class="loading-icon"></span><span>Mapping digital footprint</span></li>
+          <li class="loading-row" data-step="2"><span class="loading-icon"></span><span>Scoring brand clarity</span></li>
+          <li class="loading-row" data-step="3"><span class="loading-icon"></span><span>Reading authority signals</span></li>
+          <li class="loading-row" data-step="4"><span class="loading-icon"></span><span>Measuring content cadence</span></li>
+          <li class="loading-row" data-step="5"><span class="loading-icon"></span><span>Auditing visual identity</span></li>
+          <li class="loading-row" data-step="6"><span class="loading-icon"></span><span>Calculating network recognition</span></li>
+          <li class="loading-row" data-step="7"><span class="loading-icon"></span><span>Computing your Visibility Index</span></li>
+        </ul>
+      </div>
+
     </div>
-    <div class="hero-trust">
-      <span>Built by Von Peach</span>
-      <span class="sep">·</span>
-      <span>Confidential · GDPR-compliant</span>
-      <span class="sep">·</span>
+
+    <div class="pills-row" id="pills-row">
+      <span class="pills-row-label">Or sample a peer:</span>
+      <button class="pill" data-sample="founder-ceo-series-c">Founder-CEO · Series C</button>
+      <button class="pill" data-sample="public-company-ceo">Public-company CEO</button>
+      <button class="pill" data-sample="cfo-growth">CFO at growth-stage</button>
+      <button class="pill" data-sample="senior-leader">Senior leader · enterprise</button>
+    </div>
+
+    <div class="hero-trust-line">
       <span>Free</span>
+      <span class="sep">·</span>
+      <span>60 seconds</span>
+      <span class="sep">·</span>
+      <span>No login</span>
+      <span class="sep">·</span>
+      <span>GDPR-compliant</span>
     </div>
+
+    <a href="#how" class="scroll-hint">How it works</a>
   </div>
 </section>
 
 <!-- ─────────── PILLARS ─────────── -->
-<section class="pillars">
+<section class="pillars" id="how">
   <div class="container">
     <div class="pillars-grid">
       <div class="pillar">
@@ -805,59 +884,10 @@
   </div>
 </section>
 
-<!-- ─────────── CALCULATOR ─────────── -->
-<section class="calc-wrap" id="calculator">
-  <div class="container-narrow">
-    <span class="eyebrow">The assessment</span>
-    <h2 class="h2" style="margin-top: 18px; margin-bottom: 18px;">One link. Six dimensions. One score.</h2>
-    <p class="lede">
-      Paste your LinkedIn URL. We pull the public signals that determine executive visibility, score them across
-      six dimensions, and place you in one of four tiers. No quiz. No twenty-question form.
-    </p>
-
-    <div class="calc-card">
-
-      <!-- INPUT PANEL -->
-      <div class="input-panel" id="input-panel">
-        <div class="calc-q">What's your LinkedIn URL?</div>
-        <div class="calc-help">Public profile. We scan headline, About, activity, recommendations, featured content, and more.</div>
-        <div class="url-row">
-          <input type="url" class="calc-input" id="input-linkedin"
-                 placeholder="linkedin.com/in/your-handle"
-                 autocomplete="off"
-                 spellcheck="false" />
-          <button class="btn btn-indigo btn-arrow" id="btn-calculate">Calculate my score</button>
-        </div>
-        <div class="calc-foot">
-          <span class="lock">🔒</span>
-          <span>Your URL stays private. We only store anything if you choose to unlock the full report.</span>
-        </div>
-      </div>
-
-      <!-- LOADING PANEL -->
-      <div class="loading-panel" id="loading-panel">
-        <div class="loading-title">Running the audit…</div>
-        <div class="loading-subtitle">This is what happens behind a real Visibility Index call. Six dimensions, two seconds each.</div>
-        <ul class="loading-list" id="loading-list">
-          <li class="loading-row" data-step="0"><span class="loading-icon"></span><span>Verifying LinkedIn profile</span></li>
-          <li class="loading-row" data-step="1"><span class="loading-icon"></span><span>Mapping digital footprint</span></li>
-          <li class="loading-row" data-step="2"><span class="loading-icon"></span><span>Scoring brand clarity</span></li>
-          <li class="loading-row" data-step="3"><span class="loading-icon"></span><span>Reading authority signals</span></li>
-          <li class="loading-row" data-step="4"><span class="loading-icon"></span><span>Measuring content cadence</span></li>
-          <li class="loading-row" data-step="5"><span class="loading-icon"></span><span>Auditing visual identity</span></li>
-          <li class="loading-row" data-step="6"><span class="loading-icon"></span><span>Calculating network recognition</span></li>
-          <li class="loading-row" data-step="7"><span class="loading-icon"></span><span>Computing your Visibility Index</span></li>
-        </ul>
-      </div>
-
-    </div><!-- /calc-card -->
-  </div>
-</section>
-
 <!-- ─────────── RESULTS ─────────── -->
 <section class="results-wrap hidden" id="results">
   <div class="container">
-    <div class="eyebrow-row">
+    <div class="results-eyebrow-row">
       <span class="dot"></span>
       <span class="eyebrow">Your result</span>
     </div>
@@ -930,7 +960,7 @@
   <div class="container">
     <div class="circle-grid">
       <div>
-        <div class="eyebrow-row">
+        <div class="circle-eyebrow-row">
           <span class="dot"></span>
           <span class="eyebrow">By invitation</span>
         </div>
@@ -988,7 +1018,7 @@
 </section>
 
 <!-- ─────────── METHODOLOGY ─────────── -->
-<section class="method-wrap">
+<section class="method-wrap" id="methodology">
   <div class="container-narrow">
     <span class="eyebrow">Methodology</span>
     <h2 class="h2" style="margin: 18px 0 28px;">How the Visibility Index is calculated.</h2>
@@ -1068,22 +1098,32 @@
       </a>
       <div class="footer-links">
         <a href="#">Privacy</a>
-        <a href="#">Methodology</a>
+        <a href="#methodology">Methodology</a>
         <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
       </div>
     </div>
     <div style="margin-top:32px; font-size:12px; color:rgba(252,252,252,0.4);">
-      © 2026 Von Peach GmbH · FutureMakers · The Visibility Index — v0.1
+      © 2026 Von Peach GmbH · FutureMakers · The Visibility Index — v0.2
     </div>
   </div>
 </footer>
 
 <!-- ─────────── JS ─────────── -->
 <script>
-  /* SCORING — six dimensions, 0–3 each, total 0–18.
-     v0 mock: deterministic from URL hash so different URLs give stable but varied results.
-     v1 replaces this with ProxyCurl + LLM scoring backend. */
+  /* ────────── UTM CAPTURE (paid attribution) ────────── */
+  // Capture utm_* and gclid from URL on page load and persist for the session.
+  // Attached to lead submission so you can attribute conversions per ad / campaign.
+  const ATTRIBUTION = (function() {
+    const params = new URLSearchParams(window.location.search);
+    const keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid'];
+    const out = {};
+    keys.forEach(k => { if (params.get(k)) out[k] = params.get(k); });
+    out.referrer = document.referrer || null;
+    out.landingPath = window.location.pathname;
+    return out;
+  })();
 
+  /* ────────── SCORING — six dimensions, 0–3 each, total 0–18 ────────── */
   const DIMENSIONS = [
     { key:'footprint',  label:'Digital Footprint',
       ctxByLevel:[
@@ -1136,40 +1176,47 @@
   ];
 
   const TIERS = [
-    {
-      min: 0, max: 5,
-      name: 'The Hidden Gem',
-      tagline: 'Real expertise. The world just doesn’t know it yet.',
-      blurb: 'Your brand is nearly invisible. The good news? Everything is ahead of you. With the right foundations, you can fast-track from unknown to unmissable.',
-      cta: "Here's your roadmap from invisible to unmissable"
-    },
-    {
-      min: 6, max: 10,
-      name: 'The Rising Voice',
-      tagline: 'Building momentum, but gaps are holding you back.',
-      blurb: 'You have something to say, but your brand isn’t amplifying it yet. Closing a few key gaps could dramatically shift how the right people find and perceive you.',
-      cta: "Here's exactly what to build first"
-    },
-    {
-      min: 11, max: 15,
-      name: 'The Emerging Authority',
-      tagline: 'Solid foundations. Time to scale your reach.',
-      blurb: 'You’re doing more right than most. Your challenge now is consistency and intentionality — turning effort into a brand that reliably attracts the right opportunities.',
-      cta: "Here's how to close the gaps fast"
-    },
-    {
-      min: 16, max: 18,
-      name: 'The Recognised Leader',
-      tagline: 'Strong brand. Let’s make it legacy-level.',
-      blurb: 'You’ve built real authority. The next level is about sharpening your signature, deepening your impact, and ensuring every asset is working as hard as you are.',
-      cta: "Here's how to sharpen your edge"
-    }
+    { min:0,  max:5,  name:'The Hidden Gem',
+      tagline:'Real expertise. The world just doesn’t know it yet.',
+      blurb:'Your brand is nearly invisible. The good news? Everything is ahead of you. With the right foundations, you can fast-track from unknown to unmissable.',
+      cta:"Here's your roadmap from invisible to unmissable" },
+    { min:6,  max:10, name:'The Rising Voice',
+      tagline:'Building momentum, but gaps are holding you back.',
+      blurb:'You have something to say, but your brand isn’t amplifying it yet. Closing a few key gaps could dramatically shift how the right people find and perceive you.',
+      cta:"Here's exactly what to build first" },
+    { min:11, max:15, name:'The Emerging Authority',
+      tagline:'Solid foundations. Time to scale your reach.',
+      blurb:'You’re doing more right than most. Your challenge now is consistency and intentionality — turning effort into a brand that reliably attracts the right opportunities.',
+      cta:"Here's how to close the gaps fast" },
+    { min:16, max:18, name:'The Recognised Leader',
+      tagline:'Strong brand. Let’s make it legacy-level.',
+      blurb:'You’ve built real authority. The next level is about sharpening your signature, deepening your impact, and ensuring every asset is working as hard as you are.',
+      cta:"Here's how to sharpen your edge" }
   ];
 
   const $  = sel => document.querySelector(sel);
   const $$ = sel => document.querySelectorAll(sel);
 
-  /* Mock scorer — deterministic from URL */
+  /* ────────── URL NORMALISATION ────────── */
+  // Accept: linkedin.com/in/x | https://linkedin.com/in/x | www.linkedin.com/in/x | @x | x
+  function normaliseLinkedIn(raw) {
+    if (!raw) return null;
+    let s = raw.trim().toLowerCase();
+    // Strip protocol + www
+    s = s.replace(/^https?:\/\//, '').replace(/^www\./, '');
+    // If the user pasted just a handle / @handle, prefix
+    if (!s.includes('linkedin.com')) {
+      s = s.replace(/^@/, '');
+      // if it has slashes treat as relative path
+      if (!s.startsWith('in/')) s = 'in/' + s;
+      s = 'linkedin.com/' + s;
+    }
+    // Strip trailing slash + query
+    s = s.split('?')[0].replace(/\/$/, '');
+    return s;
+  }
+
+  /* ────────── Mock scorer (deterministic) ────────── */
   function hashStr(s) {
     let h = 2166136261;
     for (let i = 0; i < s.length; i++) {
@@ -1202,26 +1249,54 @@
     const total = Object.values(subs).reduce((a,b) => a+b, 0);
     return { total, subs };
   }
-  function tierFor(score) {
-    return TIERS.find(t => score >= t.min && score <= t.max) || TIERS[0];
-  }
+  function tierFor(score) { return TIERS.find(t => score >= t.min && score <= t.max) || TIERS[0]; }
 
-  /* Flow */
+  /* ────────── Sample peers (clickable pills) ────────── */
+  const SAMPLES = {
+    'founder-ceo-series-c':  { url:'sample/founder-ceo-c',     score:14, subs:{footprint:3,clarity:2,authority:3,cadence:2,visual:2,network:2} },
+    'public-company-ceo':    { url:'sample/public-ceo',         score:17, subs:{footprint:3,clarity:3,authority:3,cadence:3,visual:3,network:2} },
+    'cfo-growth':            { url:'sample/cfo-growth',         score:8,  subs:{footprint:2,clarity:1,authority:2,cadence:1,visual:1,network:1} },
+    'senior-leader':         { url:'sample/senior-leader',      score:4,  subs:{footprint:1,clarity:0,authority:1,cadence:0,visual:1,network:1} }
+  };
+
+  /* ────────── Flow ────────── */
+  const actionCard   = $('#action-card');
   const inputPanel   = $('#input-panel');
   const loadingPanel = $('#loading-panel');
   const calcBtn      = $('#btn-calculate');
   const linkInput    = $('#input-linkedin');
 
-  calcBtn.addEventListener('click', startAudit);
+  // Auto-focus on load (for desktop; mobile won't summon keyboard automatically)
+  window.addEventListener('load', () => {
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      setTimeout(() => linkInput.focus(), 200);
+    }
+  });
+
+  calcBtn.addEventListener('click', () => startAudit());
   linkInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAudit(); });
 
-  function startAudit() {
-    const url = linkInput.value.trim() || 'demo-profile';
+  // Sample pills auto-run
+  $$('.pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const sample = SAMPLES[pill.dataset.sample];
+      if (!sample) return;
+      linkInput.value = sample.url;
+      startAudit({ override: sample });
+    });
+  });
+
+  function startAudit(opts = {}) {
+    const raw = linkInput.value.trim();
+    const normalised = normaliseLinkedIn(raw) || 'demo-profile';
     inputPanel.classList.add('hidden');
     loadingPanel.classList.add('active');
+    actionCard.classList.add('is-loading');
     runLoadingSequence(() => {
-      const { total, subs } = mockScores(url);
-      revealResults(total, subs, url);
+      const { total, subs } = opts.override
+        ? { total: opts.override.score, subs: opts.override.subs }
+        : mockScores(normalised);
+      revealResults(total, subs, normalised);
     });
   }
 
@@ -1233,11 +1308,12 @@
       if (i >= rows.length) { done(); return; }
       rows[i].classList.add('running');
       i++;
-      setTimeout(advance, 700 + Math.random() * 300);
+      setTimeout(advance, 600 + Math.random() * 250);
     }
     advance();
   }
 
+  /* ────────── Reveal results ────────── */
   function revealResults(total, subs, url) {
     const results = $('#results');
     results.classList.remove('hidden');
@@ -1337,13 +1413,16 @@
     $('#leaderboard').innerHTML = rows;
   }
 
-  /* Email gate (v0 mock — v1 POSTs to Mailchimp via Netlify Function) */
+  /* ────────── Email gate (v0 mock — v1 POSTs to Mailchimp via Netlify Function) ────────── */
   $('#gate-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const email = $('#gate-email').value.trim();
     const goal  = $('#gate-goal').value;
     if (!email || !email.includes('@')) { $('#gate-email').focus(); return; }
     if (!goal) { $('#gate-goal').focus(); return; }
+    // v1 will POST { email, goal, linkedin: <normalised>, score, subs, attribution: ATTRIBUTION }
+    // to /api/lead → Mailchimp + lead store. ATTRIBUTION captures utm_* + gclid for paid attribution.
+    console.log('[v0 mock] lead captured', { email, goal, attribution: ATTRIBUTION });
     $('#leaderboard-wrap').classList.remove('locked');
     $('#gate').remove();
     setTimeout(() => $('#circle').scrollIntoView({ behavior: 'smooth', block: 'start' }), 800);
