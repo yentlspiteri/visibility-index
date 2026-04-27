@@ -1286,18 +1286,56 @@
     });
   });
 
-  function startAudit(opts = {}) {
+  /* Latest audit state — passed to /api/lead on email submit */
+  let lastScore = 0, lastSubs = {}, lastTier = null, lastUrl = '';
+
+  async function startAudit(opts = {}) {
     const raw = linkInput.value.trim();
     const normalised = normaliseLinkedIn(raw) || 'demo-profile';
     inputPanel.classList.add('hidden');
     loadingPanel.classList.add('active');
     actionCard.classList.add('is-loading');
-    runLoadingSequence(() => {
-      const { total, subs } = opts.override
-        ? { total: opts.override.score, subs: opts.override.subs }
-        : mockScores(normalised);
-      revealResults(total, subs, normalised);
-    });
+
+    // Sample pills — mock data, no API call (so demo costs nothing)
+    if (opts.override) {
+      runLoadingSequence(() => {
+        revealResults(opts.override.score, opts.override.subs, opts.override.url);
+      });
+      return;
+    }
+
+    // Real audit — POST /api/score in parallel with the loading animation
+    const fetchPromise = fetch('/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: normalised })
+    }).then(r => r.json()).catch(() => ({ error: 'Network error. Please try again.' }));
+
+    const animPromise = new Promise(resolve => runLoadingSequence(resolve));
+
+    const [data] = await Promise.all([fetchPromise, animPromise]);
+
+    if (!data || data.error) {
+      showError((data && data.error) || 'Audit failed. Please try again.');
+      return;
+    }
+    revealResults(data.total, data.subs, data.normalisedUrl || normalised);
+  }
+
+  function showError(msg) {
+    loadingPanel.classList.remove('active');
+    actionCard.classList.remove('is-loading');
+    inputPanel.classList.remove('hidden');
+    $$('.loading-row').forEach(r => { r.classList.remove('running'); r.classList.remove('done'); });
+    let errEl = document.getElementById('hero-error');
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.id = 'hero-error';
+      errEl.style.cssText = 'margin-top:14px;color:#FFD6BB;font-size:13px;text-align:center;';
+      actionCard.parentNode.insertBefore(errEl, actionCard.nextSibling);
+    }
+    errEl.textContent = msg;
+    setTimeout(() => { if (errEl) errEl.textContent = ''; }, 8000);
   }
 
   function runLoadingSequence(done) {
@@ -1319,6 +1357,9 @@
     results.classList.remove('hidden');
 
     const tier = tierFor(total);
+    // Save for the lead capture call
+    lastScore = total; lastSubs = subs; lastTier = tier; lastUrl = url;
+
     $('#tier-name').textContent     = tier.name;
     $('#tier-tagline').textContent  = tier.tagline;
     $('#tier-blurb').textContent    = tier.blurb;
@@ -1413,19 +1454,47 @@
     $('#leaderboard').innerHTML = rows;
   }
 
-  /* ────────── Email gate (v0 mock — v1 POSTs to Mailchimp via Netlify Function) ────────── */
-  $('#gate-form').addEventListener('submit', (e) => {
+  /* ────────── Email gate → POST /api/lead (Mailchimp upsert) ────────── */
+  $('#gate-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('#gate-email').value.trim();
     const goal  = $('#gate-goal').value;
     if (!email || !email.includes('@')) { $('#gate-email').focus(); return; }
     if (!goal) { $('#gate-goal').focus(); return; }
-    // v1 will POST { email, goal, linkedin: <normalised>, score, subs, attribution: ATTRIBUTION }
-    // to /api/lead → Mailchimp + lead store. ATTRIBUTION captures utm_* + gclid for paid attribution.
-    console.log('[v0 mock] lead captured', { email, goal, attribution: ATTRIBUTION });
-    $('#leaderboard-wrap').classList.remove('locked');
-    $('#gate').remove();
-    setTimeout(() => $('#circle').scrollIntoView({ behavior: 'smooth', block: 'start' }), 800);
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const origText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    try {
+      const res = await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, goal,
+          score: lastScore,
+          subs:  lastSubs,
+          tier:  lastTier,
+          normalisedUrl: lastUrl,
+          attribution: ATTRIBUTION
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed.');
+
+      $('#leaderboard-wrap').classList.remove('locked');
+      $('#gate').remove();
+      setTimeout(() => $('#circle').scrollIntoView({ behavior: 'smooth', block: 'start' }), 800);
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = origText;
+      const errEl = document.querySelector('.gate-disclaimer');
+      if (errEl) {
+        errEl.textContent = (err && err.message) || 'Could not submit. Please try again.';
+        errEl.style.color = '#FFD6BB';
+      }
+    }
   });
 </script>
 </body>

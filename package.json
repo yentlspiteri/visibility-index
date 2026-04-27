@@ -1,0 +1,14 @@
+{
+  "name": "visibility-index",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FutureMakers Visibility Index — paid-marketing lead magnet for Von Peach.",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  }
+}

@@ -1,7 +1,18 @@
+# OS / IDE
 .DS_Store
 .vscode/
 .idea/
+
+# Node
 node_modules/
+
+# Local env (NEVER commit secrets)
 .env
 .env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# Logs
 *.log

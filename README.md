@@ -1,68 +1,129 @@
 # The Visibility Index
 
-A lead-magnet calculator for **Von Peach FutureMakers** — the personal-branding
-service line targeting C-suite executives. Inspired by the FIN tax-savings
-calculator (~20 leads/week conversion benchmark).
+A lead-magnet calculator for **Von Peach FutureMakers** — the personal-branding service line targeting C-suite executives. Inspired by the FIN tax-savings calculator (~20 leads/week conversion benchmark).
 
-## What this is
+The user pastes their LinkedIn URL. We run a forensic audit using public signals only (LinkedIn data via ProxyCurl, Google footprint via SerpAPI, brand-clarity scoring via Claude Haiku), score the profile across six dimensions (0–3 each, total 0–18), and place them in one of four tiers. Email gate captures the lead into Mailchimp with full UTM attribution.
 
-A self-contained, single-file HTML prototype (v0) of an executive
-"Visibility Index" assessment. Eight inputs in, one composite score out
-(0–100), plus a peer-cohort ranking, sub-score breakdown, and an email gate
-that unlocks the full leaderboard.
+## Architecture
 
-The downstream lead funnel pushes qualified executives toward the
-**FutureMakers Circle** — a 12-seat quarterly cohort, application only.
+```
+Frontend  (index.html, static)
+   │
+   ▼  POST /api/score { url }
+api/score.js
+   ├─ ProxyCurl        → LinkedIn profile JSON
+   ├─ SerpAPI          → Google footprint
+   └─ Claude Haiku     → brand clarity 0-3
+   ▼ returns { total, subs, tier }
+
+   ▼  POST /api/lead   { email, goal, score, attribution }
+api/lead.js
+   └─ Mailchimp        → upsert with merge fields + tags
+```
+
+Hosted on **Vercel**: static frontend + serverless functions on the same domain. No CORS hops, single env-var dashboard, single deploy pipeline.
 
 ## Versions
 
-- **v0 (this file)** — Design prototype with mocked LinkedIn data.
-  Brand-correct, copy-complete, scoring formula working. No backend.
-- **v1 (next)** — ProxyCurl integration for live LinkedIn lookups,
-  Mailchimp wired for email capture, Netlify Functions backend,
-  synthetic peer baselines from published research.
-- **v2 (post-launch)** — Real peer database built from accumulated leads,
-  swap synthetic baselines for live cohort ranking. Relaunch moment.
+- **v0.0–v0.2 (shipped)** — Single-URL UX, six-dimension scoring, four tiers, ad-optimised hero, sample-peer pills, UTM capture. All client-side mock scoring on GitHub Pages.
+- **v1 (this repo, current)** — Real backend on Vercel. ProxyCurl + SerpAPI + Claude Haiku → live scoring. Mailchimp wiring → live lead capture with attribution.
+- **v2 (planned, post-launch)** — Once 200+ leads accumulated, swap synthetic peer baselines for a real cohort DB built from opted-in profiles. Relaunch moment.
 
-## Deployment (GitHub Pages)
+## Local development
 
-This repo deploys as a static site. After pushing to GitHub:
+```bash
+npm i -g vercel
+vercel login
+vercel link            # link to your Vercel project
+cp .env.example .env.local
+# edit .env.local — paste your real keys
+vercel dev             # runs frontend + functions locally
+```
 
-1. Repo → **Settings** → **Pages**
-2. Source: **Deploy from a branch**
-3. Branch: `main` · folder: `/ (root)`
-4. Save. URL appears in 30–60 seconds at
-   `https://<username>.github.io/visibility-index/`
+## Production deployment (Vercel)
 
-For a custom domain (e.g. `visibility.vonpeach.com`), add a `CNAME` file
-with the domain and create a CNAME DNS record pointing to
-`<username>.github.io`.
+1. Sign in to [vercel.com](https://vercel.com) and click **Add New → Project**.
+2. Import the GitHub repo (`visibility-index`).
+3. Build settings: leave everything default — Vercel detects static + serverless functions automatically.
+4. **Environment Variables** — add the following at Project Settings → Environment Variables. **Set them for Production, Preview AND Development**.
+
+   | Variable | Value source |
+   |---|---|
+   | `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys |
+   | `PROXYCURL_API_KEY` | nubela.co/proxycurl → Dashboard → API Key |
+   | `SERPAPI_API_KEY` | serpapi.com/dashboard → API Key |
+   | `MAILCHIMP_API_KEY` | Mailchimp → Account → Extras → API keys |
+   | `MAILCHIMP_AUDIENCE_ID` | Audience → Settings → Audience name and defaults → "Audience ID" |
+   | `MAILCHIMP_SERVER_PREFIX` | The `usX` in your Mailchimp dashboard URL (e.g. `us17`) |
+
+5. Deploy. The first deploy takes ~30 seconds.
+6. Custom domain — Project Settings → Domains → add `visibility.vonpeach.com` and follow the DNS instructions.
+
+## Mailchimp setup (one-time)
+
+The `/api/lead` function writes merge fields to your Mailchimp audience. Add these custom fields **before** going live, or the merge values will be silently dropped.
+
+1. Mailchimp → Audience → **Settings** → **Audience fields and *|MERGE|* tags**
+2. Add the following:
+
+   | Field name | Tag | Type |
+   |---|---|---|
+   | Visibility Score | `VIS_SCORE` | Number |
+   | Visibility Tier | `VIS_TIER` | Text |
+   | Visibility Goal | `VIS_GOAL` | Text |
+   | Visibility LinkedIn | `VIS_LINKEDIN` | Text |
+   | UTM Source | `UTM_SOURCE` | Text |
+   | UTM Campaign | `UTM_CAMP` | Text |
+   | UTM Medium | `UTM_MED` | Text |
+
+Tags are added automatically per submission: `tier:<slug>`, `goal:<value>`, `campaign:<utm_campaign>`. You can build segments and automations off these.
+
+## Scoring rubric
+
+Total = sum of six dimensions, each 0–3. Range: 0–18.
+
+| Dimension | Source |
+|---|---|
+| Digital Footprint | LinkedIn presence (photo, banner, About length) + SerpAPI organic results count + press domains |
+| Brand Clarity | Claude Haiku scores LinkedIn headline + About against a 4-point rubric |
+| Authority Signals | Recommendations, articles, honors, press keywords in headline/About |
+| Content Cadence | Activities array length from ProxyCurl (recent posts) |
+| Visual Identity | Profile photo + banner + About length + brand-clarity correlation |
+| Network Recognition | Followers, connections, recommendations |
+
+## Tiers
+
+| Score | Tier | Tagline |
+|---|---|---|
+| 0–5 | The Hidden Gem | Real expertise. The world just doesn't know it yet. |
+| 6–10 | The Rising Voice | Building momentum, but gaps are holding you back. |
+| 11–15 | The Emerging Authority | Solid foundations. Time to scale your reach. |
+| 16–18 | The Recognised Leader | Strong brand. Let's make it legacy-level. |
 
 ## Brand
 
 Built on the **FutureMakers** palette (Von Peach personal-branding service):
 
-| Token        | Hex       |
-|--------------|-----------|
-| Deep navy    | `#0B0359` |
-| Indigo       | `#3F36B2` |
-| Lavender     | `#8683E5` |
-| Ice          | `#EBF0FF` |
+| Token | Hex |
+|---|---|
+| Deep navy | `#0B0359` |
+| Indigo | `#3F36B2` |
+| Lavender | `#8683E5` |
+| Ice | `#EBF0FF` |
 
-Typography: Aileron (display, system fallback in v0) + General Sans (body,
-Fontshare CDN). Aileron should be self-hosted from the brand zip in v1.
+Typography: **Aileron** (display, system fallback in v0–v1) + **General Sans** (body, Fontshare CDN). Aileron should be self-hosted from the brand assets in v1.1.
 
-## Scoring rubric
+## Cost per audit
 
-Total = 100 points, normalised to a 0–100 score.
+| Service | Approx. per audit |
+|---|---|
+| ProxyCurl | $0.01 |
+| SerpAPI | $0.01 |
+| Claude Haiku | $0.001 |
+| Mailchimp | flat (per-list pricing) |
+| **Total** | **~$0.025 per audit** |
 
-| Component        | Weight | Inputs                                       |
-|------------------|--------|----------------------------------------------|
-| Profile strength | 15     | LinkedIn URL provided, role clarity          |
-| Reach            | 25     | Follower band                                |
-| Cadence          | 15     | Posting frequency last 90 days               |
-| Authority        | 30     | Press mentions + speaking engagements (12mo) |
-| External roles   | 15     | Board seats / advisory roles                 |
+Rate limit defaults to 5 audits per IP per hour to bound spend on bots. Override via `RATE_LIMIT_PER_HOUR` env var.
 
 ## License
 
