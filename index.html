@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Visibility Index — Von Peach FutureMakers</title>
+<meta name="description" content="Benchmark your executive visibility against 300+ C-suite peers. Real LinkedIn data. Real ranking. 90 seconds." />
+
+<!-- General Sans (body) — from Fontshare CDN. Aileron should be self-hosted from brand assets in v1. -->
+<link rel="preconnect" href="https://api.fontshare.com" />
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap" rel="stylesheet" />
+
+<style>
+  /* ──────────────────────────────────────────────────────────
+     VON PEACH — FUTUREMAKERS PALETTE (personal branding)
+     #0B0359  deep navy
+     #3F36B2  indigo (primary action)
+     #8683E5  lavender
+     #EBF0FF  ice
+     Neutrals: #FCFCFC / #0F0F0F / #666666 / #ADADAD
+     ────────────────────────────────────────────────────────── */
+
+  :root {
+    --vp-navy:      #0B0359;
+    --vp-indigo:    #3F36B2;
+    --vp-lavender:  #8683E5;
+    --vp-ice:       #EBF0FF;
+    --vp-white:     #FCFCFC;
+    --vp-black:     #0F0F0F;
+    --vp-grey-1:    #ADADAD;
+    --vp-grey-2:    #666666;
+
+    /* Aileron is the brand display font — replace with self-hosted @font-face in v1.
+       Fallback stack chosen to feel similar (geometric, slightly condensed). */
+    --font-display: 'Aileron', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
+    --font-body:    'General Sans', 'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--vp-navy);
+    color: var(--vp-white);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  /* ── Layout primitives ── */
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  .container-narrow {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ── Type scale ── */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    font-size: clamp(40px, 6vw, 80px);
+  }
+  .h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    font-size: clamp(28px, 3.5vw, 44px);
+  }
+  .h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    font-size: 22px;
+  }
+  .eyebrow {
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--vp-lavender);
+  }
+  .lede {
+    font-size: clamp(17px, 1.6vw, 20px);
+    line-height: 1.5;
+    color: rgba(252,252,252,0.78);
+    max-width: 640px;
+  }
+  .small {
+    font-size: 13px;
+    color: rgba(252,252,252,0.6);
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 56px;
+    padding: 0 28px;
+    border: 0;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: transform .18s ease, background .18s ease, color .18s ease;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--vp-white);
+    color: var(--vp-navy);
+  }
+  .btn-primary:hover { transform: translateY(-1px); background: var(--vp-ice); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--vp-white);
+    border: 1px solid rgba(252,252,252,0.25);
+  }
+  .btn-ghost:hover { border-color: var(--vp-white); }
+
+  .btn-indigo {
+    background: var(--vp-indigo);
+    color: var(--vp-white);
+  }
+  .btn-indigo:hover { background: var(--vp-lavender); color: var(--vp-navy); }
+
+  .btn-arrow::after {
+    content: "→";
+    font-size: 18px;
+    transition: transform .2s ease;
+  }
+  .btn-arrow:hover::after { transform: translateX(4px); }
+
+  /* ── Nav ── */
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px);
+    background: rgba(11,3,89,0.65);
+    border-bottom: 1px solid rgba(252,252,252,0.08);
+  }
+  nav.top .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 76px;
+  }
+  .logo {
+    height: 32px;
+    width: auto;
+  }
+  .logo svg { height: 100%; width: auto; }
+  nav .nav-right {
+    display: flex; gap: 12px; align-items: center;
+  }
+  nav .nav-meta {
+    font-size: 13px;
+    color: var(--vp-lavender);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 100px 0 120px;
+    overflow: hidden;
+  }
+  .hero::before {
+    /* radial gradient atmosphere */
+    content: "";
+    position: absolute;
+    top: -20%; left: 50%;
+    transform: translateX(-50%);
+    width: 1200px; height: 1200px;
+    background: radial-gradient(closest-side, rgba(63,54,178,0.55), rgba(11,3,89,0) 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero .container { position: relative; z-index: 1; }
+
+  .hero-eyebrow-row {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 36px;
+  }
+  .hero-eyebrow-row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--vp-lavender);
+    box-shadow: 0 0 12px var(--vp-lavender);
+  }
+
+  .hero h1 { margin-bottom: 28px; max-width: 16ch; }
+  .hero .lede { margin-bottom: 48px; }
+
+  .hero-cta-row {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+  }
+
+  .hero-trust {
+    margin-top: 64px;
+    display: flex; flex-wrap: wrap; gap: 32px;
+    color: rgba(252,252,252,0.55);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+  }
+  .hero-trust .sep { color: rgba(252,252,252,0.2); }
+
+  /* ── PILLAR STRIP ── */
+  .pillars {
+    border-top: 1px solid rgba(252,252,252,0.08);
+    border-bottom: 1px solid rgba(252,252,252,0.08);
+    background: rgba(11,3,89,0.4);
+  }
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .pillar {
+    padding: 56px 36px;
+    border-right: 1px solid rgba(252,252,252,0.06);
+  }
+  .pillar:last-child { border-right: 0; }
+  .pillar .num {
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--vp-lavender);
+    margin-bottom: 18px;
+    letter-spacing: 0.1em;
+  }
+  .pillar .h3 { margin-bottom: 12px; }
+  .pillar p { color: rgba(252,252,252,0.7); font-size: 15px; }
+  @media (max-width: 760px) {
+    .pillars-grid { grid-template-columns: 1fr; }
+    .pillar { border-right: 0; border-bottom: 1px solid rgba(252,252,252,0.06); }
+    .pillar:last-child { border-bottom: 0; }
+  }
+
+  /* ── CALCULATOR (light section) ── */
+  .calc-wrap {
+    background: var(--vp-ice);
+    color: var(--vp-black);
+    padding: 120px 0;
+  }
+  .calc-wrap .eyebrow { color: var(--vp-indigo); }
+  .calc-wrap .lede { color: rgba(15,15,15,0.65); max-width: 540px; }
+
+  .calc-card {
+    margin-top: 56px;
+    background: var(--vp-white);
+    border: 1px solid rgba(15,15,15,0.06);
+    border-radius: 24px;
+    box-shadow: 0 32px 80px rgba(11,3,89,0.08);
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .calc-progress {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 36px;
+    color: var(--vp-grey-2);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .calc-progress-bar {
+    flex: 1;
+    height: 2px;
+    margin: 0 18px;
+    background: rgba(15,15,15,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .calc-progress-fill {
+    height: 100%;
+    background: var(--vp-indigo);
+    width: 0%;
+    transition: width .35s cubic-bezier(.4,0,.2,1);
+  }
+
+  .calc-step { display: none; }
+  .calc-step.active { display: block; animation: fadeIn .35s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .calc-q {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--vp-black);
+    margin-bottom: 8px;
+    letter-spacing: -0.015em;
+  }
+  .calc-help {
+    color: var(--vp-grey-2);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  .calc-input {
+    width: 100%;
+    height: 56px;
+    padding: 0 20px;
+    border: 1px solid rgba(15,15,15,0.12);
+    border-radius: 14px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--vp-black);
+    background: var(--vp-white);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .calc-input:focus {
+    border-color: var(--vp-indigo);
+    box-shadow: 0 0 0 4px rgba(63,54,178,0.12);
+  }
+  .calc-input::placeholder { color: var(--vp-grey-1); }
+
+  .calc-options {
+    display: grid; gap: 10px;
+  }
+  .calc-options.cols-2 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 600px) { .calc-options.cols-2 { grid-template-columns: 1fr; } }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+    border: 1px solid rgba(15,15,15,0.12);
+    border-radius: 14px;
+    background: var(--vp-white);
+    cursor: pointer;
+    transition: all .15s ease;
+    font-size: 15px;
+    color: var(--vp-black);
+    text-align: left;
+  }
+  .opt:hover {
+    border-color: var(--vp-indigo);
+    background: rgba(63,54,178,0.04);
+  }
+  .opt.selected {
+    border-color: var(--vp-indigo);
+    background: rgba(63,54,178,0.06);
+    box-shadow: 0 0 0 3px rgba(63,54,178,0.1);
+  }
+  .opt .opt-marker {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(15,15,15,0.2);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .opt.selected .opt-marker {
+    border-color: var(--vp-indigo);
+    background: var(--vp-indigo);
+  }
+  .opt.selected .opt-marker::after {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--vp-white);
+  }
+
+  .calc-actions {
+    margin-top: 36px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .calc-actions .small { color: var(--vp-grey-2); }
+
+  .btn-back {
+    background: transparent;
+    color: var(--vp-grey-2);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: var(--font-body);
+  }
+  .btn-back:hover { color: var(--vp-black); }
+  .btn-back::before { content: "← "; }
+
+  /* ── RESULTS ── */
+  .results-wrap {
+    background: var(--vp-navy);
+    color: var(--vp-white);
+    padding: 120px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .results-wrap::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(at 75% 20%, rgba(134,131,229,0.18), transparent 50%),
+                radial-gradient(at 20% 80%, rgba(63,54,178,0.25), transparent 55%);
+    pointer-events: none;
+  }
+  .results-wrap .container { position: relative; z-index: 1; }
+
+  .result-headline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    margin-bottom: 80px;
+  }
+  @media (max-width: 880px) { .result-headline { grid-template-columns: 1fr; gap: 40px; } }
+
+  .score-ring-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+  .score-ring {
+    position: relative;
+    width: 320px; height: 320px;
+  }
+  .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-ring .ring-bg { fill: none; stroke: rgba(252,252,252,0.08); stroke-width: 14; }
+  .score-ring .ring-fg {
+    fill: none;
+    stroke: url(#ringGradient);
+    stroke-width: 14;
+    stroke-linecap: round;
+    transition: stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);
+  }
+  .score-ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .score-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 88px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .score-suffix { font-size: 18px; color: rgba(252,252,252,0.6); margin-top: 8px; }
+  .score-label {
+    margin-top: 18px;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+  }
+
+  .rank-block .eyebrow { margin-bottom: 18px; }
+  .rank-block .rank-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(56px, 6vw, 84px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+  }
+  .rank-block .rank-context {
+    color: rgba(252,252,252,0.7);
+    font-size: 17px;
+    line-height: 1.5;
+    max-width: 460px;
+  }
+  .rank-block .rank-tier {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 24px;
+    padding: 8px 14px;
+    border: 1px solid rgba(134,131,229,0.4);
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--vp-lavender);
+    letter-spacing: 0.05em;
+  }
+  .rank-block .rank-tier::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--vp-lavender);
+  }
+
+  /* Sub-scores */
+  .subscores {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
+    margin-bottom: 80px;
+  }
+  @media (max-width: 880px) { .subscores { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .subscores { grid-template-columns: 1fr; } }
+
+  .subscore {
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(252,252,252,0.08);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .subscore-label {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(252,252,252,0.6);
+    margin-bottom: 10px;
+  }
+  .subscore-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 36px;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+  .subscore-bar {
+    height: 4px;
+    background: rgba(252,252,252,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .subscore-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--vp-indigo), var(--vp-lavender));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 1.4s cubic-bezier(.4,0,.2,1);
+  }
+  .subscore-context {
+    font-size: 12px;
+    color: rgba(252,252,252,0.55);
+  }
+
+  /* Leaderboard + email gate */
+  .leaderboard-wrap { position: relative; }
+  .leaderboard-card {
+    background: rgba(252,252,252,0.03);
+    border: 1px solid rgba(252,252,252,0.08);
+    border-radius: 20px;
+    padding: 40px;
+  }
+  .leaderboard-card h2 { margin-bottom: 8px; }
+  .leaderboard-card .lede { margin-bottom: 28px; max-width: 540px; }
+
+  .leaderboard-list {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: grid; gap: 4px;
+  }
+  .leaderboard-row {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: rgba(252,252,252,0.02);
+    border: 1px solid rgba(252,252,252,0.04);
+  }
+  .leaderboard-row.you {
+    background: rgba(63,54,178,0.18);
+    border-color: rgba(134,131,229,0.45);
+  }
+  .leaderboard-rank {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--vp-lavender);
+  }
+  .leaderboard-meta { color: rgba(252,252,252,0.78); font-size: 14px; }
+  .leaderboard-score {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+  }
+  .leaderboard-row.you .leaderboard-meta { color: var(--vp-white); font-weight: 500; }
+  .leaderboard-row.you .leaderboard-score { color: var(--vp-white); }
+
+  /* Locked state */
+  .locked .leaderboard-list { filter: blur(6px) brightness(0.8); pointer-events: none; user-select: none; }
+  .locked .leaderboard-card { position: relative; }
+
+  .gate {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 20px;
+  }
+  .gate-card {
+    background: var(--vp-navy);
+    border: 1px solid rgba(134,131,229,0.4);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 460px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .gate-card .lock-icon {
+    width: 44px; height: 44px;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(134,131,229,0.15);
+    color: var(--vp-lavender);
+    font-size: 18px;
+  }
+  .gate-card h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .gate-card p { font-size: 14px; color: rgba(252,252,252,0.7); margin-bottom: 20px; }
+  .gate-form { display: flex; gap: 8px; }
+  .gate-form input {
+    flex: 1;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(252,252,252,0.18);
+    background: rgba(252,252,252,0.04);
+    color: var(--vp-white);
+    font-family: var(--font-body);
+    font-size: 14px;
+    outline: none;
+  }
+  .gate-form input:focus { border-color: var(--vp-lavender); }
+  .gate-form button {
+    height: 48px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--vp-white);
+    color: var(--vp-navy);
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .gate-disclaimer {
+    margin-top: 14px;
+    font-size: 11px;
+    color: rgba(252,252,252,0.5);
+  }
+
+  /* ── THE CIRCLE (scarcity tier) ── */
+  .circle-wrap {
+    background: var(--vp-black);
+    color: var(--vp-white);
+    padding: 120px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .circle-wrap::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(at 80% 30%, rgba(63,54,178,0.4), transparent 50%),
+      radial-gradient(at 10% 70%, rgba(134,131,229,0.18), transparent 55%);
+    pointer-events: none;
+  }
+  .circle-wrap .container { position: relative; z-index: 1; }
+
+  .circle-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .circle-grid { grid-template-columns: 1fr; gap: 48px; } }
+
+  .circle-h2 { margin-bottom: 24px; }
+  .circle-lede { color: rgba(252,252,252,0.78); margin-bottom: 36px; max-width: 480px; }
+
+  .perks {
+    display: grid; gap: 18px;
+    margin-bottom: 40px;
+  }
+  .perk {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .perk-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(134,131,229,0.16);
+    color: var(--vp-lavender);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .perk strong {
+    font-family: var(--font-display);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 17px;
+  }
+  .perk span { color: rgba(252,252,252,0.7); font-size: 14px; line-height: 1.5; }
+
+  .circle-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(252,252,252,0.08);
+    border-radius: 20px;
+    padding: 32px;
+  }
+  .stat-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 56px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: rgba(252,252,252,0.65);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ── METHODOLOGY (collapsible) ── */
+  .method-wrap {
+    background: var(--vp-navy);
+    border-top: 1px solid rgba(252,252,252,0.08);
+    padding: 80px 0;
+  }
+  details.method {
+    border-bottom: 1px solid rgba(252,252,252,0.08);
+    padding: 24px 0;
+  }
+  details.method summary {
+    cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    list-style: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+  }
+  details.method summary::-webkit-details-marker { display: none; }
+  details.method summary::after {
+    content: "+";
+    font-size: 22px;
+    color: var(--vp-lavender);
+    transition: transform .2s ease;
+  }
+  details.method[open] summary::after { content: "−"; }
+  details.method .method-body {
+    padding: 18px 0 4px;
+    color: rgba(252,252,252,0.72);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 720px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--vp-black);
+    color: rgba(252,252,252,0.55);
+    padding: 56px 0 40px;
+    border-top: 1px solid rgba(252,252,252,0.06);
+  }
+  footer .footer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 24px;
+  }
+  footer .logo { height: 24px; }
+  footer .footer-links {
+    display: flex; gap: 24px; font-size: 13px;
+  }
+  footer .footer-links a { color: rgba(252,252,252,0.55); text-decoration: none; }
+  footer .footer-links a:hover { color: var(--vp-white); }
+
+  /* ── Utility ── */
+  .hidden { display: none !important; }
+  .stack-lg > * + * { margin-top: 32px; }
+  .stack-md > * + * { margin-top: 20px; }
+
+</style>
+</head>
+<body>
+
+<!-- ─────────── NAV ─────────── -->
+<nav class="top">
+  <div class="container">
+    <a href="#" class="logo" aria-label="Von Peach">
+      <!-- Inline white logo (Von Peach wordmark) -->
+      <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g fill="#FCFCFC">
+          <path d="M298.99,614.13h-34.36c10.38-48.96,20.56-96.75,30.86-145.34,15.56,0,30.7,0,46.73,0,9.35,31.71,18.27,63.38,28.42,97.8,6.95-34.2,13.42-65.83,19.92-97.8h34.07c-10.31,49.35-19.87,96.44-30.16,145.34h-45.66c-9.62-33.84-19.33-68.24-29.03-102.37h-.85c-3.06,17.24-5.83,34.54-9.19,51.73-3.26,16.7-7.07,33.53-10.74,50.64Z"/>
+          <path d="M90.32,614.13h-44.06c-3.56-48.22-7.07-97.71-10.58-145.34,11.38,0,24.03,0,39.87,0v97.99c1.13,0,1.7,0,2.63,0,14.45-33.08,28.15-64.75,42.67-97.99h41.16c-24.6,49.89-48,97.29-71.69,145.34Z"/>
+          <path d="M272.73,511.37c-2.84-18.45-14.31-38.48-35.74-44.45-30.13-8.4-58.47.72-78.18,27.92-14.35,19.82-20.07,42.4-19.73,66.78.34,24.58,13.12,50.12,45.91,53.81,29.86,3.36,53.07-6.25,71.17-30.46,13.2-17.67,18.1-39.13,17.99-55.16-.06-8.29-.8-14.43-1.42-18.45ZM233.87,550.91c-8.82,28.87-27.2,40.35-42.54,36.46-14.35-3.63-20.57-26.26-11.38-54.86,8.15-25.37,27.57-41.52,42.54-36.46,15.02,5.08,19.23,29.16,11.38,54.86Z"/>
+          <path d="M958.01,520.04h35.57q7.52-32.14,12.21-52.34h38.53c-10.38,48.89-20.54,97.12-30.92,146.03h-38.46c3.49-19.69,7.75-39.74,10.78-59.83h-33.84c-4.68,18.66-5.07,21.1-14.32,59.83-3.76,0-35.42-.05-38.28-.05,10.48-49.63,20.61-97.52,30.84-145.98h37.28q-5.32,29.26-9.39,52.34Z"/>
+          <path d="M893.67,576.81v30.06c-22.51,9.21-44.95,13-67.99,4.38-12.4-4.64-21.24-13.75-25.28-26.53-9.69-30.66-3.93-59.41,11.86-86.63,7.36-12.69,18.25-21.5,31.48-27.92,19.72-9.57,62.84-7.05,77.95,8.31-4.16,8.89-8.54,18.27-13.14,28.1-3.52-1.4-3.02-1.11-8.09-3.42q-6.22-2.83-8.76-3.76c-21.82-7.98-34.64-2.62-47.23,18.27-8.18,13.57-10.3,29.13-8.91,44.82,1.32,14.92,12.33,23.2,27.19,20.78,10.01-1.63,19.87-4.12,30.92-6.46Z"/>
+          <path d="M791.83,613.72c-4.54-48.48-8.4-97.67-13.62-146.03h-50.92c-19.28,38.03-38.59,75.9-58,114.19-5.24,0-35.78,0-50.98,0,2.38-10.65,4.21-19.15,6.15-27.81h45.64c3-13.57,5.26-22.62,7.75-32.8-15.6,0-31.9,0-46.33,0,1.99-8.94,3.66-16.22,5.53-24.6h46.9c4.42-17.25,6.69-26.87,7.19-28.98h-87.61c-10.27,48.57-20.21,97.26-30.52,146.03h119.76c3.48-7.54,5.15-10.86,10.87-23.46,0,0,3.56-7.71,3.56-7.56l34.89-.21c2.58,0,11.75.08,11.76.21.68,9.26,1.24,16.04,2.46,31.02M751.54,554.07c-1.55,0-22.71,0-30.93,0,5.09-11.31,17.27-37.71,26.01-55.99.73,2.82,1.55,12.76,2.83,29.41"/>
+          <path d="M548.99,467.69c-17.69-1.82-34.72-1.41-54.09,0-10.08,47.1-15.06,79.32-24.83,125.4-.39,1.83-3.96,18.1-4.39,20.63h37.19c5.71-26.46,5.71-31.43,9.75-51.17,14.96-.72,26.93.56,37.43-2.52,20.15-5.91,32.27-19.13,35.79-40.44,5.42-32.82-14.75-49.63-36.85-51.9ZM544.17,523.71c-4.4,4.91-10.53,9.36-23.76,8.29,2.07-10.46,4.17-20.13,6.03-29.52.19-.95.92-1.72,1.88-1.86,2.99-.45,13.37-1.18,17.44,3.58,6.07,7.07,2.27,15.21-1.59,19.52Z"/>
+        </g>
+      </svg>
+    </a>
+    <div class="nav-right">
+      <span class="nav-meta">FutureMakers · Visibility Index</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ─────────── HERO ─────────── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow-row">
+      <span class="dot"></span>
+      <span class="eyebrow">FutureMakers · Visibility Index</span>
+    </div>
+    <h1 class="display">How visible<br/>are you, really?</h1>
+    <p class="lede">
+      The Visibility Index benchmarks your executive presence against C-suite peers in your industry.
+      Real LinkedIn data. Real ranking. Ninety seconds.
+    </p>
+    <div class="hero-cta-row">
+      <a href="#calculator" class="btn btn-primary btn-arrow">Calculate my score</a>
+      <a href="#circle" class="btn btn-ghost">About the Circle</a>
+    </div>
+    <div class="hero-trust">
+      <span>Built by Von Peach</span>
+      <span class="sep">·</span>
+      <span>Confidential · GDPR-compliant</span>
+      <span class="sep">·</span>
+      <span>Free</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── PILLARS ─────────── -->
+<section class="pillars">
+  <div class="container">
+    <div class="pillars-grid">
+      <div class="pillar">
+        <div class="num">01</div>
+        <div class="h3">Where you actually rank</div>
+        <p>Not vanity metrics — your position against a curated cohort of C-level peers in your industry, role and region.</p>
+      </div>
+      <div class="pillar">
+        <div class="num">02</div>
+        <div class="h3">The five levers that move you up</div>
+        <p>Reach, cadence, authority signals, engagement and profile strength. We show which lever is costing you the most.</p>
+      </div>
+      <div class="pillar">
+        <div class="num">03</div>
+        <div class="h3">A path to the top decile</div>
+        <p>Concrete next steps based on what executives at the top of your cohort actually do. No fluff, no growth-hack clichés.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── CALCULATOR ─────────── -->
+<section class="calc-wrap" id="calculator">
+  <div class="container-narrow">
+    <span class="eyebrow">The assessment</span>
+    <h2 class="h2" style="margin-top: 18px; margin-bottom: 18px;">Eight questions. One number.</h2>
+    <p class="lede">Each answer maps to a specific weight in the Visibility Index. The full methodology is published below — nothing is opaque.</p>
+
+    <div class="calc-card">
+      <div class="calc-progress">
+        <span id="step-counter">Step 1 of 8</span>
+        <div class="calc-progress-bar"><div class="calc-progress-fill" id="progress-fill"></div></div>
+        <span>Visibility Index</span>
+      </div>
+
+      <!-- STEP 1: LinkedIn URL -->
+      <div class="calc-step active" data-step="1">
+        <div class="calc-q">What's your LinkedIn URL?</div>
+        <div class="calc-help">We use this in v1 to pull live profile data. For now, just paste it — no scraping happens in this preview.</div>
+        <input type="url" class="calc-input" id="input-linkedin" placeholder="linkedin.com/in/your-handle" autocomplete="off" />
+        <div class="calc-actions">
+          <span class="small">Step 1 of 8</span>
+          <button class="btn btn-indigo btn-arrow" data-action="next">Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Role -->
+      <div class="calc-step" data-step="2">
+        <div class="calc-q">What's your role?</div>
+        <div class="calc-help">Pick the one that best fits — we benchmark you against peers at the same level.</div>
+        <div class="calc-options cols-2" data-field="role">
+          <button class="opt" data-value="ceo"><span>CEO</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="founder"><span>Founder</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cfo"><span>CFO</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="coo"><span>COO</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cmo"><span>CMO / CRO</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cto"><span>CTO / CPO</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="other-c"><span>Other C-suite</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="senior"><span>Senior leader (VP / GM)</span><span class="opt-marker"></span></button>
+        </div>
+        <div class="calc-actions">
+          <button class="btn-back" data-action="back">Back</button>
+          <span class="small">Step 2 of 8</span>
+        </div>
+      </div>
+
+      <!-- STEP 3: Industry -->
+      <div class="calc-step" data-step="3">
+        <div class="calc-q">Which industry?</div>
+        <div class="calc-help">Cohorts are sized per industry — your ranking is relative to peers in your sector.</div>
+        <div class="calc-options cols-2" data-field="industry">
+          <button class="opt" data-value="tech"><span>Technology &amp; SaaS</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="finance"><span>Financial Services</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="healthcare"><span>Healthcare &amp; Life Sciences</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="consumer"><span>Consumer &amp; Retail</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="industrial"><span>Industrial &amp; Manufacturing</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="proserv"><span>Professional Services</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="energy"><span>Energy &amp; Utilities</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="other-ind"><span>Other</span><span class="opt-marker"></span></button>
+        </div>
+        <div class="calc-actions">
+          <button class="btn-back" data-action="back">Back</button>
+          <span class="small">Step 3 of 8</span>
+        </div>
+      </div>
+
+      <!-- STEP 4: Region -->
+      <div class="calc-step" data-step="4">
+        <div class="calc-q">Where are you headquartered?</div>
+        <div class="calc-help">Posting norms and audience expectations vary by region — we adjust accordingly.</div>
+        <div class="calc-options cols-2" data-field="region">
+          <button class="opt" data-value="us"><span>United States</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="uk"><span>United Kingdom</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="dach"><span>DACH (DE / AT / CH)</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="weu"><span>Western Europe</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="nordics"><span>Nordics</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="me"><span>Middle East</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="apac"><span>Asia-Pacific</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="other-reg"><span>Other</span><span class="opt-marker"></span></button>
+        </div>
+        <div class="calc-actions">
+          <button class="btn-back" data-action="back">Back</button>
+          <span class="small">Step 4 of 8</span>
+        </div>
+      </div>
+
+      <!-- STEP 5: Followers -->
+      <div class="calc-step" data-step="5">
+        <div class="calc-q">Roughly how many LinkedIn followers do you have?</div>
+        <div class="calc-help">Just an estimate — v1 will pull this automatically.</div>
+        <div class="calc-options" data-field="reach">
+          <button class="opt" data-value="reach-1"><span>Under 1,000</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="reach-2"><span>1,000 — 5,000</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="reach-3"><span>5,000 — 20,000</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="reach-4"><span>20,000 — 100,000</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="reach-5"><span>100,000+</span><span class="opt-marker"></span></button>
+        </div>
+        <div class="calc-actions">
+          <button class="btn-back" data-action="back">Back</button>
+          <span class="small">Step 5 of 8</span>
+        </div>
+      </div>
+
+      <!-- STEP 6: Cadence -->
+      <div class="calc-step" data-step="6">
+        <div class="calc-q">How often have you posted in the last 90 days?</div>
+        <div class="calc-help">Cadence is one of the strongest predictors of executive visibility.</div>
+        <div class="calc-options" data-field="cadence">
+          <button class="opt" data-value="cad-5"><span>Daily — or close to it</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cad-4"><span>Several times per week</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cad-3"><span>About once a week</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cad-2"><span>About once a month</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cad-1"><span>Rarely — a few times a year</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="cad-0"><span>Never</span><span class="opt-marker"></span></button>
+        </div>
+        <div class="calc-actions">
+          <button class="btn-back" data-action="back">Back</button>
+          <span class="small">Step 6 of 8</span>
+        </div>
+      </div>
+
+      <!-- STEP 7: Authority signals -->
+      <div class="calc-step" data-step="7">
+        <div class="calc-q">External recognition in the last 12 months</div>
+        <div class="calc-help">Tier-1 press mentions, podcasts, keynote speaking, panel appearances — combined.</div>
+        <div class="calc-options" data-field="authority">
+          <button class="opt" data-value="auth-0"><span>None</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="auth-1"><span>Rare — 1 to 3 mentions or appearances</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="auth-2"><span>Active — steady drumbeat through the year</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="auth-3"><span>Highly active — recognised voice in your industry</span><span class="opt-marker"></span></button>
+        </div>
+        <div class="calc-actions">
+          <button class="btn-back" data-action="back">Back</button>
+          <span class="small">Step 7 of 8</span>
+        </div>
+      </div>
+
+      <!-- STEP 8: External roles -->
+      <div class="calc-step" data-step="8">
+        <div class="calc-q">Board seats &amp; advisory roles</div>
+        <div class="calc-help">External roles are a strong authority signal — and a leading indicator of who reaches the top of the cohort.</div>
+        <div class="calc-options" data-field="boards">
+          <button class="opt" data-value="board-0"><span>None</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="board-1"><span>1 board or advisory role</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="board-2"><span>2 to 3 roles</span><span class="opt-marker"></span></button>
+          <button class="opt" data-value="board-3"><span>4 or more</span><span class="opt-marker"></span></button>
+        </div>
+        <div class="calc-actions">
+          <button class="btn-back" data-action="back">Back</button>
+          <span class="small">Step 8 of 8 — your score is computed instantly</span>
+        </div>
+      </div>
+
+    </div><!-- /calc-card -->
+  </div>
+</section>
+
+<!-- ─────────── RESULTS ─────────── -->
+<section class="results-wrap hidden" id="results">
+  <div class="container">
+    <div class="hero-eyebrow-row">
+      <span class="dot"></span>
+      <span class="eyebrow">Your result</span>
+    </div>
+
+    <div class="result-headline">
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg viewBox="0 0 320 320">
+            <defs>
+              <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#3F36B2"/>
+                <stop offset="100%" stop-color="#8683E5"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="160" cy="160" r="140" />
+            <circle class="ring-fg" id="ring-fg" cx="160" cy="160" r="140"
+                    stroke-dasharray="0 880" />
+          </svg>
+          <div class="score-ring-center">
+            <div class="score-num" id="score-num">0</div>
+            <div class="score-suffix">/ 100</div>
+          </div>
+        </div>
+        <div class="score-label">Your Visibility Index</div>
+      </div>
+
+      <div class="rank-block">
+        <span class="eyebrow">Cohort ranking</span>
+        <div class="rank-num" id="rank-line">#— of —</div>
+        <p class="rank-context" id="rank-context">
+          Your ranking against the cohort of executives at your level in your industry and region.
+        </p>
+        <span class="rank-tier" id="rank-tier">Calculating tier…</span>
+      </div>
+    </div>
+
+    <!-- Sub-scores -->
+    <div class="subscores" id="subscores">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Leaderboard + email gate -->
+    <div class="leaderboard-wrap locked" id="leaderboard-wrap">
+      <div class="leaderboard-card">
+        <h2 class="h2">Your peer leaderboard</h2>
+        <p class="lede">A live snapshot of the top 10 in your cohort, plus your position in the full ranking.</p>
+        <ul class="leaderboard-list" id="leaderboard">
+          <!-- populated by JS -->
+        </ul>
+      </div>
+      <div class="gate" id="gate">
+        <div class="gate-card">
+          <div class="lock-icon">🔒</div>
+          <h3>Unlock your full report</h3>
+          <p>See the leaderboard, your sub-score breakdown, and the three highest-leverage moves to climb the ranks.</p>
+          <form class="gate-form" id="gate-form" novalidate>
+            <input type="email" id="gate-email" placeholder="Your work email" required />
+            <button type="submit">Unlock</button>
+          </form>
+          <div class="gate-disclaimer">We'll email your report once. No lists. Unsubscribe anytime.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── CIRCLE (scarcity tier) ─────────── -->
+<section class="circle-wrap" id="circle">
+  <div class="container">
+    <div class="circle-grid">
+      <div>
+        <div class="hero-eyebrow-row">
+          <span class="dot"></span>
+          <span class="eyebrow">By invitation</span>
+        </div>
+        <h2 class="h2 circle-h2">The FutureMakers Circle</h2>
+        <p class="lede circle-lede">
+          Twelve seats. Quarterly cohort. Application only. A small, vetted group of operating C-suite leaders building their public voice
+          with our team — alongside peers who actually move the needle for one another.
+        </p>
+        <div class="perks">
+          <div class="perk">
+            <div class="perk-icon">01</div>
+            <div>
+              <strong>A 90-day visibility plan, custom-built</strong>
+              <span>Designed against your gap analysis from this Index. Specific. Defendable. Yours.</span>
+            </div>
+          </div>
+          <div class="perk">
+            <div class="perk-icon">02</div>
+            <div>
+              <strong>The Black Book</strong>
+              <span>Curated directory of the operators we trust — ghostwriters, photographers, podcast bookers, video producers. Not for sale.</span>
+            </div>
+          </div>
+          <div class="perk">
+            <div class="perk-icon">03</div>
+            <div>
+              <strong>Quarterly off-the-record dinner</strong>
+              <span>Twelve people, one room, Chatham House rules. The conversations you can't have on a podcast.</span>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="btn btn-primary btn-arrow" id="apply-cta">Request an invitation</a>
+      </div>
+
+      <div class="circle-stats">
+        <div>
+          <div class="stat-num">12</div>
+          <div class="stat-label">Seats per cohort</div>
+        </div>
+        <div>
+          <div class="stat-num">4×</div>
+          <div class="stat-label">Cohorts a year</div>
+        </div>
+        <div>
+          <div class="stat-num">90<span style="font-size:24px">d</span></div>
+          <div class="stat-label">Engagement</div>
+        </div>
+        <div>
+          <div class="stat-num">~14%</div>
+          <div class="stat-label">Acceptance rate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── METHODOLOGY ─────────── -->
+<section class="method-wrap">
+  <div class="container-narrow">
+    <span class="eyebrow">Methodology</span>
+    <h2 class="h2" style="margin: 18px 0 28px;">How the Visibility Index is calculated.</h2>
+
+    <details class="method">
+      <summary>The five components</summary>
+      <div class="method-body">
+        Each profile is scored across five components weighted by their predictive power for executive visibility outcomes (board roles, speaking fees, inbound deal flow, candidate pull):
+        Reach (25%), Authority (30%), Cadence (15%), Engagement (15%) and Profile Strength (15%). The composite is normalised to a 0–100 score.
+      </div>
+    </details>
+
+    <details class="method">
+      <summary>Where the peer cohort comes from</summary>
+      <div class="method-body">
+        The cohort is built from publicly available LinkedIn profile data of executives at comparable levels, in your industry and region. Peer benchmarks are derived from published research on executive social presence — including the Edelman Trust Barometer, BrandZ Top 100 leadership data, and the Weber Shandwick "CEO Reputation Premium" study.
+        In v1 your ranking is calibrated against synthetic baselines from those sources. From v2 onward, it ranks against our own Visibility Index cohort (built from opted-in profiles).
+      </div>
+    </details>
+
+    <details class="method">
+      <summary>Privacy &amp; data use</summary>
+      <div class="method-body">
+        Your LinkedIn URL is used to compute your score and is stored against your email address only if you choose to unlock your full report.
+        We do not sell or share your data. You can request deletion at any time. Hosting and processing are GDPR-compliant.
+      </div>
+    </details>
+
+    <details class="method">
+      <summary>What we do not measure (and why)</summary>
+      <div class="method-body">
+        We deliberately exclude follower count alone, total impressions, and "viral" hit posts. These metrics reward gaming and are uncorrelated with the executive outcomes we care about.
+        We measure cadence over volume, signal over reach, and authority over noise.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ─────────── FOOTER ─────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-row">
+      <a href="#" class="logo" aria-label="Von Peach">
+        <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g fill="#FCFCFC" opacity="0.7">
+            <path d="M298.99,614.13h-34.36c10.38-48.96,20.56-96.75,30.86-145.34,15.56,0,30.7,0,46.73,0,9.35,31.71,18.27,63.38,28.42,97.8,6.95-34.2,13.42-65.83,19.92-97.8h34.07c-10.31,49.35-19.87,96.44-30.16,145.34h-45.66c-9.62-33.84-19.33-68.24-29.03-102.37h-.85c-3.06,17.24-5.83,34.54-9.19,51.73-3.26,16.7-7.07,33.53-10.74,50.64Z"/>
+            <path d="M90.32,614.13h-44.06c-3.56-48.22-7.07-97.71-10.58-145.34,11.38,0,24.03,0,39.87,0v97.99c1.13,0,1.7,0,2.63,0,14.45-33.08,28.15-64.75,42.67-97.99h41.16c-24.6,49.89-48,97.29-71.69,145.34Z"/>
+            <path d="M272.73,511.37c-2.84-18.45-14.31-38.48-35.74-44.45-30.13-8.4-58.47.72-78.18,27.92-14.35,19.82-20.07,42.4-19.73,66.78.34,24.58,13.12,50.12,45.91,53.81,29.86,3.36,53.07-6.25,71.17-30.46,13.2-17.67,18.1-39.13,17.99-55.16-.06-8.29-.8-14.43-1.42-18.45ZM233.87,550.91c-8.82,28.87-27.2,40.35-42.54,36.46-14.35-3.63-20.57-26.26-11.38-54.86,8.15-25.37,27.57-41.52,42.54-36.46,15.02,5.08,19.23,29.16,11.38,54.86Z"/>
+            <path d="M958.01,520.04h35.57q7.52-32.14,12.21-52.34h38.53c-10.38,48.89-20.54,97.12-30.92,146.03h-38.46c3.49-19.69,7.75-39.74,10.78-59.83h-33.84c-4.68,18.66-5.07,21.1-14.32,59.83-3.76,0-35.42-.05-38.28-.05,10.48-49.63,20.61-97.52,30.84-145.98h37.28q-5.32,29.26-9.39,52.34Z"/>
+            <path d="M893.67,576.81v30.06c-22.51,9.21-44.95,13-67.99,4.38-12.4-4.64-21.24-13.75-25.28-26.53-9.69-30.66-3.93-59.41,11.86-86.63,7.36-12.69,18.25-21.5,31.48-27.92,19.72-9.57,62.84-7.05,77.95,8.31-4.16,8.89-8.54,18.27-13.14,28.1-3.52-1.4-3.02-1.11-8.09-3.42q-6.22-2.83-8.76-3.76c-21.82-7.98-34.64-2.62-47.23,18.27-8.18,13.57-10.3,29.13-8.91,44.82,1.32,14.92,12.33,23.2,27.19,20.78,10.01-1.63,19.87-4.12,30.92-6.46Z"/>
+            <path d="M791.83,613.72c-4.54-48.48-8.4-97.67-13.62-146.03h-50.92c-19.28,38.03-38.59,75.9-58,114.19-5.24,0-35.78,0-50.98,0,2.38-10.65,4.21-19.15,6.15-27.81h45.64c3-13.57,5.26-22.62,7.75-32.8-15.6,0-31.9,0-46.33,0,1.99-8.94,3.66-16.22,5.53-24.6h46.9c4.42-17.25,6.69-26.87,7.19-28.98h-87.61c-10.27,48.57-20.21,97.26-30.52,146.03h119.76c3.48-7.54,5.15-10.86,10.87-23.46,0,0,3.56-7.71,3.56-7.56l34.89-.21c2.58,0,11.75.08,11.76.21.68,9.26,1.24,16.04,2.46,31.02M751.54,554.07c-1.55,0-22.71,0-30.93,0,5.09-11.31,17.27-37.71,26.01-55.99.73,2.82,1.55,12.76,2.83,29.41"/>
+            <path d="M548.99,467.69c-17.69-1.82-34.72-1.41-54.09,0-10.08,47.1-15.06,79.32-24.83,125.4-.39,1.83-3.96,18.1-4.39,20.63h37.19c5.71-26.46,5.71-31.43,9.75-51.17,14.96-.72,26.93.56,37.43-2.52,20.15-5.91,32.27-19.13,35.79-40.44,5.42-32.82-14.75-49.63-36.85-51.9ZM544.17,523.71c-4.4,4.91-10.53,9.36-23.76,8.29,2.07-10.46,4.17-20.13,6.03-29.52.19-.95.92-1.72,1.88-1.86,2.99-.45,13.37-1.18,17.44,3.58,6.07,7.07,2.27,15.21-1.59,19.52Z"/>
+          </g>
+        </svg>
+      </a>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Methodology</a>
+        <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
+      </div>
+    </div>
+    <div style="margin-top:32px; font-size:12px; color:rgba(252,252,252,0.4);">
+      © 2026 Von Peach GmbH · FutureMakers · The Visibility Index is a Von Peach lead-magnet prototype (v0).
+    </div>
+  </div>
+</footer>
+
+<!-- ─────────── JS ─────────── -->
+<script>
+  /* ──────────────────────────────────────────────────────────
+     SCORING RUBRIC — published in methodology section
+     Profile Strength: 15 pts (LinkedIn URL + role clarity)
+     Reach:            25 pts (follower band)
+     Cadence:          15 pts (posting frequency)
+     Authority:        30 pts (press + speaking)
+     External roles:   15 pts (boards / advisory) — proxy for engagement
+     Total:           100 pts → normalised to 0-100 score
+     ────────────────────────────────────────────────────────── */
+
+  const SCORING = {
+    profile: {
+      hasLinkedIn: 8,   // up to 8
+      hasRole:     7    // up to 7
+    },
+    reach: {
+      'reach-1': 6,   // <1k
+      'reach-2': 12,  // 1k-5k
+      'reach-3': 18,  // 5k-20k
+      'reach-4': 22,  // 20k-100k
+      'reach-5': 25   // 100k+
+    },
+    cadence: {
+      'cad-0': 0,
+      'cad-1': 3,
+      'cad-2': 7,
+      'cad-3': 11,
+      'cad-4': 14,
+      'cad-5': 15
+    },
+    authority: {
+      'auth-0': 0,
+      'auth-1': 12,
+      'auth-2': 22,
+      'auth-3': 30
+    },
+    boards: {
+      'board-0': 0,
+      'board-1': 6,
+      'board-2': 11,
+      'board-3': 15
+    }
+  };
+
+  const REGION_LABELS = {
+    'us':'United States','uk':'United Kingdom','dach':'DACH','weu':'Western Europe',
+    'nordics':'Nordics','me':'Middle East','apac':'Asia-Pacific','other-reg':'Global'
+  };
+  const INDUSTRY_LABELS = {
+    'tech':'Technology & SaaS','finance':'Financial Services','healthcare':'Healthcare & Life Sciences',
+    'consumer':'Consumer & Retail','industrial':'Industrial & Manufacturing',
+    'proserv':'Professional Services','energy':'Energy & Utilities','other-ind':'Cross-industry'
+  };
+  const ROLE_LABELS = {
+    'ceo':'CEO','founder':'Founder','cfo':'CFO','coo':'COO',
+    'cmo':'CMO / CRO','cto':'CTO / CPO','other-c':'C-suite','senior':'Senior leader'
+  };
+
+  /* ── State ── */
+  const state = {
+    step: 1,
+    totalSteps: 8,
+    linkedin: '',
+    role: null,
+    industry: null,
+    region: null,
+    reach: null,
+    cadence: null,
+    authority: null,
+    boards: null
+  };
+
+  /* ── DOM refs ── */
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => document.querySelectorAll(sel);
+
+  const stepCounter = $('#step-counter');
+  const progressFill = $('#progress-fill');
+
+  function showStep(n) {
+    $$('.calc-step').forEach(el => el.classList.remove('active'));
+    const target = document.querySelector(`.calc-step[data-step="${n}"]`);
+    if (!target) return;
+    target.classList.add('active');
+    state.step = n;
+    stepCounter.textContent = `Step ${n} of ${state.totalSteps}`;
+    progressFill.style.width = ((n - 1) / state.totalSteps * 100) + '%';
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  /* ── Bind option clicks (auto-advance) ── */
+  $$('.calc-options .opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const parent = btn.parentElement;
+      const field  = parent.dataset.field;
+      const value  = btn.dataset.value;
+      // mark selected
+      parent.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+      btn.classList.add('selected');
+      state[field] = value;
+      // auto-advance after 220ms
+      setTimeout(() => {
+        if (state.step < state.totalSteps) {
+          showStep(state.step + 1);
+        } else {
+          submitCalc();
+        }
+      }, 220);
+    });
+  });
+
+  /* ── Bind next/back ── */
+  $$('[data-action="next"]').forEach(b => {
+    b.addEventListener('click', () => {
+      // Step 1 needs LinkedIn URL
+      if (state.step === 1) {
+        const v = $('#input-linkedin').value.trim();
+        if (!v) { $('#input-linkedin').focus(); return; }
+        state.linkedin = v;
+      }
+      if (state.step < state.totalSteps) showStep(state.step + 1);
+      else submitCalc();
+    });
+  });
+  $$('[data-action="back"]').forEach(b => {
+    b.addEventListener('click', () => { if (state.step > 1) showStep(state.step - 1); });
+  });
+
+  /* ── Submit & compute ── */
+  function submitCalc() {
+    const score = computeScore();
+    showResults(score);
+  }
+
+  function computeScore() {
+    let pts = 0;
+    pts += state.linkedin ? SCORING.profile.hasLinkedIn : 0;
+    pts += state.role     ? SCORING.profile.hasRole     : 0;
+    pts += SCORING.reach[state.reach]         || 0;
+    pts += SCORING.cadence[state.cadence]     || 0;
+    pts += SCORING.authority[state.authority] || 0;
+    pts += SCORING.boards[state.boards]       || 0;
+    const score = Math.max(0, Math.min(100, Math.round(pts)));
+    // Sub-scores normalised to 0-100 for display
+    const subs = {
+      profile:   Math.round(((state.linkedin ? 8:0) + (state.role ? 7:0)) / 15 * 100),
+      reach:     Math.round((SCORING.reach[state.reach]         || 0) / 25 * 100),
+      cadence:   Math.round((SCORING.cadence[state.cadence]     || 0) / 15 * 100),
+      authority: Math.round((SCORING.authority[state.authority] || 0) / 30 * 100),
+      engagement:Math.round((SCORING.boards[state.boards]       || 0) / 15 * 100)
+    };
+    return { total: score, subs };
+  }
+
+  function showResults({ total, subs }) {
+    // Reveal results section
+    const results = $('#results');
+    results.classList.remove('hidden');
+
+    // Animate ring (circumference = 2πr = 2π·140 ≈ 879.6)
+    const circumference = 879.6;
+    const ringDash = (total / 100) * circumference;
+    setTimeout(() => {
+      $('#ring-fg').setAttribute('stroke-dasharray', `${ringDash} ${circumference}`);
+    }, 60);
+
+    // Animate number count-up
+    animateNumber('#score-num', 0, total, 1400);
+
+    // Cohort framing
+    const industry = INDUSTRY_LABELS[state.industry] || 'Cross-industry';
+    const region   = REGION_LABELS[state.region]     || 'Global';
+    const role     = ROLE_LABELS[state.role]         || 'C-suite';
+
+    // Synthetic cohort size based on industry+region (defensible-feeling number)
+    const cohortSize = synthCohortSize(state.industry, state.region);
+    const rank       = synthRank(total, cohortSize);
+
+    $('#rank-line').textContent = `#${rank} of ${cohortSize}`;
+    $('#rank-context').textContent =
+      `Among ${role}s in ${industry} headquartered in ${region}. Your composite score puts you in the ${tierLabel(total)} tier.`;
+    $('#rank-tier').textContent   = `${tierLabel(total)} tier`;
+
+    // Sub-scores
+    renderSubscores(subs);
+    // Leaderboard (locked)
+    renderLeaderboard(rank, cohortSize, total, role, industry);
+
+    // Scroll
+    setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+  }
+
+  function tierLabel(score) {
+    if (score >= 80) return 'Top decile';
+    if (score >= 65) return 'Top quartile';
+    if (score >= 45) return 'Mid-cohort';
+    if (score >= 25) return 'Bottom half';
+    return 'Bottom decile';
+  }
+
+  function synthCohortSize(industry, region) {
+    // Synthetic but stable: deterministic from inputs, in a believable band
+    const seed = (industry || 'x').length * 13 + (region || 'x').length * 7;
+    return 240 + (seed % 180);
+  }
+  function synthRank(score, cohort) {
+    // Higher score → lower rank number (better)
+    const pct = 1 - (score / 100);
+    // Add a little variance so the rank doesn't feel mechanical
+    const jitter = ((score * 7) % 11) - 5;
+    return Math.max(1, Math.min(cohort, Math.round(pct * cohort) + jitter));
+  }
+
+  function animateNumber(sel, from, to, ms) {
+    const el = $(sel);
+    const start = performance.now();
+    function step(t) {
+      const p = Math.min(1, (t - start) / ms);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + (to - from) * eased);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function renderSubscores(subs) {
+    const items = [
+      { key:'reach',      label:'Reach',           ctx: contextFor('reach', subs.reach) },
+      { key:'cadence',    label:'Cadence',         ctx: contextFor('cadence', subs.cadence) },
+      { key:'authority',  label:'Authority',       ctx: contextFor('authority', subs.authority) },
+      { key:'engagement', label:'External roles',  ctx: contextFor('engagement', subs.engagement) },
+      { key:'profile',    label:'Profile strength',ctx: contextFor('profile', subs.profile) }
+    ];
+    const container = $('#subscores');
+    container.innerHTML = items.map(it => `
+      <div class="subscore">
+        <div class="subscore-label">${it.label}</div>
+        <div class="subscore-value">${subs[it.key]}<span style="font-size:18px;color:rgba(252,252,252,0.45)"> / 100</span></div>
+        <div class="subscore-bar"><div class="subscore-bar-fill" data-target="${subs[it.key]}"></div></div>
+        <div class="subscore-context">${it.ctx}</div>
+      </div>
+    `).join('');
+    // Animate bars
+    setTimeout(() => {
+      $$('.subscore-bar-fill').forEach(b => {
+        b.style.width = b.dataset.target + '%';
+      });
+    }, 80);
+  }
+
+  function contextFor(key, val) {
+    if (val >= 75) return 'Top of cohort.';
+    if (val >= 50) return 'Above peer median.';
+    if (val >= 30) return 'Below peer median.';
+    return 'Significant gap to close.';
+  }
+
+  function renderLeaderboard(userRank, cohort, userScore, role, industry) {
+    // Mock the top 10 with anonymised peers + insert the user's row
+    const top = [
+      { rank:1, label:`${role} · ${industry} · Series C+`,    score: 94 },
+      { rank:2, label:`${role} · ${industry} · Public`,        score: 91 },
+      { rank:3, label:`${role} · ${industry} · Established`,   score: 89 },
+      { rank:4, label:`${role} · ${industry} · Series B`,      score: 87 },
+      { rank:5, label:`${role} · ${industry} · Series C+`,     score: 85 },
+      { rank:6, label:`${role} · ${industry} · Public`,        score: 83 },
+      { rank:7, label:`${role} · ${industry} · Established`,   score: 81 },
+      { rank:8, label:`${role} · ${industry} · Growth-stage`,  score: 79 },
+      { rank:9, label:`${role} · ${industry} · Series B`,      score: 77 },
+      { rank:10,label:`${role} · ${industry} · Series A`,      score: 75 }
+    ];
+    let rows = top.map(p => `
+      <li class="leaderboard-row">
+        <span class="leaderboard-rank">#${p.rank}</span>
+        <span class="leaderboard-meta">${p.label}</span>
+        <span class="leaderboard-score">${p.score}</span>
+      </li>
+    `).join('');
+
+    // If user is not already in top 10, append a separator + their row
+    if (userRank > 10) {
+      rows += `
+        <li class="leaderboard-row" style="opacity:0.4">
+          <span class="leaderboard-rank">···</span>
+          <span class="leaderboard-meta">${userRank - 11} others between</span>
+          <span class="leaderboard-score">···</span>
+        </li>
+        <li class="leaderboard-row you">
+          <span class="leaderboard-rank">#${userRank}</span>
+          <span class="leaderboard-meta">You · ${role} · ${industry}</span>
+          <span class="leaderboard-score">${userScore}</span>
+        </li>`;
+    }
+    $('#leaderboard').innerHTML = rows;
+  }
+
+  /* ── Email gate (mocked submit for v0) ── */
+  $('#gate-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = $('#gate-email').value.trim();
+    if (!email || !email.includes('@')) { $('#gate-email').focus(); return; }
+    // v1: POST to Mailchimp via Netlify Function. v0: just unlock.
+    $('#leaderboard-wrap').classList.remove('locked');
+    $('#gate').remove();
+    // Smooth scroll to the Circle CTA after a beat
+    setTimeout(() => {
+      $('#circle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 800);
+  });
+
+  // Init progress
+  progressFill.style.width = '0%';
+</script>
+</body>
+</html>
