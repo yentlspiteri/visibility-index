@@ -71,8 +71,13 @@ export default async function handler(req, res) {
     ]);
 
     if (profileRes.status === 'rejected' || !profileRes.value) {
-      console.error('Apify failed:', profileRes.reason || 'no value');
-      return res.status(502).json({ error: 'We couldn’t fetch that LinkedIn profile. The URL may be wrong or the profile is private.' });
+      const errMsg = profileRes.reason?.message || String(profileRes.reason) || 'no value';
+      console.error('Apify failed:', errMsg);
+      return res.status(502).json({
+        error: 'We couldn’t fetch that LinkedIn profile. The URL may be wrong or the profile is private.',
+        _debug: errMsg.slice(0, 400),
+        _actor: APIFY_ACTOR
+      });
     }
     const profile = profileRes.value;
     const serp    = serpRes.status === 'fulfilled' ? serpRes.value : null;
