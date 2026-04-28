@@ -78,12 +78,26 @@ export default async function handler(req, res) {
   }
 
   // ── 2) Email via Resend (with PDF attached if we have it) ──
+  // Diagnostic object surfaced in the JSON response so we can debug from the browser
+  // without log-diving. Each step writes its outcome here.
+  const emailDebug = {
+    pdfBuilt:        !!pdfBase64,
+    apiKeyPresent:   !!process.env.RESEND_API_KEY,
+    fromUsed:        process.env.RESEND_FROM || 'Visibility Index <hello@vonpeach.com>',
+    fromEnvSet:      !!process.env.RESEND_FROM,
+    resendStatus:    null,
+    resendBody:      null,
+    resendError:     null,
+    skipReason:      null
+  };
   let emailDelivered = false;
-  if (pdfBase64 && process.env.RESEND_API_KEY) {
+  if (!pdfBase64) {
+    emailDebug.skipReason = 'pdf-build-failed';
+  } else if (!process.env.RESEND_API_KEY) {
+    emailDebug.skipReason = 'resend-api-key-missing';
+  } else {
     try {
-      // Defaults to a vonpeach.com sender now that the domain is verified on Resend.
-      // Override via RESEND_FROM env var on Vercel if you want a different name/address.
-      const fromAddress = process.env.RESEND_FROM || 'Visibility Index <hello@vonpeach.com>';
+      const fromAddress = emailDebug.fromUsed;
       const firstName   = profile?.firstName || '';
       const tierName    = tier?.name || 'your tier';
       const subject     = `${firstName ? firstName + ', y' : 'Y'}our Visibility Index report`;
@@ -105,19 +119,27 @@ export default async function handler(req, res) {
           }]
         })
       });
+      emailDebug.resendStatus = resendRes.status;
       emailDelivered = resendRes.ok;
       if (!resendRes.ok) {
         const errText = await resendRes.text().catch(() => '');
+        emailDebug.resendBody = errText.slice(0, 400);
         console.error('Resend failed:', resendRes.status, errText);
-        // Page Yentl — most common cause is unverified domain on Resend free tier
         notifyOps({
           category: 'resend-failed',
           subject:  '🚨 Visibility Index: report email NOT delivered',
-          body:     `Resend rejected the send. Lead won't receive the PDF in their inbox (page download still worked if they clicked allow).\n\nResend status: ${resendRes.status}\nResend body: ${errText.slice(0, 400)}\n\nMost likely cause: vonpeach.com isn't verified in Resend → Domains, so onboarding@resend.dev only delivers to your registered Resend email.`,
+          body:     `Resend rejected the send. Lead won't receive the PDF.\n\nStatus: ${resendRes.status}\nBody: ${errText.slice(0, 400)}\nFrom: ${fromAddress}\n\nCommon causes:\n • Domain not verified on Resend\n • RESEND_FROM uses an address not on the verified domain\n • Free tier 100/day limit hit\n • API key revoked/rotated`,
           context:  { lead: email, from: fromAddress, status: resendRes.status }
         }).catch(() => {});
+      } else {
+        // Capture the message id so we can look it up in Resend → Logs if delivery fails downstream
+        try {
+          const okBody = await resendRes.json().catch(() => ({}));
+          emailDebug.resendBody = okBody.id ? `id=${okBody.id}` : null;
+        } catch {}
       }
     } catch (err) {
+      emailDebug.resendError = err?.message || String(err);
       console.error('Resend error:', err);
       notifyOps({
         category: 'resend-crash',
@@ -126,15 +148,6 @@ export default async function handler(req, res) {
         context:  { lead: email }
       }).catch(() => {});
     }
-  }
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('[lead] RESEND_API_KEY missing — emails are silently disabled.');
-    notifyOps({
-      category: 'resend-missing-key',
-      subject:  '🚨 Visibility Index: RESEND_API_KEY missing on Vercel',
-      body:     `A lead just submitted but no email could be sent because RESEND_API_KEY is not configured. Set it in Vercel → Project → Settings → Environment Variables.`,
-      context:  { lead: email }
-    }).catch(() => {});
   }
 
   // ── 3) Mailchimp upsert (lead store + segmentation, independent of email delivery) ──

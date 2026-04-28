@@ -4209,22 +4209,29 @@
       $('#gate-standalone').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    // Scroll to the score reveal — three-step robustness:
-    //   1. Wait two animation frames for layout to settle after `results.classList.remove('hidden')`
-    //   2. Measure with getBoundingClientRect (scrollIntoView is unreliable across browsers)
-    //   3. Use window.scrollTo with a small top offset so the section breathes
-    function scrollToScore() {
+    // Scroll to the score reveal — brute-force approach.
+    // Layout was racing against the smooth scroll: by the time `getBoundingClientRect` measures,
+    // some images / SVGs are still calculating final heights and the scroll target moves under us.
+    // Solution: fire the scroll at multiple intervals. The first jump uses 'instant' to GUARANTEE
+    // we land at the score reveal even if smooth scrolling is interrupted; later passes smooth-scroll
+    // to compensate for any layout shift that happened in between.
+    function scrollToScore(behavior) {
       const target = document.getElementById('score-reveal') || results;
       if (!target) return;
       const rect = target.getBoundingClientRect();
-      const y = rect.top + window.scrollY - 24;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      const y = Math.max(0, rect.top + window.scrollY - 24);
+      try {
+        window.scrollTo({ top: y, behavior: behavior || 'smooth' });
+      } catch {
+        window.scrollTo(0, y); // older browsers
+      }
     }
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      scrollToScore();
-      // Belt-and-braces — fire again after a beat in case the first scroll was interrupted
-      setTimeout(scrollToScore, 250);
-    }));
+    // Fire immediately (instant — ignore smooth-scroll preferences) so the user is moved off the hero NOW
+    scrollToScore('instant');
+    // Then re-fire smoothly after layout settles (at 80ms, 250ms, 600ms) to absorb any reflow
+    setTimeout(() => scrollToScore('smooth'),  80);
+    setTimeout(() => scrollToScore('smooth'), 250);
+    setTimeout(() => scrollToScore('smooth'), 600);
   }
 
   function animateNumber(sel, from, to, ms) {
