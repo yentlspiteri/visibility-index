@@ -127,7 +127,7 @@
  -webkit-font-smoothing: antialiased;
  -moz-osx-font-smoothing: grayscale;
   }
-  body { overflow-x: hidden; }
+  /* superseded - see overflow-x: clip rule later in the file */
 
   /* ── Layout ── */
   .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
@@ -231,7 +231,12 @@
   .hero::before {
     content: ""; position: absolute; top: -10%; left: 50%;
     transform: translateX(-50%);
-    width: 1400px; height: 1400px;
+    /* Size adaptive: was a fixed 1400px blob that caused mobile overflow + perf hit.
+       Now caps to ~140vw on mobile, scales up to 1400px on desktop. */
+    width:  min(1400px, 140vw);
+    height: min(1400px, 140vw);
+    max-width: 100vw;
+    max-height: 120vh;
     background:
       radial-gradient(closest-side, rgba(63,54,178,0.55), rgba(11,3,89,0) 65%),
       radial-gradient(closest-side at 30% 80%, rgba(134,131,229,0.18), transparent 50%);
