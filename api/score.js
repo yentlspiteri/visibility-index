@@ -4,14 +4,18 @@
  * Pipeline:
  *   1. Validate + normalise the LinkedIn URL
  *   2. Rate-limit by IP (in-memory; resets on cold start)
- *   3. Fan out to ProxyCurl + SerpAPI in parallel
+ *   3. Fan out to Apify (LinkedIn profile) + SerpAPI (Google footprint) in parallel
  *   4. Score brand clarity with Claude Haiku (depends on profile)
  *   5. Compute six dimensions (0-3 each), sum to 0-18, map to tier
+ *
+ * NOTE: Migrated from ProxyCurl → Apify on 2026-04-27 because Proxycurl's API
+ * was decommissioned after LinkedIn's January 2025 lawsuit (every call returns 410).
  */
 
-const PROXYCURL_API   = 'https://nubela.co/proxycurl/api/v2/linkedin';
-const SERPAPI_API     = 'https://serpapi.com/search.json';
-const ANTHROPIC_API   = 'https://api.anthropic.com/v1/messages';
+const APIFY_API     = 'https://api.apify.com/v2/acts';
+const APIFY_ACTOR   = process.env.APIFY_LINKEDIN_ACTOR || 'dev_fusion~Linkedin-Profile-Scraper';
+const SERPAPI_API   = 'https://serpapi.com/search.json';
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
 
 const RATE_LIMIT = new Map();
@@ -38,7 +42,6 @@ const TIERS = [
 ];
 
 export default async function handler(req, res) {
-  // Same-origin in production; permissive for safety.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -59,23 +62,23 @@ export default async function handler(req, res) {
   trackRequest(ip);
 
   try {
-    const fullUrl = 'https://' + normalised;
+    const fullUrl = 'https://www.' + normalised.replace(/^linkedin\.com\//, 'linkedin.com/');
 
     // 1) Fan out — profile + serp in parallel
     const [profileRes, serpRes] = await Promise.allSettled([
-      fetchProxyCurl(fullUrl),
+      fetchApify(fullUrl),
       fetchSerpFootprint(normalised)
     ]);
 
     if (profileRes.status === 'rejected' || !profileRes.value) {
-      console.error('ProxyCurl failed:', profileRes.reason || 'no value');
+      console.error('Apify failed:', profileRes.reason || 'no value');
       return res.status(502).json({ error: 'We couldn’t fetch that LinkedIn profile. The URL may be wrong or the profile is private.' });
     }
     const profile = profileRes.value;
     const serp    = serpRes.status === 'fulfilled' ? serpRes.value : null;
 
     // 2) Score brand clarity (LLM) — non-blocking-failure
-    let clarity = await scoreBrandClarity(profile).catch(err => {
+    const clarity = await scoreBrandClarity(profile).catch(err => {
       console.error('Claude clarity scoring failed:', err);
       return { score: 1, rationale: 'Fallback heuristic — LLM unavailable.' };
     });
@@ -106,28 +109,33 @@ export default async function handler(req, res) {
 
 /* ═══════════════════════════ EXTERNAL CALLS ═══════════════════════════ */
 
-async function fetchProxyCurl(linkedinUrl) {
-  const params = new URLSearchParams({
-    url: linkedinUrl,
-    use_cache: 'if-recent',
-    skills: 'include',
-    inferred_salary: 'exclude',
-    personal_email: 'exclude',
-    personal_contact_number: 'exclude',
-    twitter_profile_id: 'exclude',
-    facebook_profile_id: 'exclude',
-    github_profile_id: 'exclude',
-    extra: 'include'
+async function fetchApify(linkedinUrl) {
+  // Apify "run-sync-get-dataset-items" runs the actor and returns the dataset rows directly.
+  // For dev_fusion/Linkedin-Profile-Scraper, input shape is { profileUrls: [...] }.
+  const url = `${APIFY_API}/${APIFY_ACTOR}/run-sync-get-dataset-items`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.APIFY_API_TOKEN}`
+    },
+    body: JSON.stringify({
+      profileUrls: [linkedinUrl]
+    })
   });
-  const r = await fetch(`${PROXYCURL_API}?${params}`, {
-    headers: { 'Authorization': `Bearer ${process.env.PROXYCURL_API_KEY}` }
-  });
-  if (!r.ok) throw new Error(`ProxyCurl ${r.status}`);
-  return r.json();
+  if (!r.ok) {
+    const text = await r.text().catch(() => '');
+    throw new Error(`Apify ${r.status}: ${text.slice(0, 200)}`);
+  }
+  const items = await r.json();
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('Apify returned no items');
+  }
+  // Some actors wrap their output. Unwrap defensively.
+  return items[0].data || items[0];
 }
 
 async function fetchSerpFootprint(normalisedUrl) {
-  // Extract handle from linkedin.com/in/<handle>
   const handle = normalisedUrl.split('/in/')[1]?.split('/')[0] || '';
   const q = handle.replace(/-/g, ' ');
   const params = new URLSearchParams({
@@ -142,8 +150,8 @@ async function fetchSerpFootprint(normalisedUrl) {
 }
 
 async function scoreBrandClarity(profile) {
-  const headline = (profile.headline || '').slice(0, 400);
-  const summary  = (profile.summary  || '').slice(0, 2000);
+  const headline = (getHeadline(profile) || '').slice(0, 400);
+  const summary  = (getAbout(profile)    || '').slice(0, 2000);
 
   const prompt = `You are a brand strategist scoring an executive's personal brand clarity from their LinkedIn.
 
@@ -189,16 +197,55 @@ Respond with JSON only, no prose:
   }
 }
 
+/* ═══════════════════════════ FIELD MAPPERS (defensive across actor shapes) ═══════════════════════════ */
+// Apify actors don't all use identical field names. These helpers cover the common ones
+// so the same scoring code works whether the actor returns `headline` or `headlineText`,
+// `followers` or `followersCount`, etc. If the chosen actor uses something else,
+// add aliases here — no need to touch the scoring functions.
+
+function getHeadline(p)    { return p.headline || p.headlineText || p.title || ''; }
+function getAbout(p)       { return p.about || p.summary || p.description || ''; }
+function getPhotoUrl(p)    { return p.profilePic || p.profilePicture || p.profilePicUrl ||
+                                    p.profilePicHighQuality || p.profile_pic_url || null; }
+function getBannerUrl(p)   { return p.coverPic || p.coverPicture || p.bannerImage ||
+                                    p.backgroundCoverImage || p.background_cover_image_url || null; }
+function getFollowers(p)   {
+  const v = p.followers ?? p.followersCount ?? p.follower_count ?? 0;
+  return Number(v) || 0;
+}
+function getConnections(p) {
+  const c = p.connections ?? p.connectionsCount ?? p.connection_count ?? 0;
+  if (typeof c === 'string') {
+    const m = c.match(/\d+/);
+    return m ? parseInt(m[0], 10) : 0;
+  }
+  return Number(c) || 0;
+}
+function getRecommendations(p) {
+  return p.recommendations || p.recommendationsList || p.received_recommendations || [];
+}
+function getActivities(p) {
+  return p.activities || p.posts || p.recentActivities || p.recent_posts || [];
+}
+function getArticles(p) {
+  return p.articles || p.publications || [];
+}
+function getHonors(p) {
+  return p.honorsAndAwards || p.honors || p.awards ||
+         p.accomplishment_honors_awards || [];
+}
+
 /* ═══════════════════════════ SCORING ═══════════════════════════ */
 
 function scoreFootprint(profile, serp) {
   let pts = 0;
-  if (profile.profile_pic_url) pts += 0.5;
-  if (profile.background_cover_image_url) pts += 0.5;
-  if (profile.summary && profile.summary.length > 200) pts += 0.5;
+  if (getPhotoUrl(profile))        pts += 0.5;
+  if (getBannerUrl(profile))       pts += 0.5;
+  const about = getAbout(profile);
+  if (about && about.length > 200) pts += 0.5;
 
   const results = serp?.organic_results || [];
-  if (results.length >= 8) pts += 1.5;
+  if (results.length >= 8)      pts += 1.5;
   else if (results.length >= 4) pts += 1;
   else if (results.length >= 1) pts += 0.5;
 
@@ -210,10 +257,9 @@ function scoreFootprint(profile, serp) {
 
 function scoreAuthority(profile) {
   let pts = 0;
-  const recsCount    = (profile.recommendations || []).length;
-  const honorsCount  = (profile.accomplishment_honors_awards || profile.honors_and_awards || []).length;
-  const orgsCount    = (profile.accomplishment_organisations || []).length;
-  const articlesCount = (profile.articles || []).length;
+  const recsCount     = getRecommendations(profile).length;
+  const honorsCount   = getHonors(profile).length;
+  const articlesCount = getArticles(profile).length;
 
   if (recsCount >= 5)      pts += 1;
   else if (recsCount >= 2) pts += 0.5;
@@ -222,9 +268,8 @@ function scoreAuthority(profile) {
   else if (articlesCount >= 1) pts += 0.5;
 
   if (honorsCount >= 1) pts += 0.5;
-  if (orgsCount >= 1)   pts += 0.25;
 
-  const text = ((profile.headline || '') + ' ' + (profile.summary || '')).toLowerCase();
+  const text = (getHeadline(profile) + ' ' + getAbout(profile)).toLowerCase();
   if (/featured|forbes|bloomberg|wsj|techcrunch|tedx|keynote|speaker|awarded|recognised|recognized/i.test(text)) {
     pts += 0.75;
   }
@@ -232,7 +277,7 @@ function scoreAuthority(profile) {
 }
 
 function scoreCadence(profile) {
-  const activities = profile.activities || [];
+  const activities = getActivities(profile);
   if (activities.length >= 11) return 3;
   if (activities.length >= 4)  return 2;
   if (activities.length >= 1)  return 1;
@@ -241,17 +286,18 @@ function scoreCadence(profile) {
 
 function scoreVisual(profile, clarity) {
   let pts = 0;
-  if (profile.profile_pic_url) pts += 1;
-  if (profile.background_cover_image_url) pts += 1;
-  if (profile.summary && profile.summary.length > 300) pts += 0.75;
+  if (getPhotoUrl(profile))  pts += 1;
+  if (getBannerUrl(profile)) pts += 1;
+  const about = getAbout(profile);
+  if (about && about.length > 300) pts += 0.75;
   if (clarity?.score >= 2) pts += 0.25;
   return clamp03(Math.round(pts));
 }
 
 function scoreNetwork(profile) {
-  const followers   = profile.follower_count || 0;
-  const connections = profile.connections    || 0;
-  const recsCount   = (profile.recommendations || []).length;
+  const followers   = getFollowers(profile);
+  const connections = getConnections(profile);
+  const recsCount   = getRecommendations(profile).length;
 
   let pts = 0;
   if (followers >= 50_000)      pts += 2;
