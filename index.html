@@ -3236,6 +3236,97 @@
     touch-action: none;
   }
 
+  /* ── "Here's what we found" findings strip ──
+     Sits between the score reveal and the hexagon. Pulls real scraped data into
+     concrete cards so the user feels SEEN. Each card surfaces one specific finding
+     with the actual data quoted back at them. */
+  .findings {
+    max-width: 1080px;
+    margin: 8px auto 56px;
+    padding: 0 24px;
+    animation: findings-in 0.6s cubic-bezier(.34,1.56,.64,1) 0.6s both;
+  }
+  @keyframes findings-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .findings-eyebrow {
+    display: block;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+    margin-bottom: 22px;
+  }
+  .findings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 720px) {
+    .findings-grid { grid-template-columns: 1fr; }
+  }
+  .finding-card {
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(134,131,229,0.20);
+    border-radius: 16px;
+    padding: 18px 20px;
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1), border-color .22s ease, background .22s ease;
+  }
+  .finding-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(134,131,229,0.40);
+    background: rgba(252,252,252,0.06);
+  }
+  .finding-card.is-wide { grid-column: 1 / -1; }
+  .finding-icon {
+    display: inline-block;
+    font-size: 18px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .finding-label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+    opacity: 0.85;
+    margin-bottom: 6px;
+  }
+  .finding-value {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--vp-cream, #fafafa);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+  .finding-value em {
+    font-style: italic;
+    color: rgba(252,252,252,0.78);
+    font-weight: 400;
+  }
+  .finding-sub {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: rgba(252,252,252,0.55);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  /* "Gap" framing for missing things — softer visual treatment */
+  .finding-card.is-gap {
+    border-color: rgba(252,252,252,0.10);
+  }
+  .finding-card.is-gap .finding-label { color: rgba(252,252,252,0.45); }
+  .finding-card.is-gap .finding-value { color: rgba(252,252,252,0.7); }
+
   /* ── Start-over link, top-left, only on the results page ──
      Replaces the missing nav with a single "go back to the start" affordance.
      Reloads to a clean URL (strips utm + cache state) so the audit re-runs from scratch. */
@@ -4413,6 +4504,13 @@
       <div class="score-reveal-tier-name" id="tier-name">-</div>
       <div class="score-reveal-tier-tagline" id="tier-tagline">-</div>
       <span class="hidden" id="tier-cta"></span>
+    </div>
+
+    <!-- "Here's what we found" - real scraped data surfaced as concrete cards.
+         Hidden until the audit completes; populated by JS from the API payload. -->
+    <div class="findings hidden" id="findings">
+      <span class="findings-eyebrow">Here's what we found about you</span>
+      <div class="findings-grid" id="findings-grid"><!-- populated by JS --></div>
     </div>
 
     <!-- Personalized analysis (Claude-generated from real LinkedIn profile data) -->
@@ -5604,6 +5702,9 @@
       personalCard.classList.remove('hidden');
     }
 
+    // Render the "Here's what we found" findings strip - real scraped data as concrete cards
+    renderFindings(payload, total, subs);
+
     // Defensive: any of these could be missing in the DOM after a markup tweak.
     // Don't let a single missing element block the rest of the reveal flow.
     const setText = (sel, text) => { const el = document.querySelector(sel); if (el) el.textContent = text; };
@@ -5717,6 +5818,112 @@
   /* Personal-shape hexagon - mirror of the methodology hexagon, filled with the user's actual scores.
      Hover/tap any vertex → right-side summary updates with that dimension's commentary.
      Auto-cycles through all six on first reveal so the user sees every gap, then stops once they engage. */
+  /* "Here's what we found" findings strip — surfaces real scraped data as concrete cards.
+     The cards are conditional: each one only renders if the underlying data exists.
+     Empty fields are framed as "gaps" with softer styling so the user sees opportunity, not absence. */
+  function renderFindings(payload, total, subs) {
+    const wrap = document.getElementById('findings');
+    const grid = document.getElementById('findings-grid');
+    if (!wrap || !grid) return;
+    grid.innerHTML = '';
+
+    const profile = (payload && payload.profile) || {};
+    const press   = (payload && payload.press)   || { count: 0, outlets: [], hits: [] };
+    const cards = [];
+
+    // ── Headline (their actual words quoted back at them) ──
+    if (profile.headline) {
+      const truncated = profile.headline.length > 120 ? profile.headline.slice(0, 117) + '…' : profile.headline;
+      cards.push({
+        icon: '📍', label: 'Your headline',
+        valueHTML: `<em>"${escapeHtmlPage(truncated)}"</em>`
+      });
+    }
+
+    // ── Network ──
+    const followers = profile.followerCount || 0;
+    const connections = profile.connectionsCount || 0;
+    if (followers > 0 || connections > 0) {
+      const fmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n);
+      const sub = (followers > connections * 5) ? 'Reach without depth - room to convert.'
+                : (connections > followers * 1.2) ? 'Strong personal network. Now amplify.'
+                : 'Balanced reach + depth.';
+      cards.push({
+        icon: '👥', label: 'Network',
+        valueHTML: `<strong>${fmt(followers)}</strong> followers <span style="opacity:0.5">·</span> <strong>${fmt(connections)}</strong> connections`,
+        sub: sub
+      });
+    }
+
+    // ── Status badges (verified + creator) ──
+    const badges = [];
+    if (profile.isVerified) badges.push('Verified');
+    if (profile.isCreator)  badges.push('Creator profile');
+    if (badges.length) {
+      cards.push({
+        icon: '✨', label: 'Status on LinkedIn',
+        valueHTML: badges.join(' · ')
+      });
+    }
+
+    // ── Press hits (real Tier-1 mentions found via SerpAPI) ──
+    if (press.hits && press.hits.length > 0) {
+      const outletList = press.hits.slice(0, 4).map(h => h.outlet).filter(Boolean).join(' · ');
+      const topHit = press.hits[0];
+      cards.push({
+        wide: true,
+        icon: '📰', label: `Found in ${press.count} tier-1 outlet${press.count > 1 ? 's' : ''}`,
+        valueHTML: outletList,
+        sub: topHit && topHit.title ? `"${escapeHtmlPage(topHit.title.slice(0, 140))}"` : ''
+      });
+    } else {
+      // Empty press state - framed as opportunity, softer style
+      cards.push({
+        wide: false,
+        gap: true,
+        icon: '📰', label: 'In the press',
+        valueHTML: 'Not found yet',
+        sub: 'Tier-1 mentions are the biggest gap in your tier.'
+      });
+    }
+
+    // ── Score-derived flag if cadence is 0 ──
+    if (subs && subs.cadence === 0) {
+      cards.push({
+        gap: true,
+        icon: '📅', label: 'Recent posts',
+        valueHTML: 'No posts in 90 days',
+        sub: 'Your platform is quiet. The easiest fix on this list.'
+      });
+    } else if (subs && subs.cadence >= 2) {
+      cards.push({
+        icon: '📅', label: 'Posting rhythm',
+        valueHTML: 'You\'re on a cadence',
+        sub: 'Keep it up - rhythm beats volume.'
+      });
+    }
+
+    // ── Render ──
+    cards.forEach(c => {
+      const el = document.createElement('div');
+      el.className = 'finding-card' + (c.wide ? ' is-wide' : '') + (c.gap ? ' is-gap' : '');
+      el.innerHTML = `
+        <span class="finding-icon" aria-hidden="true">${c.icon || '·'}</span>
+        <span class="finding-label">${escapeHtmlPage(c.label || '')}</span>
+        <div class="finding-value">${c.valueHTML || ''}</div>
+        ${c.sub ? `<span class="finding-sub">${escapeHtmlPage(c.sub)}</span>` : ''}
+      `;
+      grid.appendChild(el);
+    });
+    wrap.classList.remove('hidden');
+  }
+
+  function escapeHtmlPage(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
   function renderSubscores(subs, commentary) {
     const container = $('#subscores');
     container.innerHTML = '';
