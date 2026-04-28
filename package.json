@@ -10,5 +10,8 @@
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
   }
 }

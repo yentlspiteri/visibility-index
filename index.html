@@ -2565,6 +2565,8 @@
   let lastScore = 0, lastSubs = {}, lastTier = null, lastUrl = '';
   let lastRole = '', lastGoal = '';
   let lastMoves = [], lastTierRoadmap = [], lastNextTier = null;
+  // Full payload kept for /api/lead → builds the PDF + emails it via Resend
+  let lastProfile = null, lastExecutiveSummary = '', lastDimensionCommentary = {};
 
   // Maps Claude's service token → human label shown on the move-card service tag
   const SERVICE_LABELS = {
@@ -2671,6 +2673,9 @@
     lastMoves        = (payload && payload.moves)        || [];
     lastTierRoadmap  = (payload && payload.tierRoadmap)  || [];
     lastNextTier     = (payload && payload.nextTier)     || TIERS.find(t => t.min > tier.max) || tier;
+    lastProfile             = (payload && payload.profile)             || null;
+    lastExecutiveSummary    = (payload && payload.executiveSummary)    || '';
+    lastDimensionCommentary = (payload && payload.dimensionCommentary) || {};
 
     // Personalize the result with profile data + Claude analysis from /api/score response
     if (payload && payload.profile) {
@@ -2908,6 +2913,26 @@
     setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
   }
 
+  // Decode base64 → Blob → trigger browser download of the PDF report
+  function downloadPDF(base64, filename) {
+    try {
+      const bin = atob(base64);
+      const len = bin.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'visibility-index-report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    } catch (e) {
+      console.error('PDF download failed:', e);
+    }
+  }
+
   // Fallbacks for the sample-pill demo path (no API call → no live moves/roadmap)
   function fallbackMoves() {
     return [
@@ -2943,17 +2968,27 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          goal: lastGoal,
-          role: lastRole,
-          score: lastScore,
-          subs:  lastSubs,
-          tier:  lastTier,
-          normalisedUrl: lastUrl,
-          attribution: ATTRIBUTION
+          goal:                lastGoal,
+          role:                lastRole,
+          score:               lastScore,
+          subs:                lastSubs,
+          tier:                lastTier,
+          nextTier:            lastNextTier,
+          normalisedUrl:       lastUrl,
+          attribution:         ATTRIBUTION,
+          // Full payload that the backend uses to build the PDF
+          profile:             lastProfile,
+          executiveSummary:    lastExecutiveSummary,
+          dimensionCommentary: lastDimensionCommentary,
+          moves:               lastMoves,
+          tierRoadmap:         lastTierRoadmap
         })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed.');
+
+      // PDF returned as base64 — auto-trigger download for instant gratification
+      if (data.pdf) downloadPDF(data.pdf, `visibility-index-${(lastProfile?.firstName || 'report').toLowerCase()}.pdf`);
 
       $('#leaderboard-wrap').classList.remove('locked');
       $('#gate').remove();
