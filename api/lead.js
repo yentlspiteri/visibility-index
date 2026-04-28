@@ -332,36 +332,91 @@ export default async function handler(req, res) {
 /* ───────────── helpers ───────────── */
 
 function buildEmailHTML({ firstName, total, tierName, hasPdf }) {
-  const greeting = firstName ? `Hi ${escapeHtml(firstName)},` : 'Hi,';
+  const safeName = escapeHtml(firstName || 'there');
   const display  = typeof total === 'number' ? Math.round((total / 18) * 100) : null;
-  const score    = display !== null ? `${display} / 100` : '';
   const tier     = escapeHtml(tierName || 'your tier');
-  // If the PDF failed to build server-side, send a softer message that promises a follow-up.
-  const lede     = hasPdf
-    ? 'Your Visibility Index report is attached.'
-    : "We hit a hiccup generating your PDF. We'll email it to you within the hour.";
-  const body     = hasPdf
-    ? "Inside: a 4-page strategic memo on what's between your current visibility and the next level. Three specific moves to make this quarter, plus how the Von Peach team can help you action them."
-    : "In the meantime, here's the headline: your score and tier are above. The full breakdown lands in your inbox shortly.";
+
+  // Tier-aware playful translation - matches the FutureMakers brand voice ("done playing small").
+  // Honest about where they are, generous about where they're going. No corporate fluff.
+  const tierKey  = (tierName || '').toLowerCase();
+  const tierCopy =
+    /hidden gem/.test(tierKey)         ? "You're nearly invisible right now - and that means everything is ahead of you. The good news: foundations are the easiest part."
+    : /rising voice/.test(tierKey)     ? "You've got something to say. Your brand just isn't amplifying it yet. Three small moves and you'll feel it shift."
+    : /emerging authority/.test(tierKey) ? "You're already doing more right than most. Now it's about consistency - turning effort into recognition."
+    : /recognised leader/.test(tierKey)  ? "You've built real authority. Time to sharpen the signature and make it legacy-level."
+    : "You're on your way. Three moves stand between where you are and where you're headed.";
+
+  const lede = hasPdf
+    ? "Your full audit just landed in your inbox. Big read inside - take ten minutes when you can."
+    : "Tiny hiccup on our side - the PDF is on the way. Your headline is below.";
+
+  // Indigo-to-lavender hero gradient + cream content. Dark navy outer (won't get inverted by
+  // dark-mode email clients). Inline styles only - email clients strip <style> blocks.
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Your Visibility Index Report</title></head>
-<body style="margin:0;padding:32px;background:#fafafa;font-family:Helvetica,Arial,sans-serif;color:#0c0b09;line-height:1.55;">
-  <div style="max-width:560px;margin:0 auto;background:#ffffff;padding:36px;border-radius:12px;border:1px solid rgba(15,15,15,0.08);">
-    <p style="color:#3F36B2;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 14px;">VON PEACH · FUTUREMAKERS · VISIBILITY INDEX</p>
-    <p style="font-size:18px;margin:0 0 18px;">${greeting}</p>
-    <p style="font-size:16px;margin:0 0 14px;">${lede}</p>
-    ${score ? `<p style="font-size:16px;margin:0 0 14px;">You scored <strong>${score}</strong>. That's <strong>${tier}</strong>.</p>` : ''}
-    <p style="font-size:15px;color:#444;margin:0 0 22px;">${body}</p>
-    <p style="margin:28px 0;">
-      <a href="https://calendly.com/yentl-spiteri/30min"
-         style="display:inline-block;background:#0c0b09;color:#fafafa;padding:14px 22px;border-radius:9px;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:0.01em;">
-        Book a 30-minute call →
-      </a>
+<head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>Your Visibility Index Report</title></head>
+<body style="margin:0;padding:0;background:#0B0359;font-family:Helvetica,Arial,sans-serif;color:#0c0b09;line-height:1.55;-webkit-font-smoothing:antialiased;">
+  <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+
+    <!-- Brand eyebrow on dark -->
+    <p style="color:#A6A4ED;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin:0 0 24px;text-align:center;">
+      Von Peach &middot; FutureMakers &middot; The Visibility Index
     </p>
-    <p style="font-size:13px;color:#666;margin:28px 0 0;">No pitch - just clarity on which moves matter most for you.</p>
-    <hr style="border:0;border-top:1px solid rgba(15,15,15,0.08);margin:28px 0;">
-    <p style="font-size:11px;color:#999;letter-spacing:0.05em;margin:0;">VON PEACH GMBH · FUTUREMAKERS · 2026</p>
+
+    <!-- Hero card with score -->
+    <div style="background:linear-gradient(160deg,#3F36B2 0%,#5A50CC 60%,#8683E5 100%);border-radius:24px 24px 0 0;padding:40px 36px 36px;text-align:center;color:#fafafa;">
+      <p style="font-size:14px;font-weight:600;letter-spacing:0.04em;margin:0 0 18px;opacity:0.9;">
+        Hey ${safeName} &mdash;
+      </p>
+      ${display !== null ? `
+        <p style="font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;margin:0 0 8px;color:#EBF0FF;opacity:0.75;">
+          Your Visibility Index
+        </p>
+        <p style="margin:0;line-height:1;">
+          <span style="font-size:88px;font-weight:900;letter-spacing:-0.04em;color:#fafafa;">${display}</span>
+          <span style="font-size:24px;font-weight:600;color:#EBF0FF;opacity:0.7;margin-left:6px;">/ 100</span>
+        </p>
+        <p style="font-size:22px;font-weight:700;letter-spacing:-0.02em;margin:18px 0 0;color:#fafafa;">
+          ${tier}
+        </p>
+      ` : `
+        <p style="font-size:32px;font-weight:700;margin:0;color:#fafafa;">
+          Your audit is ready.
+        </p>
+      `}
+    </div>
+
+    <!-- Cream body card (continues seamlessly from hero) -->
+    <div style="background:#fafafa;border-radius:0 0 24px 24px;padding:36px 36px 32px;">
+
+      <p style="font-size:18px;line-height:1.45;margin:0 0 18px;color:#0c0b09;font-weight:500;">
+        ${tierCopy}
+      </p>
+
+      <p style="font-size:15px;line-height:1.55;color:#444;margin:0 0 28px;">
+        ${lede}
+      </p>
+
+      <!-- CTA pill -->
+      <div style="text-align:center;margin:32px 0 12px;">
+        <a href="https://calendly.com/yentl-spiteri/30min"
+           style="display:inline-block;background:#0c0b09;color:#fafafa;padding:18px 32px;border-radius:999px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.04em;text-transform:uppercase;">
+          Let's talk it through
+        </a>
+      </div>
+
+      <p style="font-size:13px;color:#666;margin:14px 0 0;text-align:center;font-style:italic;">
+        30 minutes. No pitch. We'll walk through your audit together.
+      </p>
+    </div>
+
+    <!-- Outer footer on dark -->
+    <p style="font-size:10px;color:#A6A4ED;letter-spacing:0.16em;text-transform:uppercase;margin:32px 0 8px;text-align:center;opacity:0.7;">
+      Von Peach GmbH &middot; FutureMakers &middot; 2026
+    </p>
+    <p style="font-size:11px;color:#A6A4ED;margin:0;text-align:center;opacity:0.6;">
+      Replies welcome &mdash; <a href="mailto:hello@vonpeach.com" style="color:#EBF0FF;text-decoration:underline;">hello@vonpeach.com</a>
+    </p>
   </div>
 </body>
 </html>`;
