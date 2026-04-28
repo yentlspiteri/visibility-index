@@ -1766,6 +1766,10 @@
     grid-template-columns: 1fr 1fr;
     gap: 20px;
   }
+  .next-cta-row--single {
+    grid-template-columns: minmax(0, 640px);
+    justify-content: center;
+  }
   @media (max-width: 700px) { .next-cta-row { grid-template-columns: 1fr; } }
   .next-cta-card {
     background: rgba(252,252,252,0.04);
@@ -2245,17 +2249,11 @@
       <ul class="roadmap-list" id="roadmap-list"><!-- populated by JS --></ul>
     </div>
 
-    <div class="next-cta-row">
+    <div class="next-cta-row next-cta-row--single">
       <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="next-cta-card next-cta-soft">
         <span class="next-cta-eyebrow">Talk it through</span>
-        <h3>Book a 30-minute call</h3>
-        <p>Walk through these moves with one of the Von Peach team. No pitch — just clarity.</p>
-        <span class="next-cta-arrow">→</span>
-      </a>
-      <a href="#circle" class="next-cta-card next-cta-hard">
-        <span class="next-cta-eyebrow">Or</span>
-        <h3>Apply for The Circle</h3>
-        <p>A small circle of clients we work with directly. Twelve seats per quarter.</p>
+        <h3>Book a 30-minute call with the Von Peach team</h3>
+        <p>Walk through these moves together. No pitch — just clarity on which ones matter most for you.</p>
         <span class="next-cta-arrow">→</span>
       </a>
     </div>
@@ -2698,24 +2696,39 @@
     previewResult.classList.remove('active');
     previewLoading.classList.add('active');
 
-    // Sample pills — mock data, no API call (so demo costs nothing)
+    // Sample pills — mock data, no API call (so demo costs nothing). Wait for animation
+    // to reach the last step, finish it, then reveal.
     if (opts.override) {
-      runLoadingSequence(() => {
-        revealResults(opts.override.score, opts.override.subs, opts.override.url, null);
-      });
+      await new Promise(resolve => runLoadingSequence(resolve));
+      // Brief pause so the spinning final step doesn't feel instant
+      await new Promise(resolve => setTimeout(resolve, 600));
+      finishLastLoadingStep();
+      revealResults(opts.override.score, opts.override.subs, opts.override.url, null);
       return;
     }
 
-    // Real audit — POST /api/score in parallel with the loading animation
+    // Real audit — kick off the animation AND the API call in parallel.
+    // The animation pauses on the last step until the API resolves (no "stuck on done" gap).
+    const animPromise = new Promise(resolve => runLoadingSequence(resolve));
     const fetchPromise = fetch('/api/score', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal })
     }).then(r => r.json()).catch(() => ({ error: 'Network error. Please try again.' }));
 
-    const animPromise = new Promise(resolve => runLoadingSequence(resolve));
+    // After the animation hits the last step, swap the subtitle to a "still pulling data" line
+    // so a slow API doesn't look stuck.
+    let extendedTimer = null;
+    animPromise.then(() => {
+      extendedTimer = setTimeout(() => {
+        const subtitle = document.querySelector('.loading-subtitle');
+        if (subtitle) subtitle.textContent = 'Pulling deeper LinkedIn data — this can take 10–20 seconds.';
+      }, 4000);
+    });
 
     const [data] = await Promise.all([fetchPromise, animPromise]);
+    if (extendedTimer) clearTimeout(extendedTimer);
+    finishLastLoadingStep();
 
     if (!data || data.error) {
       showError((data && data.error) || 'Audit failed. Please try again.');
@@ -2741,17 +2754,31 @@
     setTimeout(() => { if (errEl) errEl.textContent = ''; }, 8000);
   }
 
+  /* Loading sequence: marches through the 8 steps, then PAUSES on the last one
+     ("Computing your Visibility Index") with the spinner running indefinitely
+     until finishLastLoadingStep() is called by the audit callback. This way
+     the animation never finishes before the API does. */
   function runLoadingSequence(done) {
     const rows = $$('.loading-row');
     let i = 0;
     function advance() {
       if (i > 0) rows[i-1].classList.replace('running', 'done');
-      if (i >= rows.length) { done(); return; }
+      if (!rows[i]) { done(); return; }
       rows[i].classList.add('running');
+      if (i === rows.length - 1) {
+        // Last step is spinning. Resolve and stop scheduling. Caller will mark it done.
+        done();
+        return;
+      }
       i++;
       setTimeout(advance, 600 + Math.random() * 250);
     }
     advance();
+  }
+
+  function finishLastLoadingStep() {
+    const rows = $$('.loading-row');
+    if (rows.length) rows[rows.length - 1].classList.replace('running', 'done');
   }
 
   /* ────────── Reveal results ────────── */
