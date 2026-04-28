@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>The Visibility Index - Von Peach FutureMakers</title>
 <meta name="description" content="Paste your LinkedIn URL. Get a forensic read on your executive visibility. 60 seconds. Zero forms." />
 
@@ -3236,6 +3236,145 @@
     touch-action: none;
   }
 
+  /* ── Start-over link, top-left, only on the results page ──
+     Replaces the missing nav with a single "go back to the start" affordance.
+     Reloads to a clean URL (strips utm + cache state) so the audit re-runs from scratch. */
+  .start-over {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top, 14px));
+    left: 16px;
+    z-index: 60;
+    display: none;     /* hidden by default; shown only on audit-complete */
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px 10px 12px;
+    background: rgba(11, 3, 89, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--vp-cream, #fafafa);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 999px;
+    border: 1px solid rgba(252,252,252,0.12);
+    cursor: pointer;
+    transition: transform .15s cubic-bezier(.34,1.56,.64,1), background .15s ease;
+  }
+  .start-over:hover {
+    background: rgba(11, 3, 89, 0.92);
+    transform: translateY(-1px);
+  }
+  .start-over:active { transform: scale(0.97); }
+  .start-over::before {
+    content: "←";
+    font-size: 14px;
+    line-height: 1;
+    margin-right: 2px;
+  }
+  body.audit-complete .start-over { display: inline-flex; }
+
+  /* ── Sticky email gate at the bottom of the results page ──
+     Once `body.audit-complete` is on, the gate-standalone block becomes a fixed
+     bottom bar with email + button inline. Always reachable, never has to be
+     scrolled to. Hidden when the user has already submitted (`gate-card.hidden`). */
+  body.audit-complete .gate-standalone {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    pointer-events: none;            /* clicks fall through everywhere except the card */
+  }
+  body.audit-complete .gate-standalone .gate-card {
+    pointer-events: auto;
+    max-width: 720px;
+    margin: 0 auto !important;
+    padding: 16px 18px max(16px, env(safe-area-inset-bottom, 16px)) !important;
+    background: rgba(11, 3, 89, 0.94);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -16px 48px rgba(11,3,89,0.35);
+    color: var(--vp-cream);
+  }
+  /* Hide all the verbose chrome on the sticky version - just the form remains */
+  body.audit-complete .gate-eyebrow,
+  body.audit-complete #gate-cta-line,
+  body.audit-complete .gate-card > p,
+  body.audit-complete .gate-disclaimer,
+  body.audit-complete .gate-label {
+    display: none !important;
+  }
+  /* The form goes inline: input fills the row, button hugs the right */
+  body.audit-complete .gate-form {
+    display: flex !important;
+    gap: 8px;
+    margin: 0 !important;
+    flex-direction: row !important;
+  }
+  body.audit-complete .gate-form input[type="email"] {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 0 16px !important;
+    border-radius: 12px;
+    border: 1px solid rgba(252,252,252,0.18) !important;
+    background: rgba(252,252,252,0.08) !important;
+    color: var(--vp-cream) !important;
+    font-size: 16px !important;
+    font-family: var(--font-body);
+    transition: border-color .15s ease, background .15s ease;
+  }
+  body.audit-complete .gate-form input[type="email"]::placeholder {
+    color: rgba(252,252,252,0.5) !important;
+  }
+  body.audit-complete .gate-form input[type="email"]:focus {
+    outline: none;
+    border-color: var(--vp-lavender) !important;
+    background: rgba(252,252,252,0.14) !important;
+  }
+  body.audit-complete .gate-form button[type="submit"] {
+    flex-shrink: 0;
+    height: 48px;
+    padding: 0 22px !important;
+    border-radius: 12px;
+    background: var(--vp-cream) !important;
+    color: var(--vp-deep-black) !important;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 0;
+    cursor: pointer;
+    transition: transform .12s cubic-bezier(.34,1.56,.64,1);
+    white-space: nowrap;
+  }
+  body.audit-complete .gate-form button[type="submit"]:hover { transform: translateY(-1px); }
+  body.audit-complete .gate-form button[type="submit"]:active { transform: scale(0.97); }
+  /* Add bottom padding to the body so the sticky bar never sits on top of footer content */
+  body.audit-complete { padding-bottom: 92px; }
+  /* Mobile bar — slightly shorter, no max-width corners (full-bleed) */
+  @media (max-width: 720px) {
+    body.audit-complete .gate-standalone .gate-card {
+      max-width: none;
+      border-radius: 0;
+      padding: 12px 14px max(12px, env(safe-area-inset-bottom, 12px)) !important;
+    }
+    body.audit-complete .gate-form button[type="submit"] {
+      padding: 0 16px !important;
+      font-size: 13px;
+    }
+  }
+  /* Once the user has submitted (gate-card hidden), keep the success card centered, not pinned */
+  body.audit-complete #gate-card.hidden + #gate-success {
+    background: transparent !important;
+    padding: 18px 14px !important;
+  }
+
   /* Temporary bug-report button - bottom-left, removable for prod once testing settles */
   .bug-report {
     position: fixed;
@@ -4081,6 +4220,17 @@
 </head>
 <body>
 
+<!-- Start-over affordance - only visible after audit completes (when nav is hidden) -->
+<a href="/" class="start-over" id="start-over" aria-label="Start a new audit">New audit</a>
+
+<!-- Graceful fallback if JS fails to load (rare but possible: ad-blockers, network errors, CSP). -->
+<noscript>
+  <div style="padding:32px;background:#0B0359;color:#fafafa;font-family:Helvetica,Arial,sans-serif;text-align:center;line-height:1.6;">
+    <p style="font-size:18px;font-weight:600;margin:0 0 8px;">JavaScript is required for the Visibility Index.</p>
+    <p style="font-size:14px;margin:0;opacity:0.8;">Enable JavaScript and refresh, or email us at <a href="mailto:hello@vonpeach.com" style="color:#A6A4ED;">hello@vonpeach.com</a> for a hand audit.</p>
+  </div>
+</noscript>
+
 <!-- ─────────── NAV ─────────── -->
 <nav class="top">
   <div class="container">
@@ -4191,7 +4341,7 @@
 
         <label class="mobile-label" for="input-linkedin">LinkedIn</label>
         <div class="audit-prose">
-          <span class="prose-text">You can find me at&nbsp;</span><span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" />
+          <span class="prose-text">You can find me at&nbsp;</span><span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" name="linkedin-handle" placeholder="your-handle" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" data-1p-ignore data-lpignore="true" data-form-type="other" />
         </div>
 
         <button type="button" class="audit-submit" id="btn-calculate">Calculate my score</button>
@@ -4279,7 +4429,7 @@
         <button type="button" class="personal-cta" id="personal-cta">
           Get my full report
         </button>
-        <span class="personal-cta-hint">Free · 4-page PDF · in your inbox</span>
+        <span class="personal-cta-hint">Free · personalised PDF · in your inbox</span>
       </div>
     </div>
 
@@ -4298,7 +4448,7 @@
       <div class="gate-card" id="gate-card">
         <div class="gate-eyebrow">Your full report</div>
         <h3 id="gate-cta-line">Here's what to build first.</h3>
-        <p>4-page PDF. Three moves. In your inbox.</p>
+        <p>Personalised PDF. Three moves. In your inbox.</p>
         <form class="gate-form" id="gate-form" novalidate>
           <span class="gate-label">Work email</span>
           <input type="email" id="gate-email" placeholder="you@company.com" required />
@@ -4450,37 +4600,7 @@
   </div>
 </section>
 
-<!-- ─────────── HOW IT WORKS (the geeky version) - linked from the footer ─────────── -->
-<section class="howitworks-wrap" id="how-it-works">
-  <div class="container-narrow">
-    <div class="eyebrow-row" style="justify-content: center; margin-bottom: 18px;">
-      <span class="dot"></span>
-      <span class="eyebrow">How it works</span>
-    </div>
-    <h2 class="h2" style="text-align: center; margin-bottom: 18px;">The geeky version.</h2>
-    <p class="lede" style="text-align: center; margin: 0 auto 40px; color: rgba(15,15,15,0.65); max-width: 640px;">
-      Each dimension scores 0&ndash;3 against a transparent rubric and sums to a 0&ndash;18 composite (displayed as 0&ndash;100). The composite places you in one of four tiers: Hidden Gem (0&ndash;5), Rising Voice (6&ndash;10), Emerging Authority (11&ndash;15), Recognised Leader (16&ndash;18).
-    </p>
-
-    <div class="howitworks-table-wrap">
-      <table class="howitworks-table">
-        <thead><tr><th>Dimension</th><th>Source</th></tr></thead>
-        <tbody>
-          <tr><td>Digital Footprint</td><td>LinkedIn profile completeness + Google search of name + company</td></tr>
-          <tr><td>Brand Clarity</td><td>Claude Haiku scores LinkedIn headline + About section</td></tr>
-          <tr><td>Authority Signals</td><td>Featured items, articles, recommendations, honors, tier-1 press hits</td></tr>
-          <tr><td>Content Cadence</td><td>Posts &amp; articles published in the last 90 days</td></tr>
-          <tr><td>Visual Identity</td><td>Profile photo, banner image, About-section quality</td></tr>
-          <tr><td>Network Recognition</td><td>Followers, connections, recommendation count</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p class="lede" style="text-align: center; margin: 32px auto 0; color: rgba(15,15,15,0.55); max-width: 640px; font-size: 14px;">
-      Peer benchmarks in v1 are calibrated against published research (Edelman Trust Barometer, BrandZ Top 100 leadership data, Weber Shandwick &ldquo;CEO Reputation Premium&rdquo;). From v2 onward, ranking is against the live Visibility Index cohort built from opted-in profiles.
-    </p>
-  </div>
-</section>
+<!-- "How it works (geeky version)" section removed - was outdated. -->
 
 <!-- ─────────── CIRCLE (bottom-of-page CTA - by conversation, not application) ─────────── -->
 <section class="circle-wrap" id="circle">
@@ -4558,7 +4678,6 @@
           <li><a href="https://www.vonpeach.com/personal-branding" target="_blank" rel="noopener">FutureMakers</a></li>
           <li><a href="https://www.vonpeach.com/about" target="_blank" rel="noopener">About</a></li>
           <li><a href="#methodology">Methodology</a></li>
-          <li><a href="#how-it-works">How it works (the geeky version)</a></li>
         </ul>
       </div>
 
@@ -4618,6 +4737,41 @@
 
 <!-- ─────────── JS ─────────── -->
 <script>
+  /* ────────── GLOBAL ERROR HANDLER — auto-files a bug report on uncaught crashes ──────────
+     Catches anything that escapes try/catch in the page JS and POSTs it to /api/feedback
+     so Yentl + the Notion DB see it within seconds. Throttled to 1 report per error message
+     per session so a tight loop can't spam the inbox. */
+  (function () {
+    const seen = new Set();
+    function report(label, info) {
+      if (seen.has(label) || seen.size > 5) return;
+      seen.add(label);
+      try {
+        fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message:  '[AUTO] ' + label + (info ? '\n\n' + info : ''),
+            email:    null,
+            url:      window.location.href,
+            viewport: window.innerWidth + 'x' + window.innerHeight,
+            ua:       navigator.userAgent,
+            time:     new Date().toISOString()
+          })
+        }).catch(() => {});
+      } catch (_) {}
+    }
+    window.addEventListener('error', (e) => {
+      const msg = e.message || 'unknown error';
+      const where = e.filename ? `${e.filename}:${e.lineno}:${e.colno}` : '';
+      report(msg, where + (e.error?.stack ? '\n' + e.error.stack.slice(0, 1500) : ''));
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      const msg = (e.reason && (e.reason.message || String(e.reason))) || 'unhandled rejection';
+      report('unhandled promise rejection: ' + msg.slice(0, 200), e.reason?.stack?.slice(0, 1500) || '');
+    });
+  })();
+
   /* ────────── BUG REPORT — modal opens, POSTs to /api/feedback ────────── */
   (function () {
     const btn   = document.getElementById('bug-report');
@@ -5211,6 +5365,10 @@
   let lastMoves = [], lastTierRoadmap = [], lastNextTier = null;
   // Full payload kept for /api/lead → builds the PDF + emails it via Resend
   let lastProfile = null, lastExecutiveSummary = '', lastDimensionCommentary = {};
+  // Press hits + (future) content ideas / press targets from Claude — surfaced on page + in PDF
+  let lastPress = { count: 0, outlets: [], hits: [] };
+  let lastContentIdeas = [];
+  let lastPressTargets = [];
 
   // Maps Claude's service token → human label shown on the move-card service tag
   const SERVICE_LABELS = {
@@ -5247,6 +5405,14 @@
     // Scroll lock - keep the user staring at the loading state (and avoid accidental scroll-away)
     document.body.classList.add('audit-locked');
     document.documentElement.classList.add('audit-locked');
+    // Safety net: even if the audit flow throws below, NEVER leave the user scroll-locked
+    // forever. After 90s force-release the lock so they can scroll/recover.
+    const lockReleaseTimeout = setTimeout(() => {
+      document.body.classList.remove('audit-locked');
+      document.documentElement.classList.remove('audit-locked');
+    }, 90000);
+    // Stash so finishLastLoadingStep / showError can clear it if they fire normally
+    window.__viReleaseLock = () => { clearTimeout(lockReleaseTimeout); };
 
     // Sample pills - mock data, no API call (so demo costs nothing). Wait for animation
     // to reach the last step, finish it, then reveal.
@@ -5389,6 +5555,9 @@
     lastProfile             = (payload && payload.profile)             || null;
     lastExecutiveSummary    = (payload && payload.executiveSummary)    || '';
     lastDimensionCommentary = (payload && payload.dimensionCommentary) || {};
+    lastPress               = (payload && payload.press)               || { count: 0, outlets: [], hits: [] };
+    lastContentIdeas        = (payload && payload.contentIdeas)        || [];
+    lastPressTargets        = (payload && payload.pressTargets)        || [];
 
     // Personalize the result with profile data + Claude analysis from /api/score response.
     // We DON'T try to load the LinkedIn CDN photo any more - LinkedIn's media.licdn.com blocks
@@ -5954,7 +6123,11 @@
           executiveSummary:    lastExecutiveSummary,
           dimensionCommentary: lastDimensionCommentary,
           moves:               lastMoves,
-          tierRoadmap:         lastTierRoadmap
+          tierRoadmap:         lastTierRoadmap,
+          // Real press hits + Claude-generated content/PR ideas (when present)
+          press:               lastPress,
+          contentIdeas:        lastContentIdeas,
+          pressTargets:        lastPressTargets
         })
       });
       const data = await res.json().catch(() => ({}));

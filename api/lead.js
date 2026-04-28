@@ -40,7 +40,8 @@ export default async function handler(req, res) {
     email, goal, role,
     score, subs, tier, nextTier, normalisedUrl, attribution,
     profile,                                                     // { firstName, headline, companyName, pictureUrl, ... }
-    executiveSummary, dimensionCommentary, moves, tierRoadmap    // Claude analysis payload
+    executiveSummary, dimensionCommentary, moves, tierRoadmap,   // Claude analysis payload
+    press, contentIdeas, pressTargets                            // press hits + content/PR ideas (optional)
   } = body;
 
   if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -63,7 +64,11 @@ export default async function handler(req, res) {
       executiveSummary:    executiveSummary || '',
       dimensionCommentary: dimensionCommentary || {},
       moves:               Array.isArray(moves) ? moves : [],
-      tierRoadmap:         Array.isArray(tierRoadmap) ? tierRoadmap : []
+      tierRoadmap:         Array.isArray(tierRoadmap) ? tierRoadmap : [],
+      // Press hits + content/PR ideas (optional, rendered only when present)
+      press:               press        || { count: 0, outlets: [], hits: [] },
+      contentIdeas:        Array.isArray(contentIdeas) ? contentIdeas : [],
+      pressTargets:        Array.isArray(pressTargets) ? pressTargets : []
     });
     pdfBase64 = Buffer.from(pdfBytes).toString('base64');
   } catch (err) {

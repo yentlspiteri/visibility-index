@@ -194,6 +194,8 @@ export default async function handler(req, res) {
       dimensionCommentary: analysis.dimensionCommentary,
       moves:               analysis.moves,
       tierRoadmap:         analysis.tierRoadmap,
+      contentIdeas:        analysis.contentIdeas || [],
+      pressTargets:        analysis.pressTargets || [],
       // Tier-1 press hits - surfaced for both the landing page and the PDF
       press:               press,
       // Backward-compat: keep older field names mapped from the new payload
@@ -408,6 +410,15 @@ YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose arou
   "tierRoadmap": [
     "<max 10 words, punchy>",
     "<max 10 words>","<max 10 words>","<max 10 words>","<max 10 words>"
+  ],
+  "contentIdeas": [
+    {"topic":"<a specific post title or hook, 6-12 words. Concrete, not generic.>","angle":"<one sentence on the take or insight that would resonate with their audience>","format":"<one of: short-form post | long-form essay | carousel | video | newsletter | thread>"},
+    {"topic":"...","angle":"...","format":"..."},
+    {"topic":"...","angle":"...","format":"..."}
+  ],
+  "pressTargets": [
+    {"outlet":"<a specific tier-1 publication that fits their niche - e.g. Forbes Leadership, TechCrunch, HBR, Sifted, etc.>","why":"<one sentence on why their story fits this outlet specifically>","pitch":"<a 10-15 word pitch angle / headline they could use>"},
+    {"outlet":"...","why":"...","pitch":"..."}
   ]
 }
 
