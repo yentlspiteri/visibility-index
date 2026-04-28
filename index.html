@@ -505,16 +505,26 @@
     stroke: rgba(134,131,229,0.18);
     stroke-width: 1;
   }
-  .personal-hex .phex-user {
-    fill: rgba(134,131,229,0.32);
-    stroke: var(--vp-lavender, #8683E5);
-    stroke-width: 2.5;
-    stroke-linejoin: round;
-    filter: drop-shadow(0 8px 32px rgba(134,131,229,0.45));
-    /* Tiny wobble settle once the SMIL animation finishes — runs once on reveal */
+  /* Six wedge segments — each its own purple shade. Soft drop-shadow on the group, not per-wedge. */
+  .personal-hex .phex-wedges {
+    filter: drop-shadow(0 12px 38px rgba(63,54,178,0.45));
+    /* Subtle wobble settle once SMIL finishes (delay matches wedge animation duration) */
     animation: phex-settle 0.6s cubic-bezier(.34,1.56,.64,1) 0.9s both;
     transform-origin: 270px 270px;
     transform-box: view-box;
+  }
+  .personal-hex .phex-wedge {
+    /* No stroke between wedges — keeps the shape feeling like one cohesive object */
+    stroke: none;
+    opacity: 0.92;
+  }
+  /* Single thin cream outline on top — ties the wedges into one silhouette */
+  .personal-hex .phex-outline {
+    fill: none;
+    stroke: rgba(252,252,252,0.85);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    pointer-events: none;
   }
   @keyframes phex-settle {
     0%   { transform: scale(1); }
@@ -4220,16 +4230,45 @@
     // Convert each dimension's 0–3 score to a position on the spoke from center (270,270) outward.
     // 0 = at center, 3 = at full vertex. Linear interpolation gives the user's personal shape.
     const cx0 = 270, cy0 = 270;
-    const userPoints = VERTICES.map(v => {
+    const userPts = VERTICES.map(v => {
       const score = subs[v.key] ?? 0;
       const t = score / 3;
-      const x = cx0 + (v.cx - cx0) * t;
-      const y = cy0 + (v.cy - cy0) * t;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
+      return {
+        x: cx0 + (v.cx - cx0) * t,
+        y: cy0 + (v.cy - cy0) * t
+      };
+    });
 
-    // Build the SVG markup with rings, axes, full-strength outline, the user's personal shape,
-    // and labels showing only "<dim> X" — no commentary.
+    // Six purple shades — one per wedge. Each triangle from center → userPt[i] → userPt[i+1]
+    // gets its own colour, walking from deep indigo around to pale lavender. Rotational gradient effect.
+    const PURPLES = [
+      '#2A1F8C', // deep indigo (top — Digital Footprint)
+      '#3F36B2', // vp-indigo  (upper-right — Brand Clarity)
+      '#5A50CC', // mid        (lower-right — Authority)
+      '#7570D9', // mid-light  (bottom — Cadence)
+      '#8683E5', // vp-lavender(lower-left — Visual)
+      '#A6A4ED'  // pale       (upper-left — Network)
+    ];
+
+    // Build six animated wedges instead of a single polygon.
+    // Each wedge starts as a degenerate triangle at the center and grows out.
+    const wedges = VERTICES.map((_, i) => {
+      const next = userPts[(i + 1) % 6];
+      const here = userPts[i];
+      const finalPts  = `270,270 ${here.x.toFixed(1)},${here.y.toFixed(1)} ${next.x.toFixed(1)},${next.y.toFixed(1)}`;
+      const startPts  = `270,270 270,270 270,270`;
+      return `
+        <polygon class="phex-wedge" fill="${PURPLES[i]}" points="${finalPts}">
+          <animate attributeName="points" dur="0.9s" calcMode="spline"
+            keyTimes="0;1" keySplines="0.2 0.8 0.25 1"
+            values="${startPts};${finalPts}"
+            fill="freeze"/>
+        </polygon>`;
+    }).join('');
+
+    // Outline path on top — connects all 6 user points so the whole shape reads as one unit
+    const outlinePoints = userPts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
     const svgNS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('viewBox', '0 40 540 480');
@@ -4249,11 +4288,13 @@
       <line class="phex-axis" x1="270" y1="270" x2="270" y2="450"/>
       <line class="phex-axis" x1="270" y1="270" x2="114" y2="360"/>
       <line class="phex-axis" x1="270" y1="270" x2="114" y2="180"/>
-      <!-- The user's actual shape — animates from center outward on reveal -->
-      <polygon class="phex-user" points="${userPoints}">
+      <!-- Six purple wedges (one per dimension), animating from center outward -->
+      <g class="phex-wedges">${wedges}</g>
+      <!-- White outline tying the wedges into a single shape -->
+      <polygon class="phex-outline" points="${outlinePoints}">
         <animate attributeName="points" dur="0.9s" calcMode="spline"
           keyTimes="0;1" keySplines="0.2 0.8 0.25 1"
-          values="270,270 270,270 270,270 270,270 270,270 270,270;${userPoints}"
+          values="270,270 270,270 270,270 270,270 270,270 270,270;${outlinePoints}"
           fill="freeze"/>
       </polygon>
       ${VERTICES.map(v => `
