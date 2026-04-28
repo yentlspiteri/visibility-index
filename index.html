@@ -3266,6 +3266,134 @@
   /* Hide bug button when the audit lock is active so it doesn't fight the loading panel */
   body.audit-locked .bug-report,
   body.menu-open .bug-report { display: none; }
+  /* Hide on mobile entirely (kept for desktop testing only) */
+  @media (max-width: 768px) {
+    .bug-report, .bug-modal { display: none !important; }
+  }
+
+  /* ── Bug-report modal ── */
+  .bug-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .bug-modal[hidden] { display: none; }
+  .bug-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 3, 89, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    cursor: pointer;
+  }
+  .bug-modal-card {
+    position: relative;
+    background: var(--vp-cream, #fafafa);
+    color: var(--vp-deep-black, #0c0b09);
+    border-radius: 20px;
+    padding: 32px 28px 24px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 32px 80px rgba(11,3,89,0.40);
+    animation: bug-modal-in 0.32s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes bug-modal-in {
+    from { opacity: 0; transform: scale(0.94) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .bug-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: transparent;
+    border: 0;
+    font-size: 24px;
+    line-height: 1;
+    color: rgba(15,15,15,0.5);
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .bug-modal-close:hover {
+    background: rgba(15,15,15,0.08);
+    color: var(--vp-deep-black);
+  }
+  .bug-modal-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 8px;
+    color: var(--vp-deep-black);
+  }
+  .bug-modal-sub {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: rgba(15,15,15,0.6);
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+  .bug-form { display: flex; flex-direction: column; gap: 12px; }
+  .bug-form textarea,
+  .bug-form input {
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--vp-deep-black);
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(15,15,15,0.15);
+    background: var(--vp-white, #fff);
+    resize: vertical;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .bug-form textarea:focus,
+  .bug-form input:focus {
+    outline: 0;
+    border-color: var(--vp-indigo);
+    box-shadow: 0 0 0 3px rgba(63,54,178,0.18);
+  }
+  .bug-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .bug-cancel,
+  .bug-submit {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 11px 22px;
+    border: 0;
+    cursor: pointer;
+  }
+  .bug-cancel {
+    background: transparent;
+    color: rgba(15,15,15,0.55);
+  }
+  .bug-cancel:hover { color: var(--vp-deep-black); }
+  .bug-submit {
+    background: var(--vp-deep-black);
+    color: var(--vp-cream);
+  }
+  .bug-submit:hover { background: #1a1815; }
+  .bug-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .bug-status {
+    font-size: 13px;
+    color: rgba(15,15,15,0.6);
+    margin-top: 8px;
+    min-height: 1.2em;
+  }
+  .bug-status.success { color: var(--vp-indigo); font-weight: 600; }
+  .bug-status.error { color: #c53030; }
 
   /* ═══════════════════════════════════════════════════════════════════════════════════════
      MOBILE-APP TREATMENT  ·  Level 1 + Level 2
@@ -4464,35 +4592,94 @@
   <!-- Decorative PEACH wordmark removed per request -->
 </footer>
 
-<!-- ─────────── TEMPORARY BUG REPORT BUTTON ───────────
-     Removable once testing settles - opens a pre-filled mailto so beta testers
-     can flag bugs in one tap. Bottom-LEFT to avoid clashing with sticky bottom CTA. -->
-<a class="bug-report"
-   id="bug-report"
-   href="mailto:hello@vonpeach.com?subject=Visibility%20Index%20Bug&body=What%20went%20wrong%3F%0A%0A---%0AURL%3A%20"
-   title="Found a bug? Tell us!"
-   aria-label="Submit a bug report">🐛</a>
+<!-- ─────────── TEMPORARY BUG REPORT BUTTON + MODAL ───────────
+     Bottom-LEFT floating bug. Click opens a modal, comments POST to /api/feedback
+     which emails yentl@vonpeach.com via Resend. Hidden on mobile. -->
+<button type="button" class="bug-report" id="bug-report"
+        title="Report a bug" aria-label="Report a bug" aria-controls="bug-modal" aria-expanded="false">🐛</button>
+
+<div class="bug-modal" id="bug-modal" role="dialog" aria-modal="true" aria-labelledby="bug-modal-title" hidden>
+  <div class="bug-modal-backdrop" data-bug-close></div>
+  <div class="bug-modal-card" role="document">
+    <button type="button" class="bug-modal-close" data-bug-close aria-label="Close">×</button>
+    <h2 class="bug-modal-title" id="bug-modal-title">Report a bug</h2>
+    <p class="bug-modal-sub">What went wrong? The more detail the better. We'll add page context automatically.</p>
+    <form id="bug-form" class="bug-form" novalidate>
+      <textarea id="bug-message" name="message" rows="5" placeholder="What broke? What did you expect to see?" required></textarea>
+      <input id="bug-email" name="email" type="email" placeholder="Your email (optional, so we can follow up)" autocomplete="email" />
+      <div class="bug-actions">
+        <button type="button" class="bug-cancel" data-bug-close>Cancel</button>
+        <button type="submit" class="bug-submit">Send report</button>
+      </div>
+      <div class="bug-status" id="bug-status" aria-live="polite"></div>
+    </form>
+  </div>
+</div>
 
 <!-- ─────────── JS ─────────── -->
 <script>
-  /* ────────── BUG REPORT — auto-fill mailto with page context ────────── */
+  /* ────────── BUG REPORT — modal opens, POSTs to /api/feedback ────────── */
   (function () {
-    const link = document.getElementById('bug-report');
-    if (!link) return;
-    function buildHref() {
-      const subject = encodeURIComponent('Visibility Index bug');
-      const body = encodeURIComponent(
-        "What went wrong?\n\n\n---\n" +
-        "URL: " + window.location.href + "\n" +
-        "Viewport: " + window.innerWidth + " x " + window.innerHeight + "\n" +
-        "Browser: " + navigator.userAgent + "\n" +
-        "Time: " + new Date().toISOString()
-      );
-      link.href = `mailto:hello@vonpeach.com?subject=${subject}&body=${body}`;
+    const btn   = document.getElementById('bug-report');
+    const modal = document.getElementById('bug-modal');
+    const form  = document.getElementById('bug-form');
+    const msg   = document.getElementById('bug-message');
+    const email = document.getElementById('bug-email');
+    const status = document.getElementById('bug-status');
+    if (!btn || !modal) return;
+
+    function open() {
+      modal.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      setTimeout(() => msg && msg.focus(), 80);
     }
-    buildHref();
-    // Refresh on click in case the user navigated within the page (audit-complete state etc.)
-    link.addEventListener('click', buildHref);
+    function close() {
+      modal.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      if (status) { status.textContent = ''; status.className = 'bug-status'; }
+    }
+    btn.addEventListener('click', open);
+    modal.addEventListener('click', (e) => {
+      if (e.target.matches('[data-bug-close]')) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.hidden) close();
+    });
+    if (form) form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = (msg.value || '').trim();
+      if (!message) { msg.focus(); return; }
+      const submitBtn = form.querySelector('.bug-submit');
+      submitBtn.disabled = true;
+      const orig = submitBtn.textContent;
+      submitBtn.textContent = 'Sending…';
+      status.className = 'bug-status';
+      status.textContent = '';
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message,
+            email:    (email.value || '').trim() || null,
+            url:      window.location.href,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            ua:       navigator.userAgent,
+            time:     new Date().toISOString()
+          })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        status.className = 'bug-status success';
+        status.textContent = 'Thanks - sent. We\'ll take a look.';
+        form.reset();
+        setTimeout(close, 1500);
+      } catch (err) {
+        status.className = 'bug-status error';
+        status.textContent = 'Could not send. Email hello@vonpeach.com directly?';
+        submitBtn.disabled = false;
+        submitBtn.textContent = orig;
+      }
+    });
   })();
 
   /* ────────── ANALYTICS — Calendly click delegation (catches every CTA) ────────── */

@@ -413,9 +413,23 @@ YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose arou
 
 VOICE NOTES - match the FutureMakers brand:
 - Confident, aspirational, action-oriented.
-- Echo the brand: "done playing small", "ideas that deserve the spotlight".
 - Specific over generic. Quote profile content, don't generalise.
 - No chatbot tone. No "great work!" affirmations.
+
+PLAIN-ENGLISH RULES (very important):
+- Write at a 6th-grade reading level. Imagine explaining it to a smart 10-year-old.
+- Short sentences. One idea per sentence.
+- Concrete words. Avoid: "leverage", "amplify", "thought leadership", "compounding", "narrative", "positioning", "visibility architecture", "ecosystem".
+- Use: "post", "share", "say", "show", "people", "see you", "find you", "talk about".
+- If you can't say it without jargon, find a simpler way.
+- Examples of GOOD plain English:
+   ✓ "Your headline lists your jobs but not who you help."
+   ✓ "You've got 5,000 followers but no one is talking back."
+   ✓ "Post once a week. Same day, same time. Pick a topic and stick with it."
+- Examples of BAD jargon to avoid:
+   ✗ "Architect a thought leadership cadence to amplify your narrative."
+   ✗ "Leverage compound visibility through multi-channel orchestration."
+   ✗ "Positioning ambiguity dilutes your personal brand equity."
 
 SERVICES KEY (use exact lowercase tokens for the "service" field):
 - strategy = Personal Brand Strategy & Discovery (1-on-1 session)
