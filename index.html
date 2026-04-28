@@ -2461,13 +2461,24 @@
     line-height: 1.4;
   }
 
-  /* — Methodology section: interactive hexagon (replaces stock-style portrait + 6 cards) — */
+  /* — Methodology: 2-column grid (hexagon left, dimension detail right) — */
+  .method-split {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: clamp(24px, 4vw, 56px);
+    align-items: center;
+    margin: 8px auto 32px;
+    max-width: 1080px;
+  }
+  @media (max-width: 880px) {
+    .method-split { grid-template-columns: 1fr; }
+  }
+
   .method-diagram {
     position: relative;
     width: 100%;
-    max-width: 760px;
-    margin: 8px auto 32px;
-    padding: 48px 24px 36px;
+    margin: 0;
+    padding: clamp(28px, 4vw, 48px) clamp(16px, 2.5vw, 32px);
     border-radius: 20px;
     background:
       radial-gradient(ellipse at 50% 0%, rgba(63,54,178,0.10), transparent 60%),
@@ -2502,10 +2513,15 @@
     stroke-linecap: round;
     filter: drop-shadow(0 8px 28px rgba(63,54,178,0.28));
   }
-  /* Interactive vertex group — large invisible hit-target makes hover easy on all devices. */
+  /* Interactive vertex group — large invisible hit-target makes hover easy on all devices.
+     `outline: none` kills the browser default focus ring (the blue rectangle on click).
+     Keyboard users still get a clear indicator via the .is-active node + label colour. */
   .method-diagram .hex-vertex {
     cursor: pointer;
+    outline: none;
   }
+  .method-diagram .hex-vertex:focus { outline: none; }
+  .method-diagram .hex-vertex:focus-visible { outline: none; }
   .method-diagram .hex-hit {
     fill: transparent;
     pointer-events: all;
@@ -2565,48 +2581,47 @@
     100% { r: 22; opacity: 0;   }
   }
 
-  /* Detail panel that appears below the hexagon on hover/click — the dimension's copy. */
+  /* Detail panel — sits in the RIGHT column on desktop, below on mobile.
+     Left-aligned so it reads like editorial copy beside the diagram. */
   .method-detail {
-    max-width: 600px;
-    margin: 0 auto;
-    min-height: 96px;
-    padding: 22px 24px;
-    background: rgba(255,255,255,0.65);
-    border-radius: 14px;
-    border: 1px solid rgba(63,54,178,0.12);
-    text-align: center;
-    transition: opacity .25s ease, transform .25s ease;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    transition: opacity .3s ease;
+  }
+  @media (max-width: 880px) {
+    .method-detail { text-align: center; padding: 0 16px; }
   }
   .method-detail.is-empty {
-    opacity: 0.65;
+    opacity: 0.7;
   }
   .method-detail-num {
     display: block;
     font-family: var(--font-body);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--vp-indigo);
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    margin-bottom: 6px;
+    margin-bottom: 14px;
   }
   .method-detail-title {
     font-family: var(--font-display);
-    font-size: clamp(20px, 2.2vw, 26px);
+    font-size: clamp(24px, 2.6vw, 32px);
     font-weight: 600;
     color: var(--vp-deep-black, #0c0b09);
-    letter-spacing: -0.01em;
-    margin: 0 0 8px;
+    letter-spacing: -0.015em;
+    line-height: 1.18;
+    margin: 0 0 16px;
   }
   .method-detail-body {
     font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: clamp(15px, 1.05vw, 17px);
+    line-height: 1.6;
     color: rgba(15,15,15,0.7);
     margin: 0;
-    max-width: 480px;
-    margin-left: auto;
-    margin-right: auto;
   }
   .method-hint {
     text-align: center;
@@ -2618,11 +2633,14 @@
     text-transform: uppercase;
     margin: 18px 0 0;
   }
+  @media (min-width: 881px) {
+    /* Hint sits beneath only the diagram column on desktop, not centered across both */
+    .method-hint { text-align: left; padding-left: 12px; }
+  }
   @media (max-width: 540px) {
-    .method-diagram { padding: 32px 8px 24px; }
+    .method-diagram { padding: 28px 8px 20px; }
     .method-diagram .hex-label { font-size: 12px; }
     .method-diagram .hex-num   { font-size: 10px; }
-    .method-detail-body { font-size: 14px; }
   }
 
   .method-grid {
@@ -2845,32 +2863,11 @@
          Replace with real client logos from vonpeach.com case studies in a follow-up.) -->
 
 
-    <a href="#how" class="scroll-hint">How it works</a>
+    <a href="#methodology" class="scroll-hint">How it works</a>
   </div>
 </section>
 
-<!-- ─────────── PILLARS ─────────── -->
-<section class="pillars" id="how">
-  <div class="container">
-    <div class="pillars-grid">
-      <div class="pillar">
-        <div class="num">01</div>
-        <div class="h3">Where you actually rank</div>
-        <p>Not vanity metrics — your tier among C-level peers, scored against the levers that matter.</p>
-      </div>
-      <div class="pillar">
-        <div class="num">02</div>
-        <div class="h3">The six levers that move you up</div>
-        <p>Digital footprint, brand clarity, authority, content, visual identity, network recognition.</p>
-      </div>
-      <div class="pillar">
-        <div class="num">03</div>
-        <div class="h3">A path to the next tier</div>
-        <p>Concrete next steps based on what executives at the tier above yours actually do.</p>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- PILLARS section removed — content was duplicating the methodology hexagon below -->
 
 <!-- ─────────── RESULTS ─────────── -->
 <section class="results-wrap hidden" id="results">
@@ -2983,16 +2980,19 @@
 
 <!-- ─────────── METHODOLOGY (now BEFORE Circle — Circle is the bottom-of-page CTA) ─────────── -->
 <section class="method-wrap" id="methodology">
-  <div class="container-narrow">
+  <div class="container-narrow" style="max-width: 1140px;">
     <div class="eyebrow-row" style="justify-content: center; margin-bottom: 18px;">
       <span class="dot"></span>
       <span class="eyebrow">Methodology</span>
     </div>
     <h2 class="h2" style="text-align: center; margin-bottom: 18px;">What we actually measure.</h2>
-    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65);">
+    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65); max-width: 720px;">
       Six signals, all from your public LinkedIn. No surveys, no self-report. Each one scored
       0&ndash;3 and summed to your 0&ndash;18 Visibility Index.
     </p>
+
+    <!-- 2-col grid: hexagon left, dimension detail right (stacks on mobile) -->
+    <div class="method-split">
 
     <!-- Interactive 6-dimension hexagon — hover/tap any vertex to see what we measure.
          The polygon morphs slowly between three real executive shapes (rising → emerging → recognised). -->
@@ -3078,6 +3078,8 @@
       <h3 class="method-detail-title"   id="method-detail-title">Pick a point to read more</h3>
       <p class="method-detail-body"     id="method-detail-body">Each of the six points scores 0–3 from your public LinkedIn signals. Together they sum to your 0–18 Visibility Index.</p>
     </div>
+
+    </div><!-- /.method-split -->
 
     <!-- Technical detail tucked into one accordion for skeptics -->
     <details class="method">

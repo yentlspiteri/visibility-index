@@ -74,9 +74,24 @@ export default async function handler(req, res) {
 
     if (profileRes.status === 'rejected' || !profileRes.value) {
       const errMsg = profileRes.reason?.message || String(profileRes.reason) || 'no value';
-      console.error('Apify failed:', errMsg);
+      console.error('Apify failed:', errMsg, 'actor=', APIFY_ACTOR);
+
+      // Pick a user-facing message based on what actually went wrong
+      let userError;
+      if (/rate.?limit|blocked|empty profile/i.test(errMsg)) {
+        userError = 'LinkedIn is rate-limiting the scraper right now. Please wait 60 seconds and try again.';
+      } else if (/401|403|unauthor/i.test(errMsg)) {
+        userError = 'Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.';
+      } else if (/404|not.?found/i.test(errMsg)) {
+        userError = 'That LinkedIn profile doesn’t exist. Check the handle in the URL.';
+      } else if (/private/i.test(errMsg)) {
+        userError = 'That profile is private — the audit needs a public LinkedIn URL.';
+      } else {
+        userError = 'We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.';
+      }
+
       return res.status(502).json({
-        error: 'We couldn’t fetch that LinkedIn profile. The URL may be wrong or the profile is private.',
+        error: userError,
         _debug: errMsg.slice(0, 400),
         _actor: APIFY_ACTOR
       });
