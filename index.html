@@ -3230,7 +3230,7 @@
         </svg>
         <div class="score-reveal-ring-center">
           <div class="score-reveal-num" id="score-num">0</div>
-          <div class="score-reveal-suffix">/ 18</div>
+          <div class="score-reveal-suffix">/ 100</div>
         </div>
       </div>
       <div class="score-reveal-tier-name" id="tier-name">—</div>
@@ -4203,7 +4203,10 @@
       $('#ring-fg').setAttribute('stroke-dasharray', `${ringDash} ${circumference}`);
     }, 60);
 
-    animateNumber('#score-num', 0, total, 1400);
+    // Display the score as a percentage (0-100) — feels more familiar than /18.
+    // Internal scoring stays 0-18 (tiers + sub-scores key off the raw composite).
+    const displayScore = Math.round((total / 18) * 100);
+    animateNumber('#score-num', 0, displayScore, 1400);
 
     // Theatrical reveal — confetti for Recognised Leader tier (16+) only
     if (total >= 16) {
@@ -4229,12 +4232,20 @@
       $('#gate-standalone').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    // Scroll to the score reveal — brute-force approach.
-    // Layout was racing against the smooth scroll: by the time `getBoundingClientRect` measures,
-    // some images / SVGs are still calculating final heights and the scroll target moves under us.
-    // Solution: fire the scroll at multiple intervals. The first jump uses 'instant' to GUARANTEE
-    // we land at the score reveal even if smooth scrolling is interrupted; later passes smooth-scroll
-    // to compensate for any layout shift that happened in between.
+    // Scroll to the score reveal — scorched-earth approach.
+    //   1. Force-remove any leftover scroll-lock styles on body/html so scroll isn't blocked
+    //   2. Hard-jump past the hero (window.innerHeight) using legacy scrollTo(x, y) so it works
+    //      on every browser including Safari ≤ 16 (which doesn't support `behavior: 'instant'`)
+    //   3. Then smooth-scroll to the actual #score-reveal at multiple intervals to absorb layout shifts
+    document.body.classList.remove('audit-locked');
+    document.documentElement.classList.remove('audit-locked');
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+
+    // Step 1: hard jump past hero (works in every browser)
+    window.scrollTo(0, window.innerHeight);
+
+    // Step 2: smooth scroll to score reveal at staggered intervals
     function scrollToScore(behavior) {
       const target = document.getElementById('score-reveal') || results;
       if (!target) return;
@@ -4243,15 +4254,10 @@
       try {
         window.scrollTo({ top: y, behavior: behavior || 'smooth' });
       } catch {
-        window.scrollTo(0, y); // older browsers
+        window.scrollTo(0, y);
       }
     }
-    // Fire immediately (instant — ignore smooth-scroll preferences) so the user is moved off the hero NOW
-    scrollToScore('instant');
-    // Then re-fire smoothly after layout settles (at 80ms, 250ms, 600ms) to absorb any reflow
-    setTimeout(() => scrollToScore('smooth'),  80);
-    setTimeout(() => scrollToScore('smooth'), 250);
-    setTimeout(() => scrollToScore('smooth'), 600);
+    [50, 200, 500, 900].forEach(t => setTimeout(() => scrollToScore('smooth'), t));
   }
 
   function animateNumber(sel, from, to, ms) {
@@ -4535,7 +4541,7 @@
             <span class="leaderboard-sub">${p.role} · ${p.stage} · ${p.region}</span>
             <span class="leaderboard-standout">↑ ${p.standout}</span>
           </span>
-          <span class="leaderboard-score">${p.score} <span class="leaderboard-score-of">/ 18</span></span>
+          <span class="leaderboard-score">${Math.round((p.score / 18) * 100)} <span class="leaderboard-score-of">/ 100</span></span>
         </li>`;
     }).join('');
 
@@ -4551,7 +4557,7 @@
           <span class="leaderboard-name">${profileFirst}</span>
           <span class="leaderboard-sub">in your cohort</span>
         </span>
-        <span class="leaderboard-score">${userScore} <span class="leaderboard-score-of">/ 18</span></span>
+        <span class="leaderboard-score">${Math.round((userScore / 18) * 100)} <span class="leaderboard-score-of">/ 100</span></span>
       </li>`;
 
     $('#leaderboard').innerHTML = peerRows + youRow;
