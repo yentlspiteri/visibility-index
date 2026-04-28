@@ -99,7 +99,21 @@ export default async function handler(req, res) {
     return res.status(200).json({
       total, subs, tier,
       normalisedUrl: normalised,
-      _meta: { clarityRationale: clarity.rationale }
+      _meta: {
+        clarityRationale: clarity.rationale,
+        // TEMP diagnostic — remove once field mappers are tuned to the actor's shape:
+        profileKeys: Object.keys(profile || {}),
+        profileSample: {
+          headline: getHeadline(profile),
+          aboutLen: (getAbout(profile) || '').length,
+          followers: getFollowers(profile),
+          connections: getConnections(profile),
+          activities: getActivities(profile).length,
+          recommendations: getRecommendations(profile).length,
+          hasPhoto: !!getPhotoUrl(profile),
+          hasBanner: !!getBannerUrl(profile)
+        }
+      }
     });
   } catch (err) {
     console.error('score handler error:', err);
