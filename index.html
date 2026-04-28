@@ -3047,6 +3047,13 @@
       this.popover = root.querySelector('.picker-popover');
       this.options = root.querySelectorAll('.picker-option');
       this.select  = root.querySelector('.picker-native');
+      // Defensive: if any required child is missing we skip silently rather than
+      // throwing — a single malformed picker shouldn't kill every other listener
+      // on the page (which is what was bricking the Calculate button).
+      if (!this.trigger || !this.popover || !this.label) {
+        console.warn('[VI] Picker init skipped — missing children', { root, trigger: !!this.trigger, popover: !!this.popover, label: !!this.label });
+        return;
+      }
       this.bind();
     }
     bind() {
@@ -3110,7 +3117,10 @@
       }
     }
   }
-  document.querySelectorAll('.picker').forEach(p => new Picker(p));
+  // Wrap each Picker init in try/catch so one bad picker can't bring the page down.
+  document.querySelectorAll('.picker').forEach(p => {
+    try { new Picker(p); } catch (err) { console.error('[VI] Picker init error:', err, p); }
+  });
 
   /* Sequential focus hints — pulse the next field after the previous one is filled */
   function pulseNext(el) {
