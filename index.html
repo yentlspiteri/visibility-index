@@ -1096,6 +1096,257 @@
   .preview-cta::after { content: "→"; font-size: 16px; transition: transform .2s ease; }
   .preview-cta:hover::after { transform: translateX(4px); }
 
+  /* ════════════════════════════════════════════════════════════════
+     v0.3 BATCH 1 — Typography pass
+     Tightens scale across the page. Body 17px (down from 28px),
+     hero 84px max (down from 96px), mad-libs reads as a form (20px not 28px).
+     Cascade-order overrides — appended at end of <style> intentionally.
+     ════════════════════════════════════════════════════════════════ */
+
+  :root {
+    /* type scale */
+    --fs-display: clamp(56px, 7vw, 84px);
+    --fs-h2:      clamp(36px, 4vw, 56px);
+    --fs-h3:      20px;
+    --fs-body:    17px;
+    --fs-small:   14px;
+    --fs-eyebrow: 12px;
+    /* tracking */
+    --ls-display: -0.025em;
+    --ls-h2:      -0.02em;
+    --ls-h3:      -0.01em;
+    --ls-eyebrow: 0.12em;
+    /* line-height */
+    --lh-display: 1.04;
+    --lh-h2:      1.08;
+    --lh-h3:      1.25;
+    --lh-body:    1.55;
+  }
+
+  /* — Display + headings — */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-display);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-display);
+  }
+  .h2, .h2.circle-h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h2);
+    line-height: var(--lh-h2);
+    letter-spacing: var(--ls-h2);
+  }
+  .h3, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-h3);
+    line-height: var(--lh-h3);
+    letter-spacing: var(--ls-h3);
+  }
+
+  /* — Body copy — */
+  body {
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    letter-spacing: 0;
+  }
+  p {
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    letter-spacing: 0;
+  }
+
+  /* — Mad-libs (highest-impact fix: reads as a form, not a headline) — */
+  .madlib {
+    font-family: var(--font-body);
+    font-size: 20px;
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+  }
+  .madlib-select {
+    font-size: 20px;
+    font-weight: 500;
+    font-family: inherit;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    padding: 6px 28px 6px 12px;
+    border-radius: 10px;
+  }
+  .madlib-input {
+    font-size: 18px;
+    font-weight: 400;
+    font-family: inherit;
+    line-height: 1.4;
+    padding: 12px 14px;
+  }
+  .madlib-handle-wrap { margin-top: 14px; }
+  .madlib-submit {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+    padding: 14px 22px;
+    border-radius: 999px;
+    min-height: 48px;
+  }
+
+  /* — Eyebrow / kicker labels (one consistent treatment site-wide) — */
+  .eyebrow,
+  .hero-eyebrow .eyebrow,
+  .preview-eyebrow,
+  .gate-eyebrow {
+    font-family: var(--font-body);
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+
+  /* — Buttons — */
+  .btn,
+  button,
+  .preview-cta,
+  .tier-cta-btn {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  .pill {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0;
+    padding: 10px 16px;
+    border-radius: 999px;
+    line-height: 1;
+  }
+
+  /* — Cards: tighter rhythm, colors unchanged — */
+  .action-card,
+  .preview-card,
+  .gate-card {
+    padding: clamp(20px, 3vw, 32px);
+    border-radius: 20px;
+  }
+  .ladder-row {
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+  .ladder-row .ladder-name {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .ladder-row .ladder-tag,
+  .ladder-row .ladder-blurb {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  /* — Subscores — */
+  .subscore { padding: 14px 0; }
+  .subscore-label {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .subscore-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .subscore-value-suffix {
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.5;
+  }
+  .subscore-context {
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0.75;
+  }
+
+  /* — Leaderboard — */
+  .leaderboard-row {
+    font-size: 15px;
+    padding: 12px 16px;
+  }
+  .leaderboard-row.you { font-weight: 600; }
+
+  /* — Email gate — */
+  .gate-card {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .gate-form input[type="email"] {
+    font-size: 17px;
+    font-weight: 400;
+    padding: 14px 16px;
+    border-radius: 12px;
+  }
+  .gate-form button[type="submit"] {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 22px;
+    border-radius: 999px;
+    min-height: 48px;
+  }
+  .gate-disclaimer {
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0.7;
+    margin-top: 12px;
+  }
+
+  /* — Trust signals (fine-print, not body copy) — */
+  .trust-strip,
+  .hero-trust-line,
+  [class*="trust"] {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+
+  /* — Nav — */
+  nav.top a,
+  nav.top .nav-link {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+
+  /* — Loading rows — */
+  .loading-row {
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 0;
+    letter-spacing: 0;
+  }
+
+  /* — Methodology table — */
+  details.method .method-body table { font-size: 15px; line-height: 1.5; }
+  details.method .method-body th {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 14px 16px;
+  }
+  details.method .method-body td {
+    padding: 14px 16px;
+    vertical-align: top;
+  }
+
   .hidden { display: none !important; }
 </style>
 </head>
