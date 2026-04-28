@@ -164,19 +164,45 @@ export default async function handler(req, res) {
   const SERVER   = process.env.MAILCHIMP_SERVER_PREFIX;
   const AUDIENCE = process.env.MAILCHIMP_AUDIENCE_ID;
   const KEY      = process.env.MAILCHIMP_API_KEY;
-  if (SERVER && AUDIENCE && KEY) {
+  // Diagnostic surfaced in the response — same pattern as _emailDebug
+  const mcDebug = {
+    serverPresent:   !!SERVER,
+    audiencePresent: !!AUDIENCE,
+    keyPresent:      !!KEY,
+    keyPrefix:       KEY ? KEY.slice(0, 6) + '…' : null,
+    server:          SERVER || null,
+    audienceLen:     AUDIENCE ? AUDIENCE.length : 0,
+    status:          null,
+    body:            null,
+    error:           null,
+    skipReason:      null
+  };
+  if (!SERVER || !AUDIENCE || !KEY) {
+    const missing = [];
+    if (!SERVER)   missing.push('MAILCHIMP_SERVER_PREFIX');
+    if (!AUDIENCE) missing.push('MAILCHIMP_AUDIENCE_ID');
+    if (!KEY)      missing.push('MAILCHIMP_API_KEY');
+    mcDebug.skipReason = `missing env: ${missing.join(', ')}`;
+    console.warn('[lead] Mailchimp skipped:', mcDebug.skipReason);
+    notifyOps({
+      category: 'mailchimp-missing-env',
+      subject:  '⚠️ Visibility Index: Mailchimp env vars not configured',
+      body:     `A lead was captured but NOT added to Mailchimp because these env vars are missing on Vercel:\n\n${missing.join('\n')}\n\nSet them under Vercel → Project → Settings → Environment Variables → Production. Then redeploy.`,
+      context:  { lead: email }
+    }).catch(() => {});
+  } else {
     try {
       const auth = 'Basic ' + Buffer.from(`anystring:${KEY}`).toString('base64');
       const tierName = tier?.name || '';
       const tierSlug = tierName.toLowerCase().replace(/^the\s+/, '').replace(/\s+/g, '-') || 'unknown';
       const merge_fields = {
-        VIS_SCORE:   typeof score === 'number' ? score : 0,
-        VIS_TIER:    tierName,
-        VIS_GOAL:    String(goal || ''),
-        VIS_LINKEDIN:String(normalisedUrl || ''),
-        UTM_SOURCE:  String(attribution?.utm_source   || ''),
-        UTM_CAMP:    String(attribution?.utm_campaign || ''),
-        UTM_MED:     String(attribution?.utm_medium   || '')
+        VIS_SCORE:    typeof score === 'number' ? score : 0,
+        VIS_TIER:     tierName,
+        VIS_GOAL:     String(goal || ''),
+        VIS_LINKEDIN: String(normalisedUrl || ''),
+        UTM_SOURCE:   String(attribution?.utm_source   || ''),
+        UTM_CAMP:     String(attribution?.utm_campaign || ''),
+        UTM_MED:      String(attribution?.utm_medium   || '')
       };
       const tags = [
         `tier:${tierSlug}`,
@@ -196,26 +222,110 @@ export default async function handler(req, res) {
           tags
         })
       });
+      mcDebug.status = r.status;
       mailchimpOk = r.ok;
       if (!r.ok) {
         const errBody = await r.json().catch(() => ({}));
+        mcDebug.body = JSON.stringify(errBody).slice(0, 500);
         console.error('Mailchimp upsert failed:', r.status, errBody);
+        // Common 400 cause: missing MERGE FIELDS in the audience (VIS_SCORE etc.) — Mailchimp rejects writes to undefined fields.
+        notifyOps({
+          category: 'mailchimp-failed',
+          subject:  '⚠️ Visibility Index: Mailchimp upsert rejected',
+          body:     `Lead got the email but was NOT added to Mailchimp.\n\nStatus: ${r.status}\nBody: ${JSON.stringify(errBody).slice(0, 500)}\n\nCommon causes:\n • Merge fields not added to the audience (need VIS_SCORE [Number], VIS_TIER, VIS_GOAL, VIS_LINKEDIN, UTM_SOURCE, UTM_CAMP, UTM_MED — all Text except VIS_SCORE)\n • API key tied to the wrong account\n • Audience ID belongs to a different list\n • Server prefix wrong (e.g. set us17 when account is us21)`,
+          context:  { lead: email, status: r.status, server: SERVER }
+        }).catch(() => {});
+      } else {
+        const okBody = await r.json().catch(() => ({}));
+        mcDebug.body = okBody.id ? `subscriber id=${okBody.id}` : 'ok';
       }
     } catch (err) {
+      mcDebug.error = err?.message || String(err);
       console.error('Mailchimp error:', err);
+      notifyOps({
+        category: 'mailchimp-crash',
+        subject:  '🚨 Visibility Index: Mailchimp call crashed',
+        body:     `Threw before getting a response from Mailchimp.\n\n${err?.stack || err?.message || String(err)}`,
+        context:  { lead: email }
+      }).catch(() => {});
     }
-  } else {
-    console.warn('Mailchimp env vars missing — skipping lead upsert.');
   }
 
-  // ── 4) Return success — frontend uses pdf base64 for instant download ──
+  // ── 4) Slack notification — every captured lead ──
+  // Set SLACK_WEBHOOK_URL on Vercel (Incoming Webhook from a Slack app) to enable.
+  // Fire-and-forget; never blocks the response.
+  let slackNotified = false;
+  if (process.env.SLACK_WEBHOOK_URL) {
+    try {
+      const display = typeof score === 'number' ? Math.round((score / 18) * 100) : null;
+      const tierName = tier?.name || 'unknown tier';
+      const profileName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || '(no name)';
+      const profileHeadline = profile?.headline || '';
+      const company = profile?.companyName || '';
+      const linkedin = normalisedUrl ? `https://www.${normalisedUrl}/` : '';
+      const utm = attribution?.utm_campaign ? `${attribution.utm_source || '?'}/${attribution.utm_campaign}` : 'direct';
+
+      const slackPayload = {
+        text: `🎯 New Visibility Index lead: ${profileName} (${email})`,
+        blocks: [
+          {
+            type: 'header',
+            text: { type: 'plain_text', text: `🎯 New lead: ${profileName}` }
+          },
+          {
+            type: 'section',
+            fields: [
+              { type: 'mrkdwn', text: `*Email*\n${email}` },
+              { type: 'mrkdwn', text: `*Score*\n${display !== null ? display + ' / 100' : 'n/a'}` },
+              { type: 'mrkdwn', text: `*Tier*\n${tierName}` },
+              { type: 'mrkdwn', text: `*Role / Goal*\n${role || '?'} / ${goal || '?'}` },
+              { type: 'mrkdwn', text: `*Company*\n${company || '_unknown_'}` },
+              { type: 'mrkdwn', text: `*Source*\n${utm}` }
+            ]
+          },
+          ...(profileHeadline ? [{
+            type: 'section',
+            text: { type: 'mrkdwn', text: `*Headline*\n_${profileHeadline}_` }
+          }] : []),
+          ...(linkedin ? [{
+            type: 'context',
+            elements: [{ type: 'mrkdwn', text: `<${linkedin}|View LinkedIn profile>` }]
+          }] : []),
+          {
+            type: 'context',
+            elements: [{
+              type: 'mrkdwn',
+              text: `Email delivered: ${emailDelivered ? '✅' : '❌'} · Mailchimp: ${mailchimpOk ? '✅' : '❌'} · PDF: ${pdfBase64 ? '✅' : '❌'}`
+            }]
+          }
+        ]
+      };
+
+      const slackRes = await fetch(process.env.SLACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(slackPayload)
+      });
+      slackNotified = slackRes.ok;
+      if (!slackRes.ok) {
+        const txt = await slackRes.text().catch(() => '');
+        console.error('Slack webhook failed:', slackRes.status, txt.slice(0, 200));
+      }
+    } catch (err) {
+      console.error('Slack notify error:', err);
+    }
+  }
+
+  // ── 5) Return success — frontend uses pdf base64 for instant download ──
   return res.status(200).json({
     ok:             true,
     emailDelivered: emailDelivered,
     mailchimpOk:    mailchimpOk,
+    slackNotified:  slackNotified,
     pdf:            pdfBase64,    // null if PDF build failed
-    _pdfError:      pdfError,     // first 600 chars of the PDF error message — null when PDF built fine
-    _emailDebug:    emailDebug
+    _pdfError:      pdfError,
+    _emailDebug:    emailDebug,
+    _mcDebug:       mcDebug
   });
 }
 
