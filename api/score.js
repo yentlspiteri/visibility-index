@@ -101,8 +101,9 @@ export default async function handler(req, res) {
       normalisedUrl: normalised,
       _meta: {
         clarityRationale: clarity.rationale,
-        // TEMP diagnostic — remove once field mappers are tuned to the actor's shape:
+        // TEMP diagnostic:
         profileKeys: Object.keys(profile || {}),
+        profileRawTrunc: JSON.stringify(profile || {}).slice(0, 800),
         profileSample: {
           headline: getHeadline(profile),
           aboutLen: (getAbout(profile) || '').length,
