@@ -504,6 +504,12 @@
     text-align: left;
     color: var(--vp-white);
   }
+  /* Gentle fade on text changes so cycling/hover doesn't feel jarring */
+  .results-summary-eyebrow,
+  .results-summary-title,
+  .results-summary-body {
+    transition: opacity .25s ease, transform .25s ease;
+  }
   .results-summary-eyebrow {
     display: block;
     font-family: var(--font-body);
@@ -582,7 +588,21 @@
     fill: var(--vp-navy, #0B0359);
     stroke: var(--vp-lavender, #8683E5);
     stroke-width: 2;
-    transition: r .18s cubic-bezier(.2,.8,.25,1);
+    transition: r .18s cubic-bezier(.2,.8,.25,1), fill .18s ease;
+  }
+  /* Interactive vertex group — invisible hit-target makes hover easy on all devices */
+  .personal-hex .phex-vertex { cursor: pointer; outline: none; }
+  .personal-hex .phex-hit    { fill: transparent; pointer-events: all; }
+  .personal-hex .phex-vertex:hover .phex-node,
+  .personal-hex .phex-vertex.is-active .phex-node {
+    r: 11;
+    fill: var(--vp-lavender, #8683E5);
+  }
+  .personal-hex .phex-vertex:hover .phex-num,
+  .personal-hex .phex-vertex.is-active .phex-num { opacity: 1; }
+  .personal-hex .phex-vertex:hover .phex-label,
+  .personal-hex .phex-vertex.is-active .phex-label {
+    fill: var(--vp-lavender, #8683E5);
   }
   .personal-hex .phex-num {
     font-family: var(--font-body);
@@ -4288,9 +4308,9 @@
   }
 
   /* Personal-shape hexagon — mirror of the methodology hexagon, filled with the user's actual scores.
-     Replaces the 6 verbose cards. Zero text — the visual carries the meaning. Detailed commentary
-     stays in the PDF where readers expect depth. */
-  function renderSubscores(subs /*, commentary unused on page now */) {
+     Hover/tap any vertex → right-side summary updates with that dimension's commentary.
+     Auto-cycles through all six on first reveal so the user sees every gap, then stops once they engage. */
+  function renderSubscores(subs, commentary) {
     const container = $('#subscores');
     container.innerHTML = '';
 
@@ -4376,13 +4396,70 @@
           fill="freeze"/>
       </polygon>
       ${VERTICES.map(v => `
-        <circle class="phex-node" cx="${v.cx}" cy="${v.cy}" r="6"/>
-        <text class="phex-num"   x="${v.tx}" y="${v.ty}" text-anchor="${v.anchor}">${v.num}</text>
-        <text class="phex-label" x="${v.tx}" y="${v.ly}" text-anchor="${v.anchor}">${v.label} ${subs[v.key] ?? 0}/3</text>
+        <g class="phex-vertex" data-dim="${v.key}" tabindex="0">
+          <circle class="phex-hit"  cx="${v.cx}" cy="${v.cy}" r="40"/>
+          <circle class="phex-node" cx="${v.cx}" cy="${v.cy}" r="6"/>
+          <text class="phex-num"    x="${v.tx}" y="${v.ty}" text-anchor="${v.anchor}">${v.num}</text>
+          <text class="phex-label"  x="${v.tx}" y="${v.ly}" text-anchor="${v.anchor}">${v.label} ${subs[v.key] ?? 0}/3</text>
+        </g>
       `).join('')}
     `;
 
     container.appendChild(svg);
+
+    // Wire hover/tap → updates the right-side summary block.
+    // Uses Claude's dimensionCommentary when available, falls back to generic per-level copy.
+    const titleEl = document.getElementById('results-summary-title');
+    const bodyEl  = document.getElementById('results-summary-body');
+    const eyebrowEl = document.querySelector('.results-summary-eyebrow');
+    // Cache the default ("What this means" + executiveSummary) so we can restore on mouseleave
+    const defaultEyebrow = eyebrowEl ? eyebrowEl.textContent : 'Your shape';
+    const defaultTitle   = titleEl   ? titleEl.textContent   : '';
+    const defaultBody    = bodyEl    ? bodyEl.textContent    : '';
+
+    function showVertex(key) {
+      const v = VERTICES.find(x => x.key === key); if (!v) return;
+      const score = subs[key] ?? 0;
+      const dim   = DIMENSIONS.find(d => d.key === key);
+      const fallbackText = dim ? dim.ctxByLevel[score] : '';
+      const claudeText   = (commentary && commentary[key]) || '';
+      const text = claudeText || fallbackText;
+      // Score-aware framing — strengths celebrated, gaps named clearly
+      let framing;
+      if (score === 3)      framing = 'Strength';
+      else if (score === 0) framing = 'Biggest gap';
+      else                  framing = 'Room to grow';
+      if (eyebrowEl) eyebrowEl.textContent = framing;
+      if (titleEl)   titleEl.textContent   = `${v.label} · ${score}/3`;
+      if (bodyEl)    bodyEl.textContent    = text;
+      // Mark active vertex for highlight CSS
+      svg.querySelectorAll('.phex-vertex').forEach(g => {
+        g.classList.toggle('is-active', g.dataset.dim === key);
+      });
+    }
+    function resetSummary() {
+      if (eyebrowEl) eyebrowEl.textContent = defaultEyebrow;
+      if (titleEl)   titleEl.textContent   = defaultTitle;
+      if (bodyEl)    bodyEl.textContent    = defaultBody;
+      svg.querySelectorAll('.phex-vertex').forEach(g => g.classList.remove('is-active'));
+    }
+    svg.querySelectorAll('.phex-vertex').forEach(g => {
+      const key = g.dataset.dim;
+      g.addEventListener('mouseenter', () => showVertex(key));
+      g.addEventListener('focus',      () => showVertex(key));
+      g.addEventListener('click',      () => showVertex(key));
+    });
+    // Auto-cycle through dimensions every 3s while idle (no hover yet) — gives the section life
+    let cycleIdx = 0;
+    let userInteracted = false;
+    svg.addEventListener('mouseenter', () => { userInteracted = true; }, { once: true });
+    const cycleTimer = setInterval(() => {
+      if (userInteracted) { clearInterval(cycleTimer); return; }
+      const v = VERTICES[cycleIdx % 6];
+      showVertex(v.key);
+      cycleIdx++;
+      if (cycleIdx >= 6) { clearInterval(cycleTimer); resetSummary(); }
+    }, 2800);
   }
 
   function synthRank(score, cohort) {
