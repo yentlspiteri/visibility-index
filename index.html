@@ -45,6 +45,7 @@
   .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
   .container-narrow { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 32px; }
   .container-action { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 32px; }
+  .container-hero   { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 32px; }
 
   /* ── Type ── */
   .display {
@@ -891,6 +892,210 @@
   }
   .sample-link:hover { color: var(--vp-white); border-bottom-color: var(--vp-white); }
 
+  /* ── HERO 2-COLUMN GRID (FIN-inspired wider layout) ── */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: stretch;
+    margin-top: 8px;
+    text-align: left;
+  }
+  @media (max-width: 880px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 20px; }
+  }
+
+  /* The action card now lives inside the grid as the LEFT panel */
+  .hero-grid .action-card {
+    margin: 0;
+    max-width: none;
+    padding: 36px 32px;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Preview card — the RIGHT panel. Three states: ladder / loading / result */
+  .preview-card {
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(134,131,229,0.22);
+    border-radius: 22px;
+    padding: 36px 32px;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(11,3,89,0.3);
+  }
+  .preview-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(at 80% 0%, rgba(134,131,229,0.18), transparent 55%),
+      radial-gradient(at 20% 100%, rgba(63,54,178,0.22), transparent 55%);
+    pointer-events: none;
+  }
+  .preview-card > * { position: relative; z-index: 1; }
+
+  .preview-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+    margin-bottom: 24px;
+  }
+
+  /* State A: the tier ladder */
+  .preview-ladder { display: block; }
+  .preview-ladder.hidden { display: none; }
+
+  .ladder { display: flex; flex-direction: column; gap: 10px; }
+  .ladder-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(252,252,252,0.03);
+    border: 1px solid rgba(252,252,252,0.06);
+    transition: all .2s ease;
+  }
+  .ladder-row:hover { background: rgba(134,131,229,0.08); border-color: rgba(134,131,229,0.3); }
+  .ladder-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(134,131,229,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .ladder-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ladder-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--vp-white);
+    line-height: 1.2;
+  }
+  .ladder-tag {
+    font-size: 12px;
+    color: rgba(252,252,252,0.55);
+    line-height: 1.3;
+  }
+  .ladder-score {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--vp-lavender);
+    background: rgba(134,131,229,0.12);
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .ladder-prompt {
+    margin-top: 22px;
+    text-align: center;
+    font-style: italic;
+    color: rgba(252,252,252,0.6);
+    font-size: 14px;
+  }
+
+  /* State B: loading (preview card variant — same loading-row markup, dark theme) */
+  .preview-loading { display: none; }
+  .preview-loading.active { display: block; }
+  .preview-loading .preview-eyebrow { color: var(--vp-lavender); }
+
+  .preview-loading .loading-list { display: grid; gap: 6px; }
+  .preview-loading .loading-row {
+    background: rgba(252,252,252,0.02);
+    border: 1px solid rgba(252,252,252,0.06);
+    color: rgba(252,252,252,0.55);
+  }
+  .preview-loading .loading-row.running {
+    background: rgba(134,131,229,0.1);
+    border-color: rgba(134,131,229,0.3);
+    color: var(--vp-white);
+  }
+  .preview-loading .loading-row.done {
+    background: rgba(252,252,252,0.02);
+    color: rgba(252,252,252,0.5);
+  }
+  .preview-loading .loading-icon::before {
+    border-color: rgba(252,252,252,0.25);
+  }
+  .preview-loading .loading-row.running .loading-icon::before {
+    border-color: var(--vp-lavender);
+    border-top-color: transparent;
+  }
+  .preview-loading .loading-row.done .loading-icon::before {
+    background: var(--vp-lavender);
+    border-color: var(--vp-lavender);
+  }
+
+  /* State C: the result */
+  .preview-result { display: none; }
+  .preview-result.active { display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+  .preview-ring { position: relative; width: 220px; height: 220px; margin-bottom: 18px; }
+  .preview-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .preview-ring .ring-bg { fill: none; stroke: rgba(252,252,252,0.08); stroke-width: 12; }
+  .preview-ring .ring-fg {
+    fill: none;
+    stroke: url(#ringGradient);
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);
+  }
+  .preview-ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .preview-score-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .preview-score-suffix { font-size: 13px; color: rgba(252,252,252,0.55); margin-top: 6px; }
+
+  .preview-tier-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin-bottom: 8px;
+  }
+  .preview-tier-tagline {
+    font-style: italic;
+    color: var(--vp-lavender);
+    font-size: 14px;
+    margin-bottom: 20px;
+    max-width: 320px;
+  }
+  .preview-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--vp-white);
+    color: var(--vp-navy);
+    border: 0;
+    border-radius: 999px;
+    height: 44px;
+    padding: 0 22px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform .18s ease, background .18s ease;
+  }
+  .preview-cta:hover { transform: translateY(-1px); background: var(--vp-ice); }
+  .preview-cta::after { content: "→"; font-size: 16px; transition: transform .2s ease; }
+  .preview-cta:hover::after { transform: translateX(4px); }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -919,9 +1124,9 @@
   </div>
 </nav>
 
-<!-- ─────────── HERO (action-first) ─────────── -->
+<!-- ─────────── HERO (FIN-inspired wide 2-col layout) ─────────── -->
 <section class="hero">
-  <div class="container-action">
+  <div class="container-hero">
 
     <div class="hero-eyebrow">
       <span class="dot"></span>
@@ -930,10 +1135,13 @@
 
     <h1 class="display">How visible<br/>are you, really?</h1>
 
-    <!-- THE ACTION CARD — mad-libs sentence + loading happen here, in place -->
-    <div class="action-card" id="action-card">
+    <!-- 2-COLUMN GRID: mad-libs LEFT, preview RIGHT -->
+    <div class="hero-grid">
 
-      <div class="input-panel" id="input-panel">
+      <!-- LEFT: action card with the mad-libs sentence -->
+      <div class="action-card" id="action-card">
+
+        <div class="input-panel" id="input-panel">
         <p class="madlib">
           Audit my visibility as a&nbsp;<select class="madlib-select" id="ml-role" aria-label="Your role">
             <option value="ceo">CEO</option>
@@ -957,22 +1165,91 @@
         <button class="madlib-submit" id="btn-calculate">Calculate my score</button>
       </div>
 
-      <div class="loading-panel" id="loading-panel">
-        <div class="loading-title">Running the audit…</div>
-        <div class="loading-subtitle">Six dimensions, public signals only.</div>
-        <ul class="loading-list" id="loading-list">
-          <li class="loading-row" data-step="0"><span class="loading-icon"></span><span>Verifying LinkedIn profile</span></li>
-          <li class="loading-row" data-step="1"><span class="loading-icon"></span><span>Mapping digital footprint</span></li>
-          <li class="loading-row" data-step="2"><span class="loading-icon"></span><span>Scoring brand clarity</span></li>
-          <li class="loading-row" data-step="3"><span class="loading-icon"></span><span>Reading authority signals</span></li>
-          <li class="loading-row" data-step="4"><span class="loading-icon"></span><span>Measuring content cadence</span></li>
-          <li class="loading-row" data-step="5"><span class="loading-icon"></span><span>Auditing visual identity</span></li>
-          <li class="loading-row" data-step="6"><span class="loading-icon"></span><span>Calculating network recognition</span></li>
-          <li class="loading-row" data-step="7"><span class="loading-icon"></span><span>Computing your Visibility Index</span></li>
-        </ul>
-      </div>
+      </div><!-- /.action-card -->
 
-    </div>
+      <!-- RIGHT: preview card — ladder pre-audit, loading during, result after -->
+      <div class="preview-card" id="preview-card">
+
+        <!-- State A: tier ladder (default) -->
+        <div class="preview-ladder" id="preview-ladder">
+          <div class="preview-eyebrow">The Visibility Ladder</div>
+          <div class="ladder">
+            <div class="ladder-row">
+              <span class="ladder-icon">★</span>
+              <div class="ladder-text">
+                <div class="ladder-name">The Recognised Leader</div>
+                <div class="ladder-tag">Strong brand. Legacy-level.</div>
+              </div>
+              <span class="ladder-score">16–18</span>
+            </div>
+            <div class="ladder-row">
+              <span class="ladder-icon">↗</span>
+              <div class="ladder-text">
+                <div class="ladder-name">The Emerging Authority</div>
+                <div class="ladder-tag">Solid foundations. Time to scale.</div>
+              </div>
+              <span class="ladder-score">11–15</span>
+            </div>
+            <div class="ladder-row">
+              <span class="ladder-icon">◐</span>
+              <div class="ladder-text">
+                <div class="ladder-name">The Rising Voice</div>
+                <div class="ladder-tag">Building momentum, gaps remain.</div>
+              </div>
+              <span class="ladder-score">6–10</span>
+            </div>
+            <div class="ladder-row">
+              <span class="ladder-icon">○</span>
+              <div class="ladder-text">
+                <div class="ladder-name">The Hidden Gem</div>
+                <div class="ladder-tag">Real expertise, hidden.</div>
+              </div>
+              <span class="ladder-score">0–5</span>
+            </div>
+          </div>
+          <p class="ladder-prompt">Where will you land?</p>
+        </div>
+
+        <!-- State B: loading -->
+        <div class="preview-loading" id="preview-loading">
+          <div class="preview-eyebrow">Running the audit</div>
+          <ul class="loading-list" id="loading-list">
+            <li class="loading-row" data-step="0"><span class="loading-icon"></span><span>Verifying LinkedIn profile</span></li>
+            <li class="loading-row" data-step="1"><span class="loading-icon"></span><span>Mapping digital footprint</span></li>
+            <li class="loading-row" data-step="2"><span class="loading-icon"></span><span>Scoring brand clarity</span></li>
+            <li class="loading-row" data-step="3"><span class="loading-icon"></span><span>Reading authority signals</span></li>
+            <li class="loading-row" data-step="4"><span class="loading-icon"></span><span>Measuring content cadence</span></li>
+            <li class="loading-row" data-step="5"><span class="loading-icon"></span><span>Auditing visual identity</span></li>
+            <li class="loading-row" data-step="6"><span class="loading-icon"></span><span>Calculating network recognition</span></li>
+            <li class="loading-row" data-step="7"><span class="loading-icon"></span><span>Computing your Visibility Index</span></li>
+          </ul>
+        </div>
+
+        <!-- State C: result -->
+        <div class="preview-result" id="preview-result">
+          <div class="preview-ring">
+            <svg viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#3F36B2"/>
+                  <stop offset="100%" stop-color="#8683E5"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="110" cy="110" r="96" />
+              <circle class="ring-fg" id="ring-fg" cx="110" cy="110" r="96" stroke-dasharray="0 600" />
+            </svg>
+            <div class="preview-ring-center">
+              <div class="preview-score-num" id="score-num">0</div>
+              <div class="preview-score-suffix">/ 18</div>
+            </div>
+          </div>
+          <div class="preview-tier-name" id="tier-name">—</div>
+          <div class="preview-tier-tagline" id="tier-tagline">—</div>
+          <button class="preview-cta" id="tier-cta">See full report</button>
+        </div>
+
+      </div><!-- /.preview-card -->
+    </div><!-- /.hero-grid -->
 
     <!-- TRUST STRIP — avatars sourced from /img/avatar-{1,2,3}.png. Fallback initials shown if missing. -->
     <div class="trust-strip">
@@ -1035,36 +1312,6 @@
     <div class="results-eyebrow-row">
       <span class="dot"></span>
       <span class="eyebrow">Your result</span>
-    </div>
-
-    <div class="result-headline">
-      <div class="score-ring-wrap">
-        <div class="score-ring">
-          <svg viewBox="0 0 320 320">
-            <defs>
-              <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#3F36B2"/>
-                <stop offset="100%" stop-color="#8683E5"/>
-              </linearGradient>
-            </defs>
-            <circle class="ring-bg" cx="160" cy="160" r="140" />
-            <circle class="ring-fg" id="ring-fg" cx="160" cy="160" r="140" stroke-dasharray="0 880" />
-          </svg>
-          <div class="score-ring-center">
-            <div class="score-num" id="score-num">0</div>
-            <div class="score-suffix">/ 18</div>
-          </div>
-        </div>
-        <div class="score-label">Your Visibility Index</div>
-      </div>
-
-      <div class="tier-block">
-        <span class="eyebrow">Your tier</span>
-        <div class="tier-name" id="tier-name">—</div>
-        <div class="tier-tagline" id="tier-tagline">—</div>
-        <p class="tier-blurb" id="tier-blurb">—</p>
-        <button class="tier-cta-btn" id="tier-cta">See my full report</button>
-      </div>
     </div>
 
     <div class="subscores" id="subscores"><!-- populated by JS --></div>
@@ -1397,13 +1644,15 @@
   };
 
   /* ────────── Flow ────────── */
-  const actionCard   = $('#action-card');
-  const inputPanel   = $('#input-panel');
-  const loadingPanel = $('#loading-panel');
-  const calcBtn      = $('#btn-calculate');
-  const linkInput    = $('#input-linkedin');
-  const roleSelect   = $('#ml-role');
-  const goalSelect   = $('#ml-goal');
+  const actionCard     = $('#action-card');
+  const inputPanel     = $('#input-panel');
+  const previewLadder  = $('#preview-ladder');
+  const previewLoading = $('#preview-loading');
+  const previewResult  = $('#preview-result');
+  const calcBtn        = $('#btn-calculate');
+  const linkInput      = $('#input-linkedin');
+  const roleSelect     = $('#ml-role');
+  const goalSelect     = $('#ml-goal');
 
   // Goal-specific subhead that appears in the result block — mirrors the user's stated goal back at them.
   const GOAL_HEADLINES = {
@@ -1453,9 +1702,12 @@
 
     const raw = linkInput.value.trim();
     const normalised = normaliseLinkedIn(raw) || 'demo-profile';
-    inputPanel.classList.add('hidden');
-    loadingPanel.classList.add('active');
-    actionCard.classList.add('is-loading');
+
+    // Switch the preview card into loading state. Mad-libs stays visible so the user
+    // can change role/goal/handle and re-run — same pattern as FIN's calculator.
+    previewLadder.classList.add('hidden');
+    previewResult.classList.remove('active');
+    previewLoading.classList.add('active');
 
     // Sample pills — mock data, no API call (so demo costs nothing)
     if (opts.override) {
@@ -1484,9 +1736,10 @@
   }
 
   function showError(msg) {
-    loadingPanel.classList.remove('active');
-    actionCard.classList.remove('is-loading');
-    inputPanel.classList.remove('hidden');
+    // Reset preview back to the ladder state so the user sees what's at stake again
+    previewLoading.classList.remove('active');
+    previewResult.classList.remove('active');
+    previewLadder.classList.remove('hidden');
     $$('.loading-row').forEach(r => { r.classList.remove('running'); r.classList.remove('done'); });
     let errEl = document.getElementById('hero-error');
     if (!errEl) {
@@ -1517,18 +1770,22 @@
     const results = $('#results');
     results.classList.remove('hidden');
 
+    // Switch preview card from loading → result
+    previewLoading.classList.remove('active');
+    previewResult.classList.add('active');
+
     const tier = tierFor(total);
     // Save for the lead capture call
     lastScore = total; lastSubs = subs; lastTier = tier; lastUrl = url;
 
     $('#tier-name').textContent     = tier.name;
     $('#tier-tagline').textContent  = tier.tagline;
-    $('#tier-blurb').textContent    = tier.blurb;
-    $('#tier-cta').textContent      = tier.cta;
+    $('#tier-cta').textContent      = 'See full report';
     // Goal-aware gate copy: mirror their stated goal back at them on the unlock card
     $('#gate-cta-line').textContent = GOAL_HEADLINES[lastGoal] || (tier.cta + '.');
 
-    const circumference = 879.6;
+    // Smaller ring (r=96) → circumference ≈ 603.2
+    const circumference = 603.2;
     const ringDash = (total / 18) * circumference;
     setTimeout(() => {
       $('#ring-fg').setAttribute('stroke-dasharray', `${ringDash} ${circumference}`);
