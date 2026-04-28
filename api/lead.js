@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')    return res.status(405).json({ error: 'Method not allowed' });
 
-  const { email, goal, score, tier, normalisedUrl, attribution } = req.body || {};
+  const { email, goal, role, score, tier, normalisedUrl, attribution } = req.body || {};
 
   if (!email || typeof email !== 'string' || !email.includes('@')) {
     return res.status(400).json({ error: 'Please provide a valid email.' });
@@ -63,6 +63,7 @@ export default async function handler(req, res) {
   const tags = [
     `tier:${tierSlug}`,
     `goal:${goal}`,
+    ...(role ? [`role:${role}`] : []),
     ...(attribution?.utm_campaign ? [`campaign:${attribution.utm_campaign}`] : [])
   ];
 

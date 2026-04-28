@@ -764,6 +764,133 @@
   footer .footer-links a { color: rgba(252,252,252,0.55); text-decoration: none; }
   footer .footer-links a:hover { color: var(--vp-white); }
 
+  /* ── MAD-LIBS SENTENCE (hero action) ── */
+  .madlib {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.6vw, 28px);
+    line-height: 1.4;
+    color: var(--vp-black);
+    letter-spacing: -0.005em;
+    margin: 0;
+  }
+  .madlib + .madlib { margin-top: 14px; }
+
+  .madlib-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    background: rgba(63,54,178,0.08);
+    color: var(--vp-indigo);
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 600;
+    line-height: 1;
+    padding: 6px 32px 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    outline: none;
+    transition: background .15s ease, color .15s ease;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%233F36B2' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 10px;
+  }
+  .madlib-select:hover { background-color: rgba(63,54,178,0.14); }
+  .madlib-select:focus { box-shadow: 0 0 0 3px rgba(63,54,178,0.18); }
+  .madlib-select option { color: var(--vp-black); background: var(--vp-white); }
+
+  .madlib-handle-wrap {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(63,54,178,0.08);
+    border-radius: 999px;
+    padding: 4px 4px 4px 14px;
+    transition: background .15s ease, box-shadow .15s ease;
+  }
+  .madlib-handle-wrap:focus-within {
+    background: rgba(63,54,178,0.14);
+    box-shadow: 0 0 0 3px rgba(63,54,178,0.18);
+  }
+  .madlib-prefix {
+    color: var(--vp-grey-2);
+    font-family: inherit;
+    font-size: 0.85em;
+    margin-right: 2px;
+  }
+  .madlib-input {
+    border: 0;
+    background: transparent;
+    color: var(--vp-indigo);
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 600;
+    outline: none;
+    padding: 4px 0;
+    min-width: 0;
+    width: 11ch;
+  }
+  .madlib-input::placeholder { color: rgba(63,54,178,0.4); font-weight: 500; }
+
+  .madlib-submit {
+    margin-top: 28px;
+    height: 56px;
+    padding: 0 28px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--vp-indigo);
+    color: var(--vp-white);
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .madlib-submit:hover { background: var(--vp-navy); transform: translateY(-1px); }
+  .madlib-submit::after { content: "→"; font-size: 18px; transition: transform .2s ease; }
+  .madlib-submit:hover::after { transform: translateX(4px); }
+
+  /* ── TRUST STRIP (avatars + line) ── */
+  .trust-strip {
+    margin-top: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: rgba(252,252,252,0.7);
+    font-size: 14px;
+  }
+  .avatars {
+    display: inline-flex;
+  }
+  .avatars img,
+  .avatars .avatar-fallback {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--vp-navy);
+    margin-left: -10px;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--vp-indigo), var(--vp-lavender));
+  }
+  .avatars > *:first-child { margin-left: 0; }
+  .avatars .avatar-fallback {
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--vp-white); font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  }
+
+  .sample-link {
+    display: inline-block;
+    margin-top: 24px;
+    color: rgba(252,252,252,0.55);
+    font-size: 13px;
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(252,252,252,0.3);
+    cursor: pointer;
+  }
+  .sample-link:hover { color: var(--vp-white); border-bottom-color: var(--vp-white); }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -803,23 +930,31 @@
 
     <h1 class="display">How visible<br/>are you, really?</h1>
 
-    <p class="lede">
-      Paste your LinkedIn. We run a forensic audit against the six dimensions that
-      move executive visibility — and place you in your tier.
-    </p>
-
-    <!-- THE ACTION CARD — input + loading happen here, in place -->
+    <!-- THE ACTION CARD — mad-libs sentence + loading happen here, in place -->
     <div class="action-card" id="action-card">
 
       <div class="input-panel" id="input-panel">
-        <div class="url-row">
-          <input type="url" class="calc-input" id="input-linkedin"
-                 placeholder="linkedin.com/in/your-handle"
-                 autocomplete="off"
-                 spellcheck="false"
-                 autofocus />
-          <button id="btn-calculate">Audit</button>
-        </div>
+        <p class="madlib">
+          Audit my visibility as a&nbsp;<select class="madlib-select" id="ml-role" aria-label="Your role">
+            <option value="ceo">CEO</option>
+            <option value="founder">Founder</option>
+            <option value="cfo">CFO</option>
+            <option value="coo">COO</option>
+            <option value="cmo">CMO / CRO</option>
+            <option value="cto">CTO / CPO</option>
+            <option value="other-c">other C-suite leader</option>
+            <option value="senior">senior leader</option>
+          </select>&nbsp;who wants to&nbsp;<select class="madlib-select" id="ml-goal" aria-label="Your goal">
+            <option value="clients">attract better clients &amp; investors</option>
+            <option value="speaking">land speaking &amp; media coverage</option>
+            <option value="credibility">build industry credibility</option>
+            <option value="legacy">leave a lasting legacy</option>
+          </select>.
+        </p>
+        <p class="madlib">
+          My LinkedIn is&nbsp;<span class="madlib-handle-wrap"><span class="madlib-prefix">linkedin.com/in/</span><input type="text" class="madlib-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" spellcheck="false" /></span>
+        </p>
+        <button class="madlib-submit" id="btn-calculate">Calculate my score</button>
       </div>
 
       <div class="loading-panel" id="loading-panel">
@@ -837,6 +972,16 @@
         </ul>
       </div>
 
+    </div>
+
+    <!-- TRUST STRIP — avatars sourced from /img/avatar-{1,2,3}.png. Fallback initials shown if missing. -->
+    <div class="trust-strip">
+      <div class="avatars" aria-hidden="true">
+        <img src="img/avatar-1.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;avatar-fallback&quot;&gt;F&lt;/span&gt;'" />
+        <img src="img/avatar-2.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;avatar-fallback&quot;&gt;M&lt;/span&gt;'" />
+        <img src="img/avatar-3.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;avatar-fallback&quot;&gt;V&lt;/span&gt;'" />
+      </div>
+      <span>Trusted by C-suite leaders building their public voice.</span>
     </div>
 
     <div class="pills-row" id="pills-row">
@@ -938,14 +1083,6 @@
           <form class="gate-form" id="gate-form" novalidate>
             <span class="gate-label">Work email</span>
             <input type="email" id="gate-email" placeholder="you@company.com" required />
-            <span class="gate-label">What are you trying to unlock?</span>
-            <select id="gate-goal" required>
-              <option value="" disabled selected>Pick the closest match</option>
-              <option value="clients">Better clients or investors</option>
-              <option value="speaking">Speaking opportunities &amp; media coverage</option>
-              <option value="credibility">Industry credibility &amp; thought leadership</option>
-              <option value="legacy">Lasting legacy &amp; inspiring others</option>
-            </select>
             <button type="submit">Send me my report</button>
           </form>
           <div class="gate-disclaimer">We email your report once. No lists, no resale. Unsubscribe in one click.</div>
@@ -1265,6 +1402,16 @@
   const loadingPanel = $('#loading-panel');
   const calcBtn      = $('#btn-calculate');
   const linkInput    = $('#input-linkedin');
+  const roleSelect   = $('#ml-role');
+  const goalSelect   = $('#ml-goal');
+
+  // Goal-specific subhead that appears in the result block — mirrors the user's stated goal back at them.
+  const GOAL_HEADLINES = {
+    clients:     "Here's what's between you and better clients.",
+    speaking:    "Here's what's between you and the speaking circuit.",
+    credibility: "Here's what's between you and recognition in your industry.",
+    legacy:      "Here's what's between you and a legacy that lasts."
+  };
 
   // Auto-focus on load (for desktop; mobile won't summon keyboard automatically)
   window.addEventListener('load', () => {
@@ -1288,8 +1435,22 @@
 
   /* Latest audit state — passed to /api/lead on email submit */
   let lastScore = 0, lastSubs = {}, lastTier = null, lastUrl = '';
+  let lastRole = '', lastGoal = '';
 
   async function startAudit(opts = {}) {
+    // Capture mad-libs context (role + goal) for the result copy and the lead capture
+    lastRole = roleSelect ? roleSelect.value : '';
+    lastGoal = goalSelect ? goalSelect.value : '';
+
+    if (!opts.override) {
+      const handle = linkInput.value.trim();
+      if (!handle) {
+        linkInput.focus();
+        linkInput.placeholder = 'drop your handle here…';
+        return;
+      }
+    }
+
     const raw = linkInput.value.trim();
     const normalised = normaliseLinkedIn(raw) || 'demo-profile';
     inputPanel.classList.add('hidden');
@@ -1308,7 +1469,7 @@
     const fetchPromise = fetch('/api/score', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: normalised })
+      body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal })
     }).then(r => r.json()).catch(() => ({ error: 'Network error. Please try again.' }));
 
     const animPromise = new Promise(resolve => runLoadingSequence(resolve));
@@ -1364,7 +1525,8 @@
     $('#tier-tagline').textContent  = tier.tagline;
     $('#tier-blurb').textContent    = tier.blurb;
     $('#tier-cta').textContent      = tier.cta;
-    $('#gate-cta-line').textContent = tier.cta + '.';
+    // Goal-aware gate copy: mirror their stated goal back at them on the unlock card
+    $('#gate-cta-line').textContent = GOAL_HEADLINES[lastGoal] || (tier.cta + '.');
 
     const circumference = 879.6;
     const ringDash = (total / 18) * circumference;
@@ -1458,9 +1620,7 @@
   $('#gate-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('#gate-email').value.trim();
-    const goal  = $('#gate-goal').value;
     if (!email || !email.includes('@')) { $('#gate-email').focus(); return; }
-    if (!goal) { $('#gate-goal').focus(); return; }
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const origText = submitBtn.textContent;
@@ -1472,7 +1632,9 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email, goal,
+          email,
+          goal: lastGoal,
+          role: lastRole,
           score: lastScore,
           subs:  lastSubs,
           tier:  lastTier,
