@@ -45,7 +45,7 @@
   .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
   .container-narrow { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 32px; }
   .container-action { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 32px; }
-  .container-hero   { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 32px; }
+  .container-hero   { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 32px; }
 
   /* ── Type ── */
   .display {
@@ -530,6 +530,12 @@
   }
   .subscore-context { font-size: 12px; color: rgba(252,252,252,0.55); line-height: 1.4; }
 
+  /* Standalone email gate (leaderboard removed in v0.4) */
+  .gate-standalone {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+  }
   .leaderboard-wrap { position: relative; }
   .leaderboard-card {
     background: rgba(252,252,252,0.03);
@@ -1201,38 +1207,217 @@
     letter-spacing: 0;
   }
 
-  /* — Mad-libs (highest-impact fix: reads as a form, not a headline) — */
+  /* — Mad-libs (reads as a sentence, not a form) — */
   .madlib {
     font-family: var(--font-body);
-    font-size: 20px;
-    line-height: 1.5;
+    font-size: clamp(20px, 2.4vw, 26px);
+    line-height: 1.55;
     font-weight: 400;
     letter-spacing: -0.005em;
-  }
-  .madlib-select {
-    font-size: 20px;
-    font-weight: 500;
-    font-family: inherit;
-    line-height: 1.3;
-    letter-spacing: -0.005em;
-    padding: 6px 28px 6px 12px;
-    border-radius: 10px;
+    color: rgba(15,15,15,0.85);
   }
   .madlib-input {
-    font-size: 18px;
-    font-weight: 400;
+    font-size: clamp(18px, 1.8vw, 20px);
+    font-weight: 500;
     font-family: inherit;
     line-height: 1.4;
     padding: 12px 14px;
+    color: var(--vp-indigo);
   }
-  .madlib-handle-wrap { margin-top: 14px; }
+  .madlib-handle-wrap {
+    margin-top: 18px;
+    transition: box-shadow .25s ease, transform .25s ease;
+  }
   .madlib-submit {
     font-size: 15px;
     font-weight: 600;
     letter-spacing: 0;
-    padding: 14px 22px;
+    padding: 14px 26px;
     border-radius: 999px;
-    min-height: 48px;
+    min-height: 50px;
+    margin-top: 24px;
+  }
+
+  /* ─────────── Custom popover dropdowns (Picker component) ─────────── */
+  .picker {
+    position: relative;
+    display: inline-block;
+    vertical-align: baseline;
+  }
+  .picker-native {
+    /* hidden but kept as the source-of-truth value (existing JS reads .value + listens for change) */
+    position: absolute;
+    width: 1px; height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    clip: rect(0,0,0,0);
+    overflow: hidden;
+  }
+  .picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(63,54,178,0.08);
+    color: var(--vp-indigo);
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    border: 0;
+    border-radius: 12px;
+    padding: 8px 16px 8px 18px;
+    cursor: pointer;
+    transition:
+      transform .18s cubic-bezier(.2,.8,.25,1),
+      background .18s ease,
+      box-shadow .25s ease;
+  }
+  .picker-trigger:hover {
+    background: rgba(63,54,178,0.14);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(63,54,178,0.20);
+  }
+  .picker-trigger:active { transform: translateY(0) scale(0.98); }
+  .picker-trigger[aria-expanded="true"] {
+    background: rgba(63,54,178,0.16);
+    box-shadow: 0 0 0 3px rgba(63,54,178,0.20);
+  }
+  .picker-trigger:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(63,54,178,0.32);
+  }
+  .picker-chevron {
+    width: 11px; height: 8px;
+    flex-shrink: 0;
+    transition: transform .25s cubic-bezier(.2,.8,.25,1);
+  }
+  .picker-trigger[aria-expanded="true"] .picker-chevron {
+    transform: rotate(180deg);
+  }
+
+  .picker-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    min-width: 260px;
+    max-width: 360px;
+    padding: 8px;
+    background: var(--vp-white);
+    border-radius: 16px;
+    box-shadow:
+      0 24px 64px rgba(11,3,89,0.24),
+      0 4px 16px rgba(11,3,89,0.10);
+    z-index: 100;
+    /* closed */
+    opacity: 0;
+    transform: scale(0.94) translateY(-6px);
+    transform-origin: top left;
+    pointer-events: none;
+    visibility: hidden;
+    transition:
+      opacity .22s cubic-bezier(.2,.8,.25,1),
+      transform .22s cubic-bezier(.2,.8,.25,1),
+      visibility 0s linear .22s;
+  }
+  .picker-popover.open {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+    visibility: visible;
+    transition:
+      opacity .22s cubic-bezier(.2,.8,.25,1),
+      transform .22s cubic-bezier(.2,.8,.25,1),
+      visibility 0s linear 0s;
+  }
+
+  .picker-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--vp-deep-black, #0c0b09);
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease;
+  }
+  .picker-option:hover,
+  .picker-option:focus-visible {
+    background: rgba(63,54,178,0.08);
+    outline: 0;
+    transform: translateX(2px);
+  }
+  .picker-option[aria-selected="true"] {
+    background: rgba(63,54,178,0.06);
+    font-weight: 500;
+  }
+  .picker-option::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: transparent;
+    flex-shrink: 0;
+    transition: background .18s ease;
+  }
+  .picker-option[aria-selected="true"]::before {
+    background: var(--vp-indigo);
+  }
+
+  /* Just-picked confirmation pulse on the trigger chip */
+  @keyframes pickerJustPicked {
+    0%   { box-shadow: 0 0 0 0 rgba(63,54,178,0.55); }
+    100% { box-shadow: 0 0 0 14px rgba(63,54,178,0); }
+  }
+  .picker-just-picked {
+    animation: pickerJustPicked .8s cubic-bezier(.2,.8,.25,1) 1;
+  }
+
+  /* Sequential focus hint — pulses the NEXT field after one is filled */
+  @keyframes nextFieldPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(134,131,229,0.65); }
+    50%  { box-shadow: 0 0 0 12px rgba(134,131,229,0); }
+    100% { box-shadow: 0 0 0 0 rgba(134,131,229,0); }
+  }
+  .picker-pulse,
+  .madlib-handle-wrap.picker-pulse,
+  .madlib-submit.picker-pulse {
+    animation: nextFieldPulse 1.4s cubic-bezier(.2,.8,.25,1) 2;
+  }
+
+  /* Mobile bottom-sheet variant for popovers */
+  @media (max-width: 600px) {
+    .picker-popover {
+      position: fixed;
+      top: auto; bottom: 0; left: 0; right: 0;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      border-radius: 18px 18px 0 0;
+      padding: 16px 12px 28px;
+      transform: translateY(100%);
+      transform-origin: bottom center;
+    }
+    .picker-popover.open { transform: translateY(0); }
+    .picker-popover::before {
+      content: "";
+      display: block;
+      width: 36px; height: 4px;
+      background: rgba(15,15,15,0.18);
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+    .picker-option {
+      padding: 14px 14px;
+      font-size: 17px;
+    }
   }
 
   /* — Eyebrow / kicker labels (one consistent treatment site-wide) — */
@@ -1972,7 +2157,7 @@
 <!-- ─────────── NAV ─────────── -->
 <nav class="top">
   <div class="container">
-    <a href="#" class="logo" aria-label="Von Peach">
+    <a href="https://www.vonpeach.com" target="_blank" rel="noopener" class="logo" aria-label="Von Peach — visit homepage">
       <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <g fill="#FCFCFC">
           <path d="M298.99,614.13h-34.36c10.38-48.96,20.56-96.75,30.86-145.34,15.56,0,30.7,0,46.73,0,9.35,31.71,18.27,63.38,28.42,97.8,6.95-34.2,13.42-65.83,19.92-97.8h34.07c-10.31,49.35-19.87,96.44-30.16,145.34h-45.66c-9.62-33.84-19.33-68.24-29.03-102.37h-.85c-3.06,17.24-5.83,34.54-9.19,51.73-3.26,16.7-7.07,33.53-10.74,50.64Z"/>
@@ -2015,21 +2200,49 @@
 
         <div class="input-panel" id="input-panel">
         <p class="madlib">
-          Audit my visibility as a&nbsp;<select class="madlib-select" id="ml-role" aria-label="Your role">
-            <option value="ceo">CEO</option>
-            <option value="founder">Founder</option>
-            <option value="cfo">CFO</option>
-            <option value="coo">COO</option>
-            <option value="cmo">CMO / CRO</option>
-            <option value="cto">CTO / CPO</option>
-            <option value="other-c">other C-suite leader</option>
-            <option value="senior">senior leader</option>
-          </select>&nbsp;who wants to&nbsp;<select class="madlib-select" id="ml-goal" aria-label="Your goal">
-            <option value="clients">attract better clients &amp; investors</option>
-            <option value="speaking">land speaking &amp; media coverage</option>
-            <option value="credibility">build industry credibility</option>
-            <option value="legacy">leave a lasting legacy</option>
-          </select>.
+          Audit my visibility as a&nbsp;<span class="picker" data-picker-name="role">
+            <button type="button" class="picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Your role">
+              <span class="picker-label" data-picker-label>CEO</span>
+              <svg class="picker-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+            <div class="picker-popover" role="listbox" aria-label="Choose your role">
+              <button type="button" class="picker-option" role="option" data-value="ceo" aria-selected="true">CEO</button>
+              <button type="button" class="picker-option" role="option" data-value="founder">Founder</button>
+              <button type="button" class="picker-option" role="option" data-value="cfo">CFO</button>
+              <button type="button" class="picker-option" role="option" data-value="coo">COO</button>
+              <button type="button" class="picker-option" role="option" data-value="cmo">CMO / CRO</button>
+              <button type="button" class="picker-option" role="option" data-value="cto">CTO / CPO</button>
+              <button type="button" class="picker-option" role="option" data-value="other-c">Other C-suite leader</button>
+              <button type="button" class="picker-option" role="option" data-value="senior">Senior leader</button>
+            </div>
+            <select class="picker-native" id="ml-role" aria-hidden="true" tabindex="-1">
+              <option value="ceo">CEO</option>
+              <option value="founder">Founder</option>
+              <option value="cfo">CFO</option>
+              <option value="coo">COO</option>
+              <option value="cmo">CMO / CRO</option>
+              <option value="cto">CTO / CPO</option>
+              <option value="other-c">Other C-suite leader</option>
+              <option value="senior">Senior leader</option>
+            </select>
+          </span>&nbsp;who wants to&nbsp;<span class="picker" data-picker-name="goal">
+            <button type="button" class="picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Your goal">
+              <span class="picker-label" data-picker-label>attract better clients &amp; investors</span>
+              <svg class="picker-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+            <div class="picker-popover" role="listbox" aria-label="Choose your goal">
+              <button type="button" class="picker-option" role="option" data-value="clients" aria-selected="true">attract better clients &amp; investors</button>
+              <button type="button" class="picker-option" role="option" data-value="speaking">land speaking &amp; media coverage</button>
+              <button type="button" class="picker-option" role="option" data-value="credibility">build industry credibility</button>
+              <button type="button" class="picker-option" role="option" data-value="legacy">leave a lasting legacy</button>
+            </div>
+            <select class="picker-native" id="ml-goal" aria-hidden="true" tabindex="-1">
+              <option value="clients">attract better clients &amp; investors</option>
+              <option value="speaking">land speaking &amp; media coverage</option>
+              <option value="credibility">build industry credibility</option>
+              <option value="legacy">leave a lasting legacy</option>
+            </select>
+          </span>.
         </p>
         <p class="madlib">
           My LinkedIn is&nbsp;<span class="madlib-handle-wrap"><span class="madlib-prefix">linkedin.com/in/</span><input type="text" class="madlib-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" spellcheck="false" /></span>
@@ -2136,13 +2349,6 @@
     <!-- (Anonymous-avatar trust strip removed — generic social proof was hurting more than helping.
          Replace with real client logos from vonpeach.com case studies in a follow-up.) -->
 
-    <div class="pills-row" id="pills-row">
-      <span class="pills-row-label">Or sample a peer:</span>
-      <button class="pill" data-sample="founder-ceo-series-c">Founder-CEO · Series C</button>
-      <button class="pill" data-sample="public-company-ceo">Public-company CEO</button>
-      <button class="pill" data-sample="cfo-growth">CFO at growth-stage</button>
-      <button class="pill" data-sample="senior-leader">Senior leader · enterprise</button>
-    </div>
 
     <a href="#how" class="scroll-hint">How it works</a>
   </div>
@@ -2199,28 +2405,18 @@
 
     <div class="subscores" id="subscores"><!-- populated by JS --></div>
 
-    <div class="leaderboard-wrap locked" id="leaderboard-wrap">
-      <div class="leaderboard-card">
-        <div class="eyebrow-row" style="margin-bottom: 14px;">
-          <span class="dot"></span>
-          <span class="eyebrow">Top 3 in your network</span>
-        </div>
-        <h2 class="h2">Three executives ahead of you.</h2>
-        <p class="lede">Same role, same cohort, slightly higher up. Each one crushes a dimension you don't — yet.</p>
-        <ul class="leaderboard-list" id="leaderboard"><!-- populated by JS --></ul>
-      </div>
-      <div class="gate" id="gate">
-        <div class="gate-card">
-          <div class="gate-eyebrow">Unlock the full report</div>
-          <h3 id="gate-cta-line">Here's what to build first.</h3>
-          <p>Your sub-score breakdown, the three highest-leverage moves, and your peer leaderboard — sent to your inbox.</p>
-          <form class="gate-form" id="gate-form" novalidate>
-            <span class="gate-label">Work email</span>
-            <input type="email" id="gate-email" placeholder="you@company.com" required />
-            <button type="submit">Unlock my full breakdown</button>
-          </form>
-          <div class="gate-disclaimer">We email your report once. No lists, no resale. Unsubscribe in one click.</div>
-        </div>
+    <!-- Standalone email gate (leaderboard removed — was placeholder content; replace in v0.5 with real research-backed distribution chart) -->
+    <div class="gate-standalone" id="gate-standalone">
+      <div class="gate-card">
+        <div class="gate-eyebrow">Get your full report</div>
+        <h3 id="gate-cta-line">Here's what to build first.</h3>
+        <p>Your sub-score breakdown, the three highest-leverage moves, and a 4-page PDF report — delivered to your inbox in seconds.</p>
+        <form class="gate-form" id="gate-form" novalidate>
+          <span class="gate-label">Work email</span>
+          <input type="email" id="gate-email" placeholder="you@company.com" required />
+          <button type="submit">Send me my report</button>
+        </form>
+        <div class="gate-disclaimer">We email your report once. No lists, no resale. Unsubscribe in one click.</div>
       </div>
     </div>
   </div>
@@ -2409,7 +2605,7 @@
 <footer>
   <div class="container">
     <div class="footer-row">
-      <a href="#" class="logo" aria-label="Von Peach">
+      <a href="https://www.vonpeach.com" target="_blank" rel="noopener" class="logo" aria-label="Von Peach — visit homepage">
         <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <g fill="#FCFCFC" opacity="0.7">
             <path d="M298.99,614.13h-34.36c10.38-48.96,20.56-96.75,30.86-145.34,15.56,0,30.7,0,46.73,0,9.35,31.71,18.27,63.38,28.42,97.8,6.95-34.2,13.42-65.83,19.92-97.8h34.07c-10.31,49.35-19.87,96.44-30.16,145.34h-45.66c-9.62-33.84-19.33-68.24-29.03-102.37h-.85c-3.06,17.24-5.83,34.54-9.19,51.73-3.26,16.7-7.07,33.53-10.74,50.64Z"/>
@@ -2423,7 +2619,7 @@
         </svg>
       </a>
       <div class="footer-links">
-        <a href="#">Privacy</a>
+        <a href="https://www.vonpeach.com/personal-branding" target="_blank" rel="noopener">FutureMakers</a>
         <a href="#methodology">Methodology</a>
         <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
       </div>
@@ -2632,6 +2828,111 @@
 
   calcBtn.addEventListener('click', () => startAudit());
   linkInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAudit(); });
+
+  /* ─────────── Custom popover Picker — replaces the native <select>s ─────────── */
+  class Picker {
+    constructor(root) {
+      this.root    = root;
+      this.trigger = root.querySelector('.picker-trigger');
+      this.label   = root.querySelector('[data-picker-label]');
+      this.popover = root.querySelector('.picker-popover');
+      this.options = root.querySelectorAll('.picker-option');
+      this.select  = root.querySelector('.picker-native');
+      this.bind();
+    }
+    bind() {
+      this.trigger.addEventListener('click', e => { e.stopPropagation(); this.toggle(); });
+      this.trigger.addEventListener('keydown', e => this.onTriggerKey(e));
+      this.popover.addEventListener('keydown', e => this.onPopoverKey(e));
+      this.options.forEach(opt => {
+        opt.addEventListener('click', e => { e.stopPropagation(); this.pick(opt.dataset.value); });
+      });
+      document.addEventListener('click', e => { if (!this.root.contains(e.target)) this.close(); });
+    }
+    open() {
+      document.querySelectorAll('.picker-popover.open').forEach(p => {
+        if (p !== this.popover) {
+          p.classList.remove('open');
+          const t = p.parentElement.querySelector('.picker-trigger');
+          if (t) t.setAttribute('aria-expanded', 'false');
+        }
+      });
+      this.popover.classList.add('open');
+      this.trigger.setAttribute('aria-expanded', 'true');
+      const sel = this.popover.querySelector('[aria-selected="true"]');
+      if (sel) sel.focus();
+    }
+    close() {
+      this.popover.classList.remove('open');
+      this.trigger.setAttribute('aria-expanded', 'false');
+    }
+    toggle() {
+      if (this.popover.classList.contains('open')) this.close();
+      else this.open();
+    }
+    pick(value) {
+      const opt = Array.from(this.options).find(o => o.dataset.value === value);
+      if (!opt) return;
+      this.label.textContent = opt.textContent;
+      this.options.forEach(o => o.setAttribute('aria-selected', o.dataset.value === value ? 'true' : 'false'));
+      if (this.select) {
+        this.select.value = value;
+        this.select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      this.close();
+      this.trigger.focus();
+      this.trigger.classList.remove('picker-just-picked');
+      void this.trigger.offsetWidth;
+      this.trigger.classList.add('picker-just-picked');
+    }
+    onTriggerKey(e) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.open(); }
+    }
+    onPopoverKey(e) {
+      const opts = Array.from(this.options);
+      const idx  = opts.indexOf(document.activeElement);
+      if (e.key === 'Escape')   { e.preventDefault(); this.close(); this.trigger.focus(); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); const n = opts[Math.min(opts.length - 1, idx + 1)]; if (n) n.focus(); }
+      else if (e.key === 'ArrowUp')   { e.preventDefault(); const p = opts[Math.max(0, idx - 1)]; if (p) p.focus(); }
+      else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const f = document.activeElement;
+        if (f && f.classList.contains('picker-option')) this.pick(f.dataset.value);
+      }
+    }
+  }
+  document.querySelectorAll('.picker').forEach(p => new Picker(p));
+
+  /* Sequential focus hints — pulse the next field after the previous one is filled */
+  function pulseNext(el) {
+    if (!el) return;
+    el.classList.remove('picker-pulse');
+    void el.offsetWidth;
+    el.classList.add('picker-pulse');
+    setTimeout(() => el.classList.remove('picker-pulse'), 2900);
+  }
+  let _pulsedHandle = false, _pulsedSubmit = false;
+  if (roleSelect) {
+    roleSelect.addEventListener('change', () => {
+      const next = document.querySelector('.picker[data-picker-name="goal"] .picker-trigger');
+      pulseNext(next);
+    });
+  }
+  if (goalSelect) {
+    goalSelect.addEventListener('change', () => {
+      if (_pulsedHandle) return;
+      _pulsedHandle = true;
+      pulseNext(document.querySelector('.madlib-handle-wrap'));
+    });
+  }
+  if (linkInput) {
+    linkInput.addEventListener('input', () => {
+      if (!_pulsedSubmit && linkInput.value.trim().length > 3) {
+        _pulsedSubmit = true;
+        pulseNext(document.querySelector('.madlib-submit'));
+      }
+    });
+  }
 
   // Goal-aware hero subhead — updates whenever role or goal changes.
   function updateHeroSubhead() {
@@ -2865,7 +3166,7 @@
     renderLeaderboard(userRank, cohortSize, total);
 
     $('#tier-cta').onclick = () => {
-      $('#leaderboard-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      $('#gate-standalone').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
@@ -3097,7 +3398,7 @@
   const personalCta = $('#personal-cta');
   if (personalCta) {
     personalCta.addEventListener('click', () => {
-      const target = $('#leaderboard-wrap');
+      const target = $('#gate-standalone');
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => {
         const emailField = $('#gate-email');
@@ -3183,8 +3484,9 @@
       // PDF returned as base64 — auto-trigger download for instant gratification
       if (data.pdf) downloadPDF(data.pdf, `visibility-index-${(lastProfile?.firstName || 'report').toLowerCase()}.pdf`);
 
-      $('#leaderboard-wrap').classList.remove('locked');
-      $('#gate').remove();
+      // Hide the gate card after successful submit; PDF auto-downloads (already triggered above)
+      const gate = $('#gate-standalone');
+      if (gate) gate.style.display = 'none';
       revealNextMoves();
     } catch (err) {
       submitBtn.disabled = false;
