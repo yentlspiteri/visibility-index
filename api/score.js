@@ -139,7 +139,11 @@ async function fetchApify(linkedinUrl) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${process.env.APIFY_API_TOKEN}`
     },
+    // Different LinkedIn actors expect different input field names.
+    // supreme_coder/* uses `urls`, dev_fusion/* uses `profileUrls`.
+    // Sending both is safe — each actor validates only its expected field.
     body: JSON.stringify({
+      urls:        [linkedinUrl],
       profileUrls: [linkedinUrl]
     })
   });
