@@ -1,20 +1,20 @@
 /**
- * /api/lead — POST { email, goal, role, score, subs, tier, ... }
+ * /api/lead - POST { email, goal, role, score, subs, tier, ... }
  *
  * Pipeline:
  *   1. Validate email
- *   2. Build the personalised PDF (lib/buildReport.js — pdf-lib, no Chromium)
+ *   2. Build the personalised PDF (lib/buildReport.js - pdf-lib, no Chromium)
  *   3. Email it via Resend with the PDF attached
  *   4. Upsert the lead into Mailchimp with merge fields + tags (segmentation)
- *   5. Return { ok, pdf: base64 } — frontend offers instant download
+ *   5. Return { ok, pdf: base64 } - frontend offers instant download
  *
  * Mailchimp audience setup (one-time):
  *   Audience → Settings → Audience fields and *|MERGE|* tags
  *   Add the following tag/name pairs (all type "Text" except VIS_SCORE which is "Number"):
- *     VIS_SCORE   (Number)   — composite 0-18
- *     VIS_TIER    (Text)     — e.g. "The Rising Voice"
- *     VIS_GOAL    (Text)     — clients / speaking / credibility / legacy
- *     VIS_LINKEDIN(Text)     — normalised linkedin URL
+ *     VIS_SCORE   (Number) - composite 0-18
+ *     VIS_TIER    (Text) - e.g. "The Rising Voice"
+ *     VIS_GOAL    (Text) - clients / speaking / credibility / legacy
+ *     VIS_LINKEDIN(Text) - normalised linkedin URL
  *     UTM_SOURCE  (Text)
  *     UTM_CAMP    (Text)
  *     UTM_MED     (Text)
@@ -70,14 +70,14 @@ export default async function handler(req, res) {
     pdfError = (err?.message || String(err)).slice(0, 600);
     console.error('PDF stack:', err?.stack || err);
     console.error('PDF build failed:', err);
-    // Page Yentl — PDF builder is a load-bearing piece of the magnet. Failure = lead gets no report.
+    // Page Yentl - PDF builder is a load-bearing piece of the magnet. Failure = lead gets no report.
     notifyOps({
       category: 'pdf-build-failed',
       subject:  '🚨 Visibility Index: PDF generation crashed',
       body:     `pdf-lib threw during buildReportPDF. Lead got an empty download.\n\n${err?.stack || err?.message || String(err)}`,
       context:  { email, firstName: profile?.firstName, score, tier: tier?.name }
     }).catch(() => {});
-    // We continue — Mailchimp upsert still happens, frontend still gets a success path
+    // We continue - Mailchimp upsert still happens, frontend still gets a success path
   }
 
   // ── 2) Email via Resend (with PDF attached if we have it) ──
@@ -98,8 +98,8 @@ export default async function handler(req, res) {
     emailDebug.skipReason = 'resend-api-key-missing';
   } else {
     // Send the email regardless of PDF outcome.
-    //   - If PDF was built → attach it (normal path)
-    //   - If PDF failed   → send a degraded email saying "we'll follow up with the PDF" so
+    // - If PDF was built → attach it (normal path)
+    // - If PDF failed   → send a degraded email saying "we'll follow up with the PDF" so
     //                       the lead at least gets a confirmation and isn't left hanging.
     try {
       const fromAddress = emailDebug.fromUsed;
@@ -164,7 +164,7 @@ export default async function handler(req, res) {
   const SERVER   = process.env.MAILCHIMP_SERVER_PREFIX;
   const AUDIENCE = process.env.MAILCHIMP_AUDIENCE_ID;
   const KEY      = process.env.MAILCHIMP_API_KEY;
-  // Diagnostic surfaced in the response — same pattern as _emailDebug
+  // Diagnostic surfaced in the response - same pattern as _emailDebug
   const mcDebug = {
     serverPresent:   !!SERVER,
     audiencePresent: !!AUDIENCE,
@@ -228,11 +228,11 @@ export default async function handler(req, res) {
         const errBody = await r.json().catch(() => ({}));
         mcDebug.body = JSON.stringify(errBody).slice(0, 500);
         console.error('Mailchimp upsert failed:', r.status, errBody);
-        // Common 400 cause: missing MERGE FIELDS in the audience (VIS_SCORE etc.) — Mailchimp rejects writes to undefined fields.
+        // Common 400 cause: missing MERGE FIELDS in the audience (VIS_SCORE etc.) - Mailchimp rejects writes to undefined fields.
         notifyOps({
           category: 'mailchimp-failed',
           subject:  '⚠️ Visibility Index: Mailchimp upsert rejected',
-          body:     `Lead got the email but was NOT added to Mailchimp.\n\nStatus: ${r.status}\nBody: ${JSON.stringify(errBody).slice(0, 500)}\n\nCommon causes:\n • Merge fields not added to the audience (need VIS_SCORE [Number], VIS_TIER, VIS_GOAL, VIS_LINKEDIN, UTM_SOURCE, UTM_CAMP, UTM_MED — all Text except VIS_SCORE)\n • API key tied to the wrong account\n • Audience ID belongs to a different list\n • Server prefix wrong (e.g. set us17 when account is us21)`,
+          body:     `Lead got the email but was NOT added to Mailchimp.\n\nStatus: ${r.status}\nBody: ${JSON.stringify(errBody).slice(0, 500)}\n\nCommon causes:\n • Merge fields not added to the audience (need VIS_SCORE [Number], VIS_TIER, VIS_GOAL, VIS_LINKEDIN, UTM_SOURCE, UTM_CAMP, UTM_MED - all Text except VIS_SCORE)\n • API key tied to the wrong account\n • Audience ID belongs to a different list\n • Server prefix wrong (e.g. set us17 when account is us21)`,
           context:  { lead: email, status: r.status, server: SERVER }
         }).catch(() => {});
       } else {
@@ -251,7 +251,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── 4) Slack notification — every captured lead ──
+  // ── 4) Slack notification - every captured lead ──
   // Set SLACK_WEBHOOK_URL on Vercel (Incoming Webhook from a Slack app) to enable.
   // Fire-and-forget; never blocks the response.
   let slackNotified = false;
@@ -316,7 +316,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── 5) Return success — frontend uses pdf base64 for instant download ──
+  // ── 5) Return success - frontend uses pdf base64 for instant download ──
   return res.status(200).json({
     ok:             true,
     emailDelivered: emailDelivered,
@@ -359,7 +359,7 @@ function buildEmailHTML({ firstName, total, tierName, hasPdf }) {
         Book a 30-minute call →
       </a>
     </p>
-    <p style="font-size:13px;color:#666;margin:28px 0 0;">No pitch — just clarity on which moves matter most for you.</p>
+    <p style="font-size:13px;color:#666;margin:28px 0 0;">No pitch - just clarity on which moves matter most for you.</p>
     <hr style="border:0;border-top:1px solid rgba(15,15,15,0.08);margin:28px 0;">
     <p style="font-size:11px;color:#999;letter-spacing:0.05em;margin:0;">VON PEACH GMBH · FUTUREMAKERS · 2026</p>
   </div>

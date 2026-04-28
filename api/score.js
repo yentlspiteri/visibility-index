@@ -1,5 +1,5 @@
 /**
- * /api/score — POST { url } → { total, subs, tier, normalisedUrl }
+ * /api/score - POST { url } → { total, subs, tier, normalisedUrl }
  *
  * Pipeline:
  *   1. Validate + normalise the LinkedIn URL
@@ -27,7 +27,7 @@ const HOUR_MS = 3_600_000;
 const TIERS = [
   { min:0,  max:5,  name:'The Hidden Gem',
     tagline:'Real expertise. The world doesn’t know it yet.',
-    blurb:'Nearly invisible — but everything is ahead of you.',
+    blurb:'Nearly invisible - but everything is ahead of you.',
     cta:"See the roadmap" },
   { min:6,  max:10, name:'The Rising Voice',
     tagline:'Building momentum. A few gaps holding you back.',
@@ -64,15 +64,17 @@ export default async function handler(req, res) {
   trackRequest(ip);
 
   try {
-    // Build a fully-qualified LinkedIn URL with trailing slash — some Apify actors
+    // Build a fully-qualified LinkedIn URL with trailing slash - some Apify actors
     // (e.g. supreme_coder) reject URLs without it as "not valid".
     const fullUrl = `https://www.${normalised}/`;
 
-    // 1) Fan out — profile + serp in parallel
-    const [profileRes, serpRes] = await Promise.allSettled([
-      fetchApify(fullUrl),
-      fetchSerpFootprint(normalised)
-    ]);
+    // 1) Fetch the LinkedIn profile FIRST so we can use the real name + company
+    //    in the press search. The handle alone produces noisy/wrong results.
+    //    +1-2s of latency in exchange for dramatically more relevant Tier-1 detection.
+    const profileRes = await fetchApify(fullUrl).then(
+      v => ({ status: 'fulfilled', value: v }),
+      e => ({ status: 'rejected',  reason: e })
+    );
 
     if (profileRes.status === 'rejected' || !profileRes.value) {
       const errMsg = profileRes.reason?.message || String(profileRes.reason) || 'no value';
@@ -83,7 +85,7 @@ export default async function handler(req, res) {
       if (/hard limit|subscribe to a paid|free user|usage limit/i.test(errMsg)) {
         userError     = 'Our profile scanner is at capacity for the day. Please try again in a few hours, or reach out at hello@vonpeach.com to get your audit by hand.';
         alertCategory = 'apify-hard-limit';
-        alertSubject  = '🚨 Apify scraper hit hard limit — audit is OFFLINE for users';
+        alertSubject  = '🚨 Apify scraper hit hard limit - audit is OFFLINE for users';
       } else if (/rate.?limit|blocked|empty profile/i.test(errMsg)) {
         userError     = 'LinkedIn is rate-limiting the scraper right now. Please wait 60 seconds and try again.';
         alertCategory = 'apify-rate-limit';
@@ -91,12 +93,12 @@ export default async function handler(req, res) {
       } else if (/401|403|unauthor/i.test(errMsg)) {
         userError     = 'Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.';
         alertCategory = 'apify-auth';
-        alertSubject  = '🚨 Apify auth failure — APIFY_API_TOKEN missing or invalid';
+        alertSubject  = '🚨 Apify auth failure - APIFY_API_TOKEN missing or invalid';
       } else if (/404|not.?found/i.test(errMsg)) {
         userError     = 'That LinkedIn profile doesn’t exist. Check the handle in the URL.';
         alertCategory = null; // Don't alert on user-input errors
       } else if (/private/i.test(errMsg)) {
-        userError     = 'That profile is private — the audit needs a public LinkedIn URL.';
+        userError     = 'That profile is private - the audit needs a public LinkedIn URL.';
         alertCategory = null;
       } else {
         userError     = 'We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.';
@@ -104,7 +106,7 @@ export default async function handler(req, res) {
         alertSubject  = '⚠️ Apify scraper failed (unknown error)';
       }
 
-      // Fire ops alert (throttled to 1/30min per category) — only for system-level failures
+      // Fire ops alert (throttled to 1/30min per category) - only for system-level failures
       if (alertCategory) {
         notifyOps({
           category: alertCategory,
@@ -127,13 +129,23 @@ export default async function handler(req, res) {
       });
     }
     const profile = profileRes.value;
-    const serp    = serpRes.status === 'fulfilled' ? serpRes.value : null;
+
+    // Now run the press search with the real first+last name and company - far more accurate than handle
+    const serpRes = await fetchSerpFootprint(normalised, {
+      firstName:   getFirstName(profile),
+      lastName:    getLastName(profile),
+      companyName: getCompany(profile)
+    }).then(v => ({ status: 'fulfilled', value: v }), e => ({ status: 'rejected', reason: e }));
+    const serp  = serpRes.status === 'fulfilled' ? serpRes.value : null;
+
+    // Tier-1 press detection - surfaces actual outlet names and URLs in the response
+    const press = serp ? extractTier1Press(serp) : { count: 0, outlets: [], hits: [] };
 
     // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
     const heuristic = {
       footprint: scoreFootprint(profile, serp),
-      authority: scoreAuthority(profile),
+      authority: scoreAuthority(profile, press),  // boosted by tier-1 hits
       cadence:   scoreCadence(profile),
       visual:    scoreVisual(profile, { score: 1 }),
       network:   scoreNetwork(profile)
@@ -143,13 +155,13 @@ export default async function handler(req, res) {
     const analysis = await analyzeProfile(profile, heuristic).catch(err => {
       console.error('Claude analysis failed:', err);
       return {
-        clarityScore: 1, clarityRationale: 'Fallback heuristic — LLM unavailable.',
+        clarityScore: 1, clarityRationale: 'Fallback heuristic - LLM unavailable.',
         executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: []
       };
     });
     const clarity = { score: analysis.clarityScore, rationale: analysis.clarityRationale };
 
-    // 4) Final sub-scores — re-compute visual with the real clarity now
+    // 4) Final sub-scores - re-compute visual with the real clarity now
     const subs = {
       footprint: heuristic.footprint,
       clarity:   clarity.score,
@@ -166,7 +178,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       total, subs, tier, nextTier,
       normalisedUrl: normalised,
-      // Personalization payload — feeds the on-page reveal and the PDF report
+      // Personalization payload - feeds the on-page reveal and the PDF report
       profile: {
         firstName:        getFirstName(profile),
         lastName:         getLastName(profile),
@@ -182,6 +194,8 @@ export default async function handler(req, res) {
       dimensionCommentary: analysis.dimensionCommentary,
       moves:               analysis.moves,
       tierRoadmap:         analysis.tierRoadmap,
+      // Tier-1 press hits - surfaced for both the landing page and the PDF
+      press:               press,
       // Backward-compat: keep older field names mapped from the new payload
       personalSummary:     analysis.executiveSummary,
       reportTeasers:       (analysis.moves || []).map(m => m.title),
@@ -214,7 +228,7 @@ async function fetchApify(linkedinUrl) {
     //   • dev_fusion/*   → profileUrls: ["https://..."]                 (string array)
     //   • supreme_coder* → urls:        ["https://..."]                 (string array)
     //   • generic Apify  → startUrls:   [{ url: "https://..." }]        (very common pattern)
-    // Sending all shapes is safe — each actor validates only its expected field.
+    // Sending all shapes is safe - each actor validates only its expected field.
     // Send EVERY known input shape for LinkedIn-profile actors so we don't need to
     // hardcode per-actor branching. Each actor validates only its expected field;
     // ignored fields are harmless.
@@ -249,7 +263,7 @@ async function fetchApify(linkedinUrl) {
     throw new Error(`Apify actor error: ${raw.error || raw.errorMessage || raw.errorType}`);
   }
 
-  // Detect a truly empty payload — no identity fields at all = something went wrong upstream.
+  // Detect a truly empty payload - no identity fields at all = something went wrong upstream.
   // The user reported a real profile (yentlspiteri) coming back with 0 followers/connections/headline,
   // which is what happens when LinkedIn rate-limits the actor and it returns a stub instead of throwing.
   const hasIdentity =
@@ -259,15 +273,78 @@ async function fetchApify(linkedinUrl) {
       raw.headline  || raw.headlineText || raw.title
     );
   if (!hasIdentity) {
-    throw new Error('Apify returned an empty profile — actor likely rate-limited or LinkedIn blocked the request. Try again in 60 seconds.');
+    throw new Error('Apify returned an empty profile - actor likely rate-limited or LinkedIn blocked the request. Try again in 60 seconds.');
   }
 
   return raw;
 }
 
-async function fetchSerpFootprint(normalisedUrl) {
-  const handle = normalisedUrl.split('/in/')[1]?.split('/')[0] || '';
-  const q = handle.replace(/-/g, ' ');
+// Tier-1 press domain allowlist - each hit is a strong Authority signal.
+// Order roughly reflects perceived prestige; the actual scoring counts unique outlets.
+const TIER_1_PRESS = [
+  'forbes.com', 'bloomberg.com', 'wsj.com', 'nytimes.com', 'ft.com', 'reuters.com',
+  'economist.com', 'theatlantic.com', 'newyorker.com', 'wired.com',
+  'techcrunch.com', 'fastcompany.com', 'hbr.org', 'inc.com', 'fortune.com',
+  'businessinsider.com', 'theguardian.com', 'cnbc.com', 'cnn.com', 'bbc.com',
+  'theinformation.com', 'axios.com'
+];
+
+// Friendly outlet name from a domain (forbes.com → Forbes)
+function outletNameFromDomain(domain) {
+  const map = {
+    'forbes.com': 'Forbes', 'bloomberg.com': 'Bloomberg', 'wsj.com': 'Wall Street Journal',
+    'nytimes.com': 'New York Times', 'ft.com': 'Financial Times', 'reuters.com': 'Reuters',
+    'economist.com': 'The Economist', 'theatlantic.com': 'The Atlantic',
+    'newyorker.com': 'The New Yorker', 'wired.com': 'Wired',
+    'techcrunch.com': 'TechCrunch', 'fastcompany.com': 'Fast Company',
+    'hbr.org': 'Harvard Business Review', 'inc.com': 'Inc.', 'fortune.com': 'Fortune',
+    'businessinsider.com': 'Business Insider', 'theguardian.com': 'The Guardian',
+    'cnbc.com': 'CNBC', 'cnn.com': 'CNN', 'bbc.com': 'BBC',
+    'theinformation.com': 'The Information', 'axios.com': 'Axios'
+  };
+  return map[domain] || domain.replace(/\.com$|\.org$|\.co$/, '').replace(/^./, c => c.toUpperCase());
+}
+
+// Extract Tier-1 press hits from raw SerpAPI organic_results.
+// Returns: { count, outlets, hits: [{ outlet, title, link, snippet }] } - capped at 5 hits.
+function extractTier1Press(serp) {
+  const results = serp?.organic_results || [];
+  const seen = new Set();
+  const hits = [];
+  for (const r of results) {
+    const url = r.link || '';
+    const matchedDomain = TIER_1_PRESS.find(d => url.includes(d));
+    if (!matchedDomain) continue;
+    if (seen.has(matchedDomain)) continue;     // one hit per outlet - quality over quantity
+    seen.add(matchedDomain);
+    hits.push({
+      outlet:  outletNameFromDomain(matchedDomain),
+      domain:  matchedDomain,
+      title:   r.title || '',
+      link:    url,
+      snippet: r.snippet || ''
+    });
+    if (hits.length >= 5) break;
+  }
+  return {
+    count:   hits.length,
+    outlets: hits.map(h => h.outlet),
+    hits
+  };
+}
+
+// SerpAPI footprint search - uses the real name + company when we have them, falls back to handle.
+// Quoted name forces exact match; company disambiguates from name overlap.
+async function fetchSerpFootprint(normalisedUrl, profileForQuery) {
+  let q;
+  if (profileForQuery && (profileForQuery.firstName || profileForQuery.lastName)) {
+    const fullName = `${profileForQuery.firstName || ''} ${profileForQuery.lastName || ''}`.trim();
+    const company  = profileForQuery.companyName ? ` ${profileForQuery.companyName}` : '';
+    q = `"${fullName}"${company}`;
+  } else {
+    const handle = normalisedUrl.split('/in/')[1]?.split('/')[0] || '';
+    q = handle.replace(/-/g, ' ');
+  }
   const params = new URLSearchParams({
     engine: 'google',
     q: q,
@@ -301,15 +378,15 @@ PROFILE DATA:
 - LinkedIn Creator profile: ${isCreator ? 'yes' : 'no'}
 - LinkedIn verified: ${isVerified ? 'yes' : 'no'}
 
-PROVISIONAL SCORES (already computed from public signals — you fill in Brand Clarity):
+PROVISIONAL SCORES (already computed from public signals - you fill in Brand Clarity):
 - Digital Footprint: ${heuristic.footprint}/3
-- Brand Clarity: TBD — you score this
+- Brand Clarity: TBD - you score this
 - Authority Signals: ${heuristic.authority}/3
 - Content Cadence: ${heuristic.cadence}/3
 - Visual Identity: ${heuristic.visual}/3
 - Network Recognition: ${heuristic.network}/3
 
-YOUR JOB — return JSON with EVERY field below. No markdown fences, no prose around it:
+YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose around it:
 
 {
   "clarityScore": 0|1|2|3,
@@ -334,7 +411,7 @@ YOUR JOB — return JSON with EVERY field below. No markdown fences, no prose ar
   ]
 }
 
-VOICE NOTES — match the FutureMakers brand:
+VOICE NOTES - match the FutureMakers brand:
 - Confident, aspirational, action-oriented.
 - Echo the brand: "done playing small", "ideas that deserve the spotlight".
 - Specific over generic. Quote profile content, don't generalise.
@@ -408,7 +485,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 // Apify actors don't all use identical field names. These helpers cover the common ones
 // so the same scoring code works whether the actor returns `headline` or `headlineText`,
 // `followers` or `followersCount`, etc. If the chosen actor uses something else,
-// add aliases here — no need to touch the scoring functions.
+// add aliases here - no need to touch the scoring functions.
 
 function getFirstName(p) {
   // supreme_coder: firstName. Others: first_name / firstname / split fullName.
@@ -472,7 +549,7 @@ function getRecommendations(p) {
          p.received_recommendations || p.recommendationsReceived || [];
 }
 function getActivities(p) {
-  // supreme_coder doesn't include posts in the basic profile — would need a separate posts-scraper actor.
+  // supreme_coder doesn't include posts in the basic profile - would need a separate posts-scraper actor.
   return p.activities || p.posts || p.recentActivities ||
          p.recent_posts || p.updates || [];
 }
@@ -504,7 +581,7 @@ function scoreFootprint(profile, serp) {
   return clamp03(Math.round(pts));
 }
 
-function scoreAuthority(profile) {
+function scoreAuthority(profile, press) {
   let pts = 0;
   const recsCount     = getRecommendations(profile).length;
   const honorsCount   = getHonors(profile).length;
@@ -518,9 +595,18 @@ function scoreAuthority(profile) {
 
   if (honorsCount >= 1) pts += 0.5;
 
-  const text = (getHeadline(profile) + ' ' + getAbout(profile)).toLowerCase();
-  if (/featured|forbes|bloomberg|wsj|techcrunch|tedx|keynote|speaker|awarded|recognised|recognized/i.test(text)) {
-    pts += 0.75;
+  // Real Tier-1 press hits - by far the strongest authority signal we can detect.
+  // 3+ unique outlets = automatic full points on this leg.
+  const tier1Count = press?.count || 0;
+  if (tier1Count >= 3)      pts += 1.5;
+  else if (tier1Count >= 1) pts += 0.5 * tier1Count;   // 0.5 per outlet up to 1.5
+
+  // Self-claimed press keywords in headline/about - weakest signal, only if no real hits found
+  if (tier1Count === 0) {
+    const text = (getHeadline(profile) + ' ' + getAbout(profile)).toLowerCase();
+    if (/featured|forbes|bloomberg|wsj|techcrunch|tedx|keynote|speaker|awarded|recognised|recognized/i.test(text)) {
+      pts += 0.5;
+    }
   }
   return clamp03(Math.round(pts));
 }

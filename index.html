@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Visibility Index — Von Peach FutureMakers</title>
+<title>The Visibility Index - Von Peach FutureMakers</title>
 <meta name="description" content="Paste your LinkedIn URL. Get a forensic read on your executive visibility. 60 seconds. Zero forms." />
 
 <!-- General Sans (body). Aileron should be self-hosted from brand assets in v1. -->
@@ -12,25 +12,25 @@
 
 <style>
   /* ──────────────────────────────────────────────────────────
-     VON PEACH — FUTUREMAKERS PALETTE (personal branding)
+     VON PEACH - FUTUREMAKERS PALETTE (personal branding)
      ────────────────────────────────────────────────────────── */
   :root {
-    --vp-navy:      #0B0359;
-    --vp-indigo:    #3F36B2;
-    --vp-lavender:  #8683E5;
-    --vp-ice:       #EBF0FF;
-    --vp-white:     #FCFCFC;
-    --vp-black:     #0F0F0F;
-    --vp-grey-1:    #ADADAD;
-    --vp-grey-2:    #666666;
+ --vp-navy:      #0B0359;
+ --vp-indigo:    #3F36B2;
+ --vp-lavender:  #8683E5;
+ --vp-ice:       #EBF0FF;
+ --vp-white:     #FCFCFC;
+ --vp-black:     #0F0F0F;
+ --vp-grey-1:    #ADADAD;
+ --vp-grey-2:    #666666;
 
-    /* Both display and body use Aileron — full family loaded via @font-face below.
+    /* Both display and body use Aileron - full family loaded via @font-face below.
        Helvetica Neue fallback covers the brief moment before the OTF weights download. */
-    --font-display: 'Aileron', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
-    --font-body:    'Aileron', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
+ --font-display: 'Aileron', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
+ --font-body:    'Aileron', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
   }
 
-  /* — Aileron family — served from the Fonts/ folder at project root.
+  /* - Aileron family - served from the Fonts/ folder at project root.
      `font-display: swap` shows system fonts first, swaps to Aileron when ready
      so the page never renders blank. */
   @font-face {
@@ -91,8 +91,8 @@
     font-family: var(--font-body);
     font-size: 16px;
     line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+ -webkit-font-smoothing: antialiased;
+ -moz-osx-font-smoothing: grayscale;
   }
   body { overflow-x: hidden; }
 
@@ -233,7 +233,7 @@
     color: rgba(252,252,252,0.72);
   }
 
-  /* The action card — the centerpiece */
+  /* The action card - the centerpiece */
   .action-card {
     background: var(--vp-white);
     color: var(--vp-black);
@@ -249,6 +249,8 @@
     min-height: 80px;
     transition: min-height .35s cubic-bezier(.4,0,.2,1);
   }
+  /* Lift the clip when a picker popover is open so it can overflow the card boundary. */
+  .action-card.picker-active { overflow: visible; }
   .action-card.is-loading { min-height: 380px; padding: 28px; }
 
   /* INPUT panel */
@@ -294,7 +296,7 @@
     .url-row button::after { content: "→"; }
   }
 
-  /* LOADING panel — in-place inside action card */
+  /* LOADING panel - in-place inside action card */
   .loading-panel { display: none; }
   .loading-panel.active { display: block; }
 
@@ -542,7 +544,7 @@
   .tier-cta-btn::after { content: "→"; font-size: 18px; transition: transform .2s ease; }
   .tier-cta-btn:hover::after { transform: translateX(4px); }
 
-  /* — Results split: hexagon left, Claude summary right (mirrors methodology layout) — */
+  /* - Results split: hexagon left, Claude summary right (mirrors methodology layout) - */
   .results-split {
     display: grid;
     grid-template-columns: 1.05fr 1fr;
@@ -592,7 +594,7 @@
     margin: 0;
   }
 
-  /* — Personal hex shape (replaces the verbose 6-card subscore strip) — */
+  /* - Personal hex shape (replaces the verbose 6-card subscore strip) - */
   .personal-hex {
     width: 100%;
     max-width: 720px;
@@ -612,14 +614,14 @@
     stroke: rgba(134,131,229,0.18);
     stroke-width: 1;
   }
-  /* Six wedge segments — each its own purple shade. Soft drop-shadow on the group, not per-wedge. */
+  /* Six wedge segments - each its own purple shade. Soft drop-shadow on the group, not per-wedge. */
   .personal-hex .phex-wedges {
     filter: drop-shadow(0 12px 38px rgba(63,54,178,0.45));
     /* Subtle wobble settle once SMIL finishes (delay matches wedge animation duration) */
     animation: phex-settle 0.6s cubic-bezier(.34,1.56,.64,1) 0.9s both;
     transform-origin: 270px 270px;
     transform-box: view-box;
-    /* Smooth shift when --shift-x/y change on hover — gravitational pull toward active vertex */
+    /* Smooth shift when --shift-x/y change on hover - gravitational pull toward active vertex */
     transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
     transform: translate(var(--shift-x, 0px), var(--shift-y, 0px));
   }
@@ -629,11 +631,11 @@
     transform: translate(var(--shift-x, 0px), var(--shift-y, 0px));
   }
   .personal-hex .phex-wedge {
-    /* No stroke between wedges — keeps the shape feeling like one cohesive object */
+    /* No stroke between wedges - keeps the shape feeling like one cohesive object */
     stroke: none;
     opacity: 0.92;
   }
-  /* Single thin cream outline on top — ties the wedges into one silhouette */
+  /* Single thin cream outline on top - ties the wedges into one silhouette */
   .personal-hex .phex-outline {
     fill: none;
     stroke: rgba(252,252,252,0.85);
@@ -653,7 +655,7 @@
     stroke-width: 2;
     transition: r .18s cubic-bezier(.2,.8,.25,1), fill .18s ease;
   }
-  /* Interactive vertex group — invisible hit-target makes hover easy on all devices */
+  /* Interactive vertex group - invisible hit-target makes hover easy on all devices */
   .personal-hex .phex-vertex { cursor: pointer; outline: none; }
   .personal-hex .phex-hit    { fill: transparent; pointer-events: all; }
   .personal-hex .phex-vertex:hover .phex-node,
@@ -1027,7 +1029,7 @@
 
   .madlib-select {
     appearance: none;
-    -webkit-appearance: none;
+ -webkit-appearance: none;
     border: 0;
     background: rgba(63,54,178,0.08);
     color: var(--vp-indigo);
@@ -1165,7 +1167,7 @@
     justify-content: center;
   }
 
-  /* Preview card — the RIGHT panel. Three states: ladder / loading / result */
+  /* Preview card - the RIGHT panel. Three states: ladder / loading / result */
   .preview-card {
     background: rgba(252,252,252,0.04);
     border: 1px solid rgba(134,131,229,0.22);
@@ -1253,7 +1255,7 @@
     font-size: 14px;
   }
 
-  /* State B: loading (preview card variant — same loading-row markup, dark theme) */
+  /* State B: loading (preview card variant - same loading-row markup, dark theme) */
   .preview-loading { display: none; }
   .preview-loading.active { display: block; }
   .preview-loading .preview-eyebrow { color: var(--vp-lavender); }
@@ -1346,33 +1348,33 @@
   .preview-cta:hover::after { transform: translateX(4px); }
 
   /* ════════════════════════════════════════════════════════════════
-     v0.3 BATCH 1 — Typography pass
+     v0.3 BATCH 1 - Typography pass
      Tightens scale across the page. Body 17px (down from 28px),
      hero 84px max (down from 96px), mad-libs reads as a form (20px not 28px).
-     Cascade-order overrides — appended at end of <style> intentionally.
+     Cascade-order overrides - appended at end of <style> intentionally.
      ════════════════════════════════════════════════════════════════ */
 
   :root {
     /* type scale */
-    --fs-display: clamp(56px, 7vw, 84px);
-    --fs-h2:      clamp(36px, 4vw, 56px);
-    --fs-h3:      20px;
-    --fs-body:    17px;
-    --fs-small:   14px;
-    --fs-eyebrow: 12px;
+ --fs-display: clamp(56px, 7vw, 84px);
+ --fs-h2:      clamp(36px, 4vw, 56px);
+ --fs-h3:      20px;
+ --fs-body:    17px;
+ --fs-small:   14px;
+ --fs-eyebrow: 12px;
     /* tracking */
-    --ls-display: -0.025em;
-    --ls-h2:      -0.02em;
-    --ls-h3:      -0.01em;
-    --ls-eyebrow: 0.12em;
+ --ls-display: -0.025em;
+ --ls-h2: -0.02em;
+ --ls-h3: -0.01em;
+ --ls-eyebrow: 0.12em;
     /* line-height */
-    --lh-display: 1.04;
-    --lh-h2:      1.08;
-    --lh-h3:      1.25;
-    --lh-body:    1.55;
+ --lh-display: 1.04;
+ --lh-h2:      1.08;
+ --lh-h3:      1.25;
+ --lh-body:    1.55;
   }
 
-  /* — Display + headings — */
+  /* - Display + headings - */
   .display {
     font-family: var(--font-display);
     font-weight: 700;
@@ -1395,7 +1397,7 @@
     letter-spacing: var(--ls-h3);
   }
 
-  /* — Body copy — */
+  /* - Body copy - */
   body {
     font-size: var(--fs-body);
     line-height: var(--lh-body);
@@ -1407,7 +1409,7 @@
     letter-spacing: 0;
   }
 
-  /* — Mad-libs (reads as a sentence, not a form) — */
+  /* - Mad-libs (reads as a sentence, not a form) - */
   .madlib {
     font-family: var(--font-body);
     font-size: clamp(20px, 2.4vw, 26px);
@@ -1502,7 +1504,7 @@
     left: 0;
     min-width: 260px;
     max-width: 360px;
-    /* Cap height — internal scroll instead of getting clipped by neighbouring sections */
+    /* Cap height - internal scroll instead of getting clipped by neighbouring sections */
     max-height: min(60vh, 480px);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1512,7 +1514,7 @@
     box-shadow:
       0 24px 64px rgba(11,3,89,0.24),
       0 4px 16px rgba(11,3,89,0.10);
-    /* High z-index — sits above everything including the next section */
+    /* High z-index - sits above everything including the next section */
     z-index: 9999;
     /* closed */
     opacity: 0;
@@ -1585,7 +1587,7 @@
     animation: pickerJustPicked .8s cubic-bezier(.2,.8,.25,1) 1;
   }
 
-  /* Sequential focus hint — pulses the NEXT field after one is filled */
+  /* Sequential focus hint - pulses the NEXT field after one is filled */
   @keyframes nextFieldPulse {
     0%   { box-shadow: 0 0 0 0 rgba(134,131,229,0.65); }
     50%  { box-shadow: 0 0 0 12px rgba(134,131,229,0); }
@@ -1625,7 +1627,7 @@
     }
   }
 
-  /* — Eyebrow / kicker labels (one consistent treatment site-wide) — */
+  /* - Eyebrow / kicker labels (one consistent treatment site-wide) - */
   .eyebrow,
   .hero-eyebrow .eyebrow,
   .preview-eyebrow,
@@ -1638,7 +1640,7 @@
     line-height: 1.4;
   }
 
-  /* — Buttons — */
+  /* - Buttons - */
   .btn,
   button,
   .preview-cta,
@@ -1658,7 +1660,7 @@
     line-height: 1;
   }
 
-  /* — Cards: tighter rhythm, colors unchanged — */
+  /* - Cards: tighter rhythm, colors unchanged - */
   .action-card,
   .preview-card,
   .gate-card {
@@ -1680,7 +1682,7 @@
     opacity: 0.7;
   }
 
-  /* — Subscores — */
+  /* - Subscores - */
   .subscore { padding: 14px 0; }
   .subscore-label {
     font-size: 14px;
@@ -1705,14 +1707,14 @@
     opacity: 0.75;
   }
 
-  /* — Leaderboard — */
+  /* - Leaderboard - */
   .leaderboard-row {
     font-size: 15px;
     padding: 12px 16px;
   }
   .leaderboard-row.you { font-weight: 600; }
 
-  /* — Email gate — */
+  /* - Email gate - */
   .gate-card {
     max-width: 560px;
     margin: 0 auto;
@@ -1737,7 +1739,7 @@
     margin-top: 12px;
   }
 
-  /* — Trust signals (fine-print, not body copy) — */
+  /* - Trust signals (fine-print, not body copy) - */
   .trust-strip,
   .hero-trust-line,
   [class*="trust"] {
@@ -1747,7 +1749,7 @@
     letter-spacing: 0;
   }
 
-  /* — Nav — */
+  /* - Nav - */
   nav.top a,
   nav.top .nav-link {
     font-family: var(--font-body);
@@ -1757,7 +1759,7 @@
     line-height: 1;
   }
 
-  /* — Loading rows — */
+  /* - Loading rows - */
   .loading-row {
     font-size: 14px;
     font-weight: 500;
@@ -1765,7 +1767,7 @@
     letter-spacing: 0;
   }
 
-  /* — Methodology table — */
+  /* - Methodology table - */
   details.method .method-body table { font-size: 15px; line-height: 1.5; }
   details.method .method-body th {
     font-size: 12px;
@@ -1781,7 +1783,7 @@
   }
 
   /* ════════════════════════════════════════════════════════════════
-     v0.3 BATCH 2 — Brand integration with vonpeach.com
+     v0.3 BATCH 2 - Brand integration with vonpeach.com
      Real tokens audited from www.vonpeach.com (Framer):
        page bg #fafafa, primary dark #0c0b09, secondary text #666,
        nav: General Sans 16px/500/0.01em, CTA: bg #0c0b09 / 9px radius
@@ -1790,12 +1792,12 @@
      ════════════════════════════════════════════════════════════════ */
 
   :root {
-    --vp-cream:      #fafafa;  /* page bg on vonpeach.com */
-    --vp-deep-black: #0c0b09;  /* primary dark, CTAs */
-    --vp-text-grey:  #666666;  /* secondary text, legal line */
+ --vp-cream:      #fafafa;  /* page bg on vonpeach.com */
+ --vp-deep-black: #0c0b09;  /* primary dark, CTAs */
+ --vp-text-grey:  #666666;  /* secondary text, legal line */
   }
 
-  /* — Nav: light variant matching vonpeach.com — */
+  /* - Nav: light variant matching vonpeach.com - */
   nav.top {
     backdrop-filter: none;
     background: var(--vp-cream);
@@ -1846,7 +1848,7 @@
     opacity: 1;
   }
 
-  /* — Section markers (black square + uppercase label, matches vonpeach.com) — */
+  /* - Section markers (black square + uppercase label, matches vonpeach.com) - */
   .eyebrow-row .dot,
   .hero-eyebrow .dot,
   .results-eyebrow-row .dot,
@@ -1858,7 +1860,7 @@
     box-shadow: none;
   }
 
-  /* — Pillars section: LIGHT — */
+  /* - Pillars section: LIGHT - */
   .pillars {
     background: var(--vp-cream);
     color: var(--vp-deep-black);
@@ -1887,7 +1889,7 @@
     }
   }
 
-  /* — Methodology section: LIGHT — */
+  /* - Methodology section: LIGHT - */
   .method-wrap {
     background: var(--vp-cream);
     color: var(--vp-deep-black);
@@ -1923,7 +1925,7 @@
 
   /* ─────────── Editorial prose form (vonpeach.com style: cream bg, black text, purple accent) ─────────── */
   .action-card {
-    /* Full-width editorial layout — no max-width constraint, no heavy card chrome */
+    /* Full-width editorial layout - no max-width constraint, no heavy card chrome */
     max-width: none;
     width: 100%;
     background: var(--vp-cream, #fafafa);
@@ -1952,7 +1954,7 @@
     line-height: 1.45 !important;
     letter-spacing: -0.018em !important;
   }
-  /* Keep the popover options at their original small body size — they're not part of the prose line */
+  /* Keep the popover options at their original small body size - they're not part of the prose line */
   .audit-prose .picker-popover,
   .audit-prose .picker-popover * {
     font-family: var(--font-body) !important;
@@ -1960,7 +1962,7 @@
     line-height: 1.35 !important;
     letter-spacing: normal !important;
   }
-  /* Inline picker trigger — text in lavender with a subtle underline, no chip background */
+  /* Inline picker trigger - text in lavender with a subtle underline, no chip background */
   .picker-trigger--inline {
     display: inline-flex;
     align-items: baseline;
@@ -2050,7 +2052,7 @@
     letter-spacing: 0.02em;
   }
 
-  /* Loading panel — playful chip layout, compact spacing, dark text on cream */
+  /* Loading panel - playful chip layout, compact spacing, dark text on cream */
   .action-card .loading-panel {
     padding: 4px 0;
   }
@@ -2070,7 +2072,7 @@
     min-height: 1.5em;
     transition: color .2s ease;
   }
-  /* Chip layout — wraps naturally, much tighter, feels like a live checklist */
+  /* Chip layout - wraps naturally, much tighter, feels like a live checklist */
   .action-card .loading-panel .loading-list {
     display: flex;
     flex-wrap: wrap;
@@ -2117,7 +2119,7 @@
     100% { transform: scale(1.06); }
   }
 
-  /* Tiny circular indicator in each chip — empty → spinner → check */
+  /* Tiny circular indicator in each chip - empty → spinner → check */
   .action-card .loading-panel .loading-row .loading-icon {
     width: 14px; height: 14px;
     flex-shrink: 0;
@@ -2148,7 +2150,7 @@
     background: var(--vp-indigo);
     border-color: var(--vp-indigo);
   }
-  /* Checkmark stroke inside completed dot — appears via clip-path animation */
+  /* Checkmark stroke inside completed dot - appears via clip-path animation */
   .action-card .loading-panel .loading-row.done .loading-icon::after {
     content: "";
     position: absolute;
@@ -2167,9 +2169,9 @@
     to   { opacity: 1; transform: rotate(-45deg) scale(1)   translate(0px, -1px); }
   }
 
-  /* ─────────── Picker-open focus state — blur everything except the active picker ─────────── */
+  /* ─────────── Picker-open focus state - blur everything except the active picker ─────────── */
   .action-card { position: relative; transition: filter .25s ease; }
-  /* When ANY picker is open, dim+blur the prose and CTA — keep the active picker (and its popover) sharp */
+  /* When ANY picker is open, dim+blur the prose and CTA - keep the active picker (and its popover) sharp */
   .action-card.picker-active .input-panel > .audit-prose,
   .action-card.picker-active .input-panel > .audit-submit,
   .action-card.picker-active .input-panel > .audit-trust {
@@ -2209,7 +2211,7 @@
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  /* Pulsing indigo orb above the loading title — visual anchor while we wait */
+  /* Pulsing indigo orb above the loading title - visual anchor while we wait */
   .action-card.is-loading .loading-panel::before {
     content: "";
     display: block;
@@ -2308,7 +2310,7 @@
     margin-bottom: 24px;
   }
   .score-reveal-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  /* Inner white disc — score reads as dark text on cream, like a medal/watch face */
+  /* Inner white disc - score reads as dark text on cream, like a medal/watch face */
   .score-reveal-ring .ring-bg {
     fill: var(--vp-cream, #fafafa);
     stroke: rgba(252,252,252,0.10);
@@ -2319,7 +2321,7 @@
     stroke: url(#ringGradient);
     stroke-width: 14;
     stroke-linecap: round;
-    /* Elastic spring fill — overshoots slightly then settles */
+    /* Elastic spring fill - overshoots slightly then settles */
     transition: stroke-dasharray 1.6s cubic-bezier(.34, 1.56, .64, 1);
   }
   .score-reveal-ring-center {
@@ -2333,7 +2335,7 @@
     font-size: 96px;
     line-height: 1;
     letter-spacing: -0.03em;
-    /* Dark text on the cream disc — score reads like a medal */
+    /* Dark text on the cream disc - score reads like a medal */
     color: var(--vp-deep-black, #0c0b09);
   }
   .score-reveal-suffix {
@@ -2357,7 +2359,7 @@
     max-width: 480px;
   }
 
-  /* — Preview greeting (avatar + first name above the score ring) — */
+  /* - Preview greeting (avatar + first name above the score ring) - */
   .preview-greeting {
     display: flex;
     align-items: center;
@@ -2399,7 +2401,7 @@
     letter-spacing: -0.01em;
   }
 
-  /* — Personalized analysis block (Claude-generated, sits above sub-scores) — */
+  /* - Personalized analysis block (Claude-generated, sits above sub-scores) - */
   .personal-card {
     background: rgba(252,252,252,0.04);
     border: 1px solid rgba(134,131,229,0.25);
@@ -2470,7 +2472,7 @@
     line-height: 1.55;
   }
 
-  /* — Next-moves section (post-submit unlock) — */
+  /* - Next-moves section (post-submit unlock) - */
   .next-moves-wrap {
     background: var(--vp-navy);
     color: var(--vp-white);
@@ -2528,7 +2530,7 @@
     line-height: 1.5;
     margin: 0;
   }
-  /* First-step sub-line — inline, smaller, no big highlighted box */
+  /* First-step sub-line - inline, smaller, no big highlighted box */
   .move-step {
     margin-top: 6px;
     padding: 10px 0 0;
@@ -2547,10 +2549,10 @@
     margin: 0;
   }
   .move-step-label::after { content: " "; }
-  /* Service tag removed from the card UI per simplification — kept in data for the PDF */
+  /* Service tag removed from the card UI per simplification - kept in data for the PDF */
   .move-service { display: none; }
 
-  /* — White help CTA on the dark next-moves section — */
+  /* - White help CTA on the dark next-moves section - */
   .help-cta {
     display: inline-flex;
     align-items: center;
@@ -2574,7 +2576,7 @@
   }
   .next-cta-row--single { display: flex; justify-content: center; }
 
-  /* — Inbox-sent success state (replaces the gate-card form on submit) — */
+  /* - Inbox-sent success state (replaces the gate-card form on submit) - */
   .gate-success {
     background: var(--vp-cream, #fafafa);
     border-radius: 20px;
@@ -2712,7 +2714,7 @@
     color: var(--vp-lavender);
   }
 
-  /* — Personal-card CTA (in the score-reveal block, jumps to the email gate) — */
+  /* - Personal-card CTA (in the score-reveal block, jumps to the email gate) - */
   .personal-cta-row {
     margin-top: 22px;
     padding-top: 22px;
@@ -2755,7 +2757,7 @@
     line-height: 1.4;
   }
 
-  /* — Methodology: 2-column grid (hexagon left, dimension detail right) — */
+  /* - Methodology: 2-column grid (hexagon left, dimension detail right) - */
   .method-split {
     display: grid;
     grid-template-columns: 1.05fr 1fr;
@@ -2797,7 +2799,7 @@
     stroke-width: 1;
     fill: none;
   }
-  /* Animated polygon — slow morph between three executive shapes (rising, emerging, recognized).
+  /* Animated polygon - slow morph between three executive shapes (rising, emerging, recognized).
      Uses values + dur on <animate> directly in markup; this rule only handles fill/stroke. */
   .method-diagram .hex-shape {
     fill: rgba(63,54,178,0.16);
@@ -2807,7 +2809,7 @@
     stroke-linecap: round;
     filter: drop-shadow(0 8px 28px rgba(63,54,178,0.28));
   }
-  /* Interactive vertex group — large invisible hit-target makes hover easy on all devices.
+  /* Interactive vertex group - large invisible hit-target makes hover easy on all devices.
      `outline: none` kills the browser default focus ring (the blue rectangle on click).
      Keyboard users still get a clear indicator via the .is-active node + label colour. */
   .method-diagram .hex-vertex {
@@ -2857,7 +2859,7 @@
   .method-diagram .hex-vertex:hover .hex-num,
   .method-diagram .hex-vertex.is-active .hex-num { opacity: 1; }
 
-  /* Soft pulsing ring on each node — draws the eye and signals "interactive" */
+  /* Soft pulsing ring on each node - draws the eye and signals "interactive" */
   .method-diagram .hex-pulse-ring {
     fill: none;
     stroke: var(--vp-indigo);
@@ -2875,7 +2877,7 @@
     100% { r: 22; opacity: 0;   }
   }
 
-  /* Detail panel — sits in the RIGHT column on desktop, below on mobile.
+  /* Detail panel - sits in the RIGHT column on desktop, below on mobile.
      Left-aligned so it reads like editorial copy beside the diagram. */
   .method-detail {
     width: 100%;
@@ -2975,7 +2977,7 @@
     margin: 0;
   }
 
-  /* — Goal-aware hero subhead — */
+  /* - Goal-aware hero subhead - */
   .hero-subhead {
     font-family: var(--font-body);
     font-size: clamp(15px, 1.4vw, 17px);
@@ -2987,7 +2989,7 @@
     letter-spacing: 0;
   }
 
-  /* — Trust line under the Calculate button (CTA cluster, not page furniture) — */
+  /* - Trust line under the Calculate button (CTA cluster, not page furniture) - */
   .madlib-trust {
     margin-top: 14px;
     font-family: var(--font-body);
@@ -2998,7 +3000,7 @@
     text-align: center;
   }
 
-  /* — Footer: LIGHT, mirrors vonpeach.com (3-col layout + giant PEACH wordmark) — */
+  /* - Footer: LIGHT, mirrors vonpeach.com (3-col layout + giant PEACH wordmark) - */
   footer {
     background: var(--vp-cream, #fafafa);
     color: var(--vp-deep-black, #0c0b09);
@@ -3099,7 +3101,7 @@
   }
   footer .footer-legal-row a:hover { opacity: 0.6; }
 
-  /* Giant PEACH wordmark — clipped at the bottom, decorative */
+  /* Giant PEACH wordmark - clipped at the bottom, decorative */
   footer .footer-mark {
     margin: 0;
     padding: 0;
@@ -3121,19 +3123,252 @@
 
   .hidden { display: none !important; }
 
-  /* After the audit completes, the score reveal IS the page — hide everything above it.
+  /* After the audit completes, the score reveal IS the page - hide everything above it.
      User can still find the methodology + footer below the results without distraction. */
   body.audit-complete nav.top,
   body.audit-complete .hero {
     display: none !important;
   }
 
-  /* Scroll lock while the audit is running — keeps the loading state in view, no accidental scroll-away */
+  /* Scroll lock while the audit is running - keeps the loading state in view, no accidental scroll-away */
   body.audit-locked,
   html.audit-locked {
     overflow: hidden !important;
     overscroll-behavior: none;
     touch-action: none;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════════════════
+     MOBILE-APP TREATMENT  ·  Level 1 + Level 2
+     Activates only on <768px. Desktop stays untouched.
+     ═══════════════════════════════════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* Prevent iOS double-tap zoom + auto-zoom on input focus (16px+ font size required) */
+    body { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+    input, select, textarea, button { font-size: 16px !important; }
+
+    /* 1.1 - Snap-scroll to feel like a sequential app, not a webpage.
+       Each major section is a 100vh "screen" that snaps into place as you scroll. */
+    html { scroll-snap-type: y proximity; scroll-padding-top: 0; }
+    .hero,
+    .action-card-section,
+    .results-wrap,
+    .next-moves-wrap,
+    .method-wrap,
+    .circle { scroll-snap-align: start; scroll-snap-stop: normal; }
+
+    /* The hero on mobile fills exactly one viewport so the form is the next swipe down */
+    .hero {
+      min-height: calc(100vh - env(safe-area-inset-top, 0px));
+      padding: 56px 0 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .hero .display { font-size: clamp(40px, 11vw, 56px); line-height: 0.98; }
+    .hero-subhead { font-size: 15px; line-height: 1.5; padding: 0 24px; }
+    .container-hero { padding: 0 24px; }
+
+    /* 1.2 - Sticky bottom CTA: thumb-reachable, always visible above the keyboard */
+    .audit-submit {
+      position: fixed !important;
+      left: 16px;
+      right: 16px;
+      bottom: max(16px, env(safe-area-inset-bottom, 16px));
+      width: auto !important;
+      margin: 0 !important;
+      padding: 18px 24px !important;
+      font-size: 16px !important;
+      border-radius: 14px !important;
+      box-shadow: 0 12px 32px rgba(11,3,89,0.35);
+      z-index: 50;
+      justify-content: center;
+    }
+    /* When form is visible, give it bottom padding so the sticky button doesn't cover content */
+    .input-panel { padding-bottom: 100px; }
+    /* Hide the sticky CTA once audit completes (results page has its own gate CTA) */
+    body.audit-complete .audit-submit { display: none !important; }
+
+    /* The action card on mobile reads as a full-screen sheet, no card chrome */
+    .action-card {
+      padding: clamp(28px, 8vw, 40px) 20px !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+    }
+    .audit-prose,
+    .audit-prose * {
+      font-size: clamp(22px, 6vw, 30px) !important;
+      line-height: 1.35 !important;
+    }
+    .audit-input { width: 100% !important; max-width: none; display: block; margin-top: 8px; }
+    .audit-prefix { display: block; font-size: 16px !important; opacity: 0.55; margin-bottom: 4px; }
+
+    /* 1.3 - Hexagon stays at top, dimension cards become a swipeable carousel */
+    .results-split {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 24px !important;
+      max-width: 100% !important;
+      margin: 16px 0 32px !important;
+    }
+    .personal-hex { max-width: 320px !important; margin: 0 auto !important; }
+    .results-summary {
+      padding: 0 20px;
+      text-align: center !important;
+    }
+    .results-summary-title { font-size: 24px !important; }
+    .results-summary-body { font-size: 15px !important; }
+
+    /* Score reveal scales down properly */
+    .score-reveal-ring { width: 220px !important; height: 220px !important; }
+    .score-reveal-num { font-size: 76px !important; }
+    .score-reveal-tier-name { font-size: clamp(28px, 8vw, 40px) !important; }
+    .score-reveal-tier-tagline { font-size: 15px !important; padding: 0 24px; }
+
+    /* 1.4 - Bottom sheets for pickers (already partial - polish here) */
+    .picker-popover {
+      max-height: 70vh !important;
+      padding: 8px 8px 24px !important;
+      border-radius: 20px 20px 0 0 !important;
+      box-shadow: 0 -16px 48px rgba(11,3,89,0.35) !important;
+    }
+    .picker-popover .picker-option {
+      padding: 16px 18px !important;
+      font-size: 16px !important;
+      min-height: 52px;
+      border-radius: 12px;
+    }
+    .picker-popover .picker-option:active {
+      background: rgba(63,54,178,0.15) !important;
+      transform: scale(0.99);
+    }
+
+    /* 2.2 - Native-feeling button taps everywhere */
+    button, .audit-submit, .help-cta, .footer-cta, .personal-cta, .nav-cta, .gate-form button {
+      transition: transform .12s cubic-bezier(.34,1.56,.64,1), background .15s ease, box-shadow .15s ease;
+    }
+    button:active, .audit-submit:active, .help-cta:active, .footer-cta:active,
+    .personal-cta:active, .nav-cta:active, .gate-form button:active {
+      transform: scale(0.97);
+    }
+
+    /* 2.3 - Loading state full-bleed on mobile: single big orb + cycling text underneath */
+    .action-card.is-loading {
+      min-height: 100vh;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 100;
+      background: var(--vp-cream, #fafafa);
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-card.is-loading .loading-panel {
+      position: static !important;
+      inset: auto !important;
+      padding: 0 24px !important;
+      background: transparent !important;
+      backdrop-filter: none !important;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+    .action-card.is-loading .loading-panel::before {
+      width: 96px !important;
+      height: 96px !important;
+      margin: 0 auto 32px !important;
+    }
+    .action-card.is-loading .loading-title {
+      font-size: 26px !important;
+      text-align: center;
+    }
+    .action-card.is-loading .loading-subtitle {
+      font-size: 16px !important;
+      min-height: 3em;
+      text-align: center;
+      padding: 0 12px;
+    }
+    .action-card.is-loading .loading-list { display: none !important; }
+
+    /* 2.4 - Sticky thin progress bar on results, fills as user scrolls toward gate */
+    body.audit-complete::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--scroll-pct, 0%);
+      height: 3px;
+      background: linear-gradient(90deg, var(--vp-indigo), var(--vp-lavender));
+      z-index: 99;
+      transition: width .1s linear;
+    }
+
+    /* 2.1 - Page transitions: form-out / score-in fade + slide.
+       Activated by JS toggling `view-transition` class on body. */
+    body.transitioning .input-panel {
+      animation: phase-out .35s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    body.transitioning .results-wrap {
+      animation: phase-in .5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes phase-out {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-24px); }
+    }
+    @keyframes phase-in {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Methodology + footer + circle look better as full-bleed mobile cards */
+    .method-wrap, .next-moves-wrap, .circle {
+      padding: 56px 0 !important;
+    }
+    .method-split {
+      grid-template-columns: 1fr !important;
+      gap: 24px !important;
+    }
+    .method-detail {
+      padding: 0 20px !important;
+      text-align: center !important;
+    }
+    .method-detail-title { font-size: 22px !important; }
+    .method-detail-body { font-size: 14px !important; }
+
+    /* Footer: stack vertically, big tap targets */
+    footer .footer-grid {
+      grid-template-columns: 1fr !important;
+      gap: 40px !important;
+      text-align: center;
+    }
+    footer .footer-col,
+    footer .footer-col-center,
+    footer .footer-col-right { text-align: center !important; }
+    footer .footer-col a { font-size: 16px !important; padding: 8px 0; display: inline-block; }
+
+    /* Nav logo smaller on mobile so it doesn't dominate the hero */
+    nav.top .container { height: 64px !important; }
+    .logo { height: 40px !important; }
+
+    /* Move cards on mobile - one column, tappable */
+    .moves-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+    .move-card { padding: 24px 20px !important; }
+    .move-title { font-size: 18px !important; }
+    .move-why { font-size: 14px !important; }
+
+    /* Eyebrow shrink */
+    .eyebrow { font-size: 11px !important; letter-spacing: 0.14em; }
+
+    /* Personal hex labels need to stay readable */
+    .personal-hex .phex-label { font-size: 11px !important; }
+    .personal-hex .phex-num { font-size: 9px !important; }
+  }
+
+  /* Respect prefers-reduced-motion: kill the snap and the page transitions */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-snap-type: none !important; }
+    body.transitioning .input-panel,
+    body.transitioning .results-wrap { animation: none !important; }
   }
 </style>
 </head>
@@ -3142,7 +3377,7 @@
 <!-- ─────────── NAV ─────────── -->
 <nav class="top">
   <div class="container">
-    <a href="https://www.vonpeach.com" target="_blank" rel="noopener" class="logo" aria-label="Von Peach — visit homepage">
+    <a href="https://www.vonpeach.com" target="_blank" rel="noopener" class="logo" aria-label="Von Peach - visit homepage">
       <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <g fill="#FCFCFC">
           <path d="M298.99,614.13h-34.36c10.38-48.96,20.56-96.75,30.86-145.34,15.56,0,30.7,0,46.73,0,9.35,31.71,18.27,63.38,28.42,97.8,6.95-34.2,13.42-65.83,19.92-97.8h34.07c-10.31,49.35-19.87,96.44-30.16,145.34h-45.66c-9.62-33.84-19.33-68.24-29.03-102.37h-.85c-3.06,17.24-5.83,34.54-9.19,51.73-3.26,16.7-7.07,33.53-10.74,50.64Z"/>
@@ -3174,8 +3409,8 @@
 
     <h1 class="display">How visible<br/>are you, really?</h1>
 
-    <!-- Goal-aware subhead — primes the value prop based on the role + goal selection -->
-    <p class="hero-subhead" id="hero-subhead">CEOs who attract better clients score 4.2 points higher on visibility than peers — see where you sit.</p>
+    <!-- Goal-aware subhead - primes the value prop based on the role + goal selection -->
+    <p class="hero-subhead" id="hero-subhead">CEOs who attract better clients score 4.2 points higher on visibility than peers - see where you sit.</p>
 
     <!-- 2-COLUMN GRID: mad-libs LEFT, preview RIGHT -->
     <!-- Single full-width action area: editorial prose form + loading panel.
@@ -3244,7 +3479,7 @@
 
       <div class="loading-panel hidden" id="loading-panel">
         <div class="loading-title">Running your audit</div>
-        <div class="loading-subtitle" id="loading-subtitle">Pulling public LinkedIn signals — this takes ~15s.</div>
+        <div class="loading-subtitle" id="loading-subtitle">Pulling public LinkedIn signals - this takes ~15s.</div>
         <ul class="loading-list" id="loading-list">
           <li class="loading-row" data-step="0" data-msg="Saying hi to your LinkedIn…"><span class="loading-icon"></span><span>Profile</span></li>
           <li class="loading-row" data-step="1" data-msg="Asking Google about you…"><span class="loading-icon"></span><span>Footprint</span></li>
@@ -3259,7 +3494,7 @@
 
     </div><!-- /.action-card -->
 
-    <!-- (Anonymous-avatar trust strip removed — generic social proof was hurting more than helping.
+    <!-- (Anonymous-avatar trust strip removed - generic social proof was hurting more than helping.
          Replace with real client logos from vonpeach.com case studies in a follow-up.) -->
 
 
@@ -3267,7 +3502,7 @@
   </div>
 </section>
 
-<!-- PILLARS section removed — content was duplicating the methodology hexagon below -->
+<!-- PILLARS section removed - content was duplicating the methodology hexagon below -->
 
 <!-- ─────────── RESULTS ─────────── -->
 <section class="results-wrap hidden" id="results">
@@ -3284,7 +3519,7 @@
         <span class="score-reveal-avatar-fallback hidden" id="preview-avatar-fallback" aria-hidden="true">·</span>
         <div class="score-reveal-greeting-text">
           <span class="score-reveal-eyebrow">Your Visibility Index</span>
-          <span class="score-reveal-name" id="preview-name">—</span>
+          <span class="score-reveal-name" id="preview-name">-</span>
         </div>
       </div>
       <div class="score-reveal-ring">
@@ -3303,8 +3538,8 @@
           <div class="score-reveal-suffix">/ 100</div>
         </div>
       </div>
-      <div class="score-reveal-tier-name" id="tier-name">—</div>
-      <div class="score-reveal-tier-tagline" id="tier-tagline">—</div>
+      <div class="score-reveal-tier-name" id="tier-name">-</div>
+      <div class="score-reveal-tier-tagline" id="tier-tagline">-</div>
       <span class="hidden" id="tier-cta"></span>
     </div>
 
@@ -3326,9 +3561,9 @@
       </div>
     </div>
 
-    <!-- Personal hexagon (left) + Claude-generated summary (right) — 2-col, stacks on mobile -->
+    <!-- Personal hexagon (left) + Claude-generated summary (right) - 2-col, stacks on mobile -->
     <div class="results-split">
-      <div class="subscores" id="subscores"><!-- populated by JS — renders the hexagon SVG --></div>
+      <div class="subscores" id="subscores"><!-- populated by JS - renders the hexagon SVG --></div>
       <div class="results-summary" id="results-summary">
         <span class="results-summary-eyebrow">Your shape</span>
         <h3 class="results-summary-title" id="results-summary-title">What this means.</h3>
@@ -3336,7 +3571,7 @@
       </div>
     </div>
 
-    <!-- Standalone email gate (leaderboard removed — was placeholder content; replace in v0.5 with real research-backed distribution chart) -->
+    <!-- Standalone email gate (leaderboard removed - was placeholder content; replace in v0.5 with real research-backed distribution chart) -->
     <div class="gate-standalone" id="gate-standalone">
       <div class="gate-card" id="gate-card">
         <div class="gate-eyebrow">Your full report</div>
@@ -3350,7 +3585,7 @@
         <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime.</div>
       </div>
 
-      <!-- Success state — replaces the form once /api/lead returns ok -->
+      <!-- Success state - replaces the form once /api/lead returns ok -->
       <div class="gate-success hidden" id="gate-success" role="status" aria-live="polite">
         <div class="gate-success-check" aria-hidden="true">
           <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
@@ -3380,7 +3615,7 @@
 
     <div class="moves-grid" id="moves-grid"><!-- populated by JS --></div>
 
-    <!-- "Path to the next tier" block removed per request — moves above are enough -->
+    <!-- "Path to the next tier" block removed per request - moves above are enough -->
 
     <div class="next-cta-row next-cta-row--single">
       <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="help-cta">
@@ -3390,7 +3625,7 @@
   </div>
 </section>
 
-<!-- ─────────── METHODOLOGY (now BEFORE Circle — Circle is the bottom-of-page CTA) ─────────── -->
+<!-- ─────────── METHODOLOGY (now BEFORE Circle - Circle is the bottom-of-page CTA) ─────────── -->
 <section class="method-wrap" id="methodology">
   <div class="container-narrow" style="max-width: 1140px;">
     <div class="eyebrow-row" style="justify-content: center; margin-bottom: 18px;">
@@ -3406,10 +3641,10 @@
     <!-- 2-col grid: hexagon left, dimension detail right (stacks on mobile) -->
     <div class="method-split">
 
-    <!-- Interactive 6-dimension hexagon — hover/tap any vertex to see what we measure.
+    <!-- Interactive 6-dimension hexagon - hover/tap any vertex to see what we measure.
          The polygon morphs slowly between three real executive shapes (rising → emerging → recognised). -->
     <div class="method-diagram" id="method-diagram">
-      <svg viewBox="0 40 540 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Six visibility dimensions — hover or tap each point to read its definition">
+      <svg viewBox="0 40 540 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Six visibility dimensions - hover or tap each point to read its definition">
         <!-- Concentric rings (0, 1, 2, 3 score levels) -->
         <polygon class="hex-ring" points="270,90 426,180 426,360 270,450 114,360 114,180" opacity="0.6"/>
         <polygon class="hex-ring" points="270,150 374,210 374,330 270,390 166,330 166,210" opacity="0.45"/>
@@ -3484,11 +3719,11 @@
       <p class="method-hint" id="method-hint">Hover any point to see what we measure</p>
     </div>
 
-    <!-- Detail panel — populated from the hovered/active vertex -->
+    <!-- Detail panel - populated from the hovered/active vertex -->
     <div class="method-detail is-empty" id="method-detail" aria-live="polite">
-      <span class="method-detail-num"   id="method-detail-num">01 — Digital Footprint</span>
+      <span class="method-detail-num"   id="method-detail-num">01 - Digital Footprint</span>
       <h3 class="method-detail-title"   id="method-detail-title">Pick a point to read more</h3>
-      <p class="method-detail-body"     id="method-detail-body">Each of the six points scores 0–3 from your public LinkedIn signals. Together they sum to your 0–18 Visibility Index.</p>
+      <p class="method-detail-body"     id="method-detail-body">Each of the six points scores 0-3 from your public LinkedIn signals. Together they sum to your 0-18 Visibility Index.</p>
     </div>
 
     </div><!-- /.method-split -->
@@ -3522,7 +3757,7 @@
   </div>
 </section>
 
-<!-- ─────────── CIRCLE (bottom-of-page CTA — by conversation, not application) ─────────── -->
+<!-- ─────────── CIRCLE (bottom-of-page CTA - by conversation, not application) ─────────── -->
 <section class="circle-wrap" id="circle">
   <div class="container">
     <div class="circle-grid">
@@ -3533,7 +3768,7 @@
         </div>
         <h2 class="h2 circle-h2">The FutureMakers Circle</h2>
         <p class="lede circle-lede">
-          A small circle of clients we work with directly. Twelve seats per quarter — not an application,
+          A small circle of clients we work with directly. Twelve seats per quarter - not an application,
           a conversation. Book a 30-minute call with one of the Von Peach team. Share what you're building.
           If it's a fit, you're in.
         </p>
@@ -3549,7 +3784,7 @@
             <div class="perk-icon">02</div>
             <div>
               <strong>The Black Book</strong>
-              <span>Curated directory of the operators we trust — ghostwriters, photographers, podcast bookers, video producers. Not for sale.</span>
+              <span>Curated directory of the operators we trust - ghostwriters, photographers, podcast bookers, video producers. Not for sale.</span>
             </div>
           </div>
           <div class="perk">
@@ -3585,7 +3820,7 @@
   </div>
 </section>
 
-<!-- ─────────── FOOTER (mirrors vonpeach.com — 3-col + giant decorative wordmark) ─────────── -->
+<!-- ─────────── FOOTER (mirrors vonpeach.com - 3-col + giant decorative wordmark) ─────────── -->
 <footer>
   <div class="container">
 
@@ -3646,12 +3881,12 @@
     return out;
   })();
 
-  /* ────────── SCORING — six dimensions, 0–3 each, total 0–18 ────────── */
+  /* ────────── SCORING - six dimensions, 0-3 each, total 0-18 ────────── */
   const DIMENSIONS = [
     { key:'footprint',  label:'Digital Footprint',
       ctxByLevel:[
         'Nearly invisible online.',
-        'Minimal — LinkedIn and a stray mention.',
+        'Minimal - LinkedIn and a stray mention.',
         'Mixed presence across channels.',
         'Strong digital footprint, clear narrative.'
       ]
@@ -3709,7 +3944,7 @@
       cta:"Here's exactly what to build first" },
     { min:11, max:15, name:'The Emerging Authority',
       tagline:'Solid foundations. Time to scale your reach.',
-      blurb:'You’re doing more right than most. Your challenge now is consistency and intentionality — turning effort into a brand that reliably attracts the right opportunities.',
+      blurb:'You’re doing more right than most. Your challenge now is consistency and intentionality - turning effort into a brand that reliably attracts the right opportunities.',
       cta:"Here's how to close the gaps fast" },
     { min:16, max:18, name:'The Recognised Leader',
       tagline:'Strong brand. Let’s make it legacy-level.',
@@ -3791,7 +4026,7 @@
   const roleSelect     = $('#ml-role');
   const goalSelect     = $('#ml-goal');
 
-  // Goal-specific subhead that appears in the result block — mirrors the user's stated goal back at them.
+  // Goal-specific subhead that appears in the result block - mirrors the user's stated goal back at them.
   const GOAL_HEADLINES = {
     clients:     "What's between you and better clients.",
     speaking:    "What's between you and the speaking circuit.",
@@ -3799,13 +4034,13 @@
     legacy:      "What's between you and a legacy."
   };
 
-  // Goal-aware HERO subhead — primes the value prop based on the user's role + goal selection.
+  // Goal-aware HERO subhead - primes the value prop based on the user's role + goal selection.
   // Synthetic but believable stats; replace with real cohort numbers once v2 ships the peer DB.
   const HERO_SUBHEADS = {
-    clients:     '{role} who attract better clients score 4.2 points higher on visibility than peers — see where you sit.',
-    speaking:    '{role} who land speaking gigs average 3× more inbound media inquiries — see where you sit.',
-    credibility: '{role} with industry credibility are 2.7× more likely to be quoted in tier-1 press — see where you sit.',
-    legacy:      '{role} building lasting legacies outscore peers by 4.5 points on visibility — see where you sit.'
+    clients:     '{role} who attract better clients score 4.2 points higher on visibility than peers - see where you sit.',
+    speaking:    '{role} who land speaking gigs average 3× more inbound media inquiries - see where you sit.',
+    credibility: '{role} with industry credibility are 2.7× more likely to be quoted in tier-1 press - see where you sit.',
+    legacy:      '{role} building lasting legacies outscore peers by 4.5 points on visibility - see where you sit.'
   };
   const ROLE_PLURALS = {
     ceo:        'CEOs and C-suite leaders',
@@ -3828,7 +4063,7 @@
     }
   });
 
-  if (!calcBtn) console.error('[VI] btn-calculate not found — form will not work');
+  if (!calcBtn) console.error('[VI] btn-calculate not found - form will not work');
   if (!linkInput) console.error('[VI] input-linkedin not found');
   if (!loadingPanel) console.error('[VI] loading-panel not found');
   if (calcBtn) {
@@ -3841,7 +4076,7 @@
     linkInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAudit(); });
   }
 
-  /* ─────────── Custom popover Picker — replaces the native <select>s ─────────── */
+  /* ─────────── Custom popover Picker - replaces the native <select>s ─────────── */
   class Picker {
     constructor(root) {
       this.root    = root;
@@ -3851,10 +4086,10 @@
       this.options = root.querySelectorAll('.picker-option');
       this.select  = root.querySelector('.picker-native');
       // Defensive: if any required child is missing we skip silently rather than
-      // throwing — a single malformed picker shouldn't kill every other listener
+      // throwing - a single malformed picker shouldn't kill every other listener
       // on the page (which is what was bricking the Calculate button).
       if (!this.trigger || !this.popover || !this.label) {
-        console.warn('[VI] Picker init skipped — missing children', { root, trigger: !!this.trigger, popover: !!this.popover, label: !!this.label });
+        console.warn('[VI] Picker init skipped - missing children', { root, trigger: !!this.trigger, popover: !!this.popover, label: !!this.label });
         return;
       }
       this.bind();
@@ -3932,37 +4167,37 @@
     try { new Picker(p); } catch (err) { console.error('[VI] Picker init error:', err, p); }
   });
 
-  /* ─────────── Methodology hexagon — hover/tap reveals dimension copy ─────────── */
+  /* ─────────── Methodology hexagon - hover/tap reveals dimension copy ─────────── */
   const HEX_COPY = {
     footprint: {
-      num:   '01 — Digital Footprint',
+      num:   '01 - Digital Footprint',
       title: 'What shows up when someone Googles you.',
-      body:  'Your LinkedIn presence and your top-10 search results. Are you on page one for your own name, with the story you want — or is someone else?'
+      body:  'Your LinkedIn presence and your top-10 search results. Are you on page one for your own name, with the story you want - or is someone else?'
     },
     clarity: {
-      num:   '02 — Brand Clarity',
+      num:   '02 - Brand Clarity',
       title: 'Could a stranger explain what you do in one line?',
       body:  'An LLM scores your headline and About against a sharpness rubric. Vague titles like "transforming the future of work" score zero.'
     },
     authority: {
-      num:   '03 — Authority Signals',
+      num:   '03 - Authority Signals',
       title: 'The proof that other people already vouch for you.',
       body:  'Press mentions, speaking gigs, recommendations, awards, featured items. Borrowed credibility you can point to.'
     },
     cadence: {
-      num:   '04 — Content Cadence',
+      num:   '04 - Content Cadence',
       title: 'How often and how consistently you publish.',
-      body:  'Top-decile executives don’t post more — they post on a rhythm. We measure posts and articles in the last 90 days against a target band.'
+      body:  'Top-decile executives don’t post more - they post on a rhythm. We measure posts and articles in the last 90 days against a target band.'
     },
     visual: {
-      num:   '05 — Visual Identity',
+      num:   '05 - Visual Identity',
       title: 'Profile photo, banner, the small craft details.',
       body:  'Your face is the most-clicked thing on your profile. We score photo quality, banner presence, and whether the visual matches your stated brand.'
     },
     network: {
-      num:   '06 — Network Recognition',
+      num:   '06 - Network Recognition',
       title: 'Whether your network actually knows what you stand for.',
-      body:  'Followers, connections, engagement on recent posts. Reach without recognition is just noise — we weight engagement over raw follower count.'
+      body:  'Followers, connections, engagement on recent posts. Reach without recognition is just noise - we weight engagement over raw follower count.'
     }
   };
 
@@ -3986,7 +4221,7 @@
     }
     function clearDim() {
       vertices.forEach(v => v.classList.remove('is-active'));
-      // Keep last shown copy on mouseleave — don't snap back to "Pick a point"
+      // Keep last shown copy on mouseleave - don't snap back to "Pick a point"
       // (avoids flicker when moving between vertices)
     }
 
@@ -4006,7 +4241,7 @@
     }
   })();
 
-  /* Sequential focus hints — pulse the next field after the previous one is filled */
+  /* Sequential focus hints - pulse the next field after the previous one is filled */
   function pulseNext(el) {
     if (!el) return;
     el.classList.remove('picker-pulse');
@@ -4037,7 +4272,7 @@
     });
   }
 
-  // Goal-aware hero subhead — updates whenever role or goal changes.
+  // Goal-aware hero subhead - updates whenever role or goal changes.
   function updateHeroSubhead() {
     const role     = ROLE_PLURALS[roleSelect.value] || 'Executives';
     const goal     = goalSelect.value || 'clients';
@@ -4059,7 +4294,7 @@
     });
   });
 
-  /* Latest audit state — passed to /api/lead on email submit */
+  /* Latest audit state - passed to /api/lead on email submit */
   let lastScore = 0, lastSubs = {}, lastTier = null, lastUrl = '';
   let lastRole = '', lastGoal = '';
   let lastMoves = [], lastTierRoadmap = [], lastNextTier = null;
@@ -4098,11 +4333,11 @@
     // panel overlays it. `is-loading` triggers the blur + animated orb in CSS.
     actionCard.classList.add('is-loading');
     loadingPanel.classList.remove('hidden');
-    // Scroll lock — keep the user staring at the loading state (and avoid accidental scroll-away)
+    // Scroll lock - keep the user staring at the loading state (and avoid accidental scroll-away)
     document.body.classList.add('audit-locked');
     document.documentElement.classList.add('audit-locked');
 
-    // Sample pills — mock data, no API call (so demo costs nothing). Wait for animation
+    // Sample pills - mock data, no API call (so demo costs nothing). Wait for animation
     // to reach the last step, finish it, then reveal.
     if (opts.override) {
       await new Promise(resolve => runLoadingSequence(resolve));
@@ -4113,7 +4348,7 @@
       return;
     }
 
-    // Real audit — kick off the animation AND the API call in parallel.
+    // Real audit - kick off the animation AND the API call in parallel.
     // The animation pauses on the last step until the API resolves (no "stuck on done" gap).
     const animPromise = new Promise(resolve => runLoadingSequence(resolve));
     const fetchPromise = fetch('/api/score', {
@@ -4128,7 +4363,7 @@
     animPromise.then(() => {
       extendedTimer = setTimeout(() => {
         const subtitle = document.getElementById('loading-subtitle');
-        if (subtitle) subtitle.textContent = 'LinkedIn is being slow — hold tight, almost there…';
+        if (subtitle) subtitle.textContent = 'LinkedIn is being slow - hold tight, almost there…';
       }, 4000);
     });
 
@@ -4201,7 +4436,7 @@
     // Hide the loading panel; the score-reveal block lives in the results-wrap section now
     loadingPanel.classList.add('hidden');
     actionCard.classList.remove('is-loading');
-    // Release scroll lock — score is up, user can now scroll the result page
+    // Release scroll lock - score is up, user can now scroll the result page
     document.body.classList.remove('audit-locked');
     document.documentElement.classList.remove('audit-locked');
 
@@ -4216,7 +4451,7 @@
     lastDimensionCommentary = (payload && payload.dimensionCommentary) || {};
 
     // Personalize the result with profile data + Claude analysis from /api/score response.
-    // We DON'T try to load the LinkedIn CDN photo any more — LinkedIn's media.licdn.com blocks
+    // We DON'T try to load the LinkedIn CDN photo any more - LinkedIn's media.licdn.com blocks
     // hot-linking from third-party domains and it broke ~50% of avatars. Initial-letter circle
     // is faster, never broken, and looks intentional.
     if (payload && payload.profile) {
@@ -4243,7 +4478,7 @@
       const teasersEl = $('#personal-teasers');
       const teasersWrap = $('#personal-teasers-wrap');
       if (summaryEl) summaryEl.textContent = summary;
-      // Always hide the second avatar — LinkedIn CDN blocks third-party loads, and the
+      // Always hide the second avatar - LinkedIn CDN blocks third-party loads, and the
       // user's initial already shows in the score-reveal block above. Don't show it twice.
       if (avatarEl) avatarEl.style.display = 'none';
       if (teasersEl) {
@@ -4273,19 +4508,19 @@
       $('#ring-fg').setAttribute('stroke-dasharray', `${ringDash} ${circumference}`);
     }, 60);
 
-    // Display the score as a percentage (0-100) — feels more familiar than /18.
+    // Display the score as a percentage (0-100) - feels more familiar than /18.
     // Internal scoring stays 0-18 (tiers + sub-scores key off the raw composite).
     const displayScore = Math.round((total / 18) * 100);
     animateNumber('#score-num', 0, displayScore, 1400);
 
-    // Theatrical reveal — confetti for Recognised Leader tier (16+) only
+    // Theatrical reveal - confetti for Recognised Leader tier (16+) only
     if (total >= 16) {
       setTimeout(() => fireConfetti(document.getElementById('score-reveal')), 800);
     }
 
     renderSubscores(subs, (payload && payload.dimensionCommentary) || null);
 
-    // Right-column summary beside the hexagon — uses Claude's 2-sentence executiveSummary if available
+    // Right-column summary beside the hexagon - uses Claude's 2-sentence executiveSummary if available
     const summaryBody = document.getElementById('results-summary-body');
     if (summaryBody) {
       const claudeSummary = payload?.executiveSummary || lastExecutiveSummary || '';
@@ -4303,7 +4538,7 @@
     };
 
     // Smartest scroll-to-results: hide everything ABOVE the score reveal entirely.
-    // The result section becomes the first thing in the viewport — no scrolling needed,
+    // The result section becomes the first thing in the viewport - no scrolling needed,
     // no race conditions, no smooth-scroll failure modes. Foolproof.
     document.body.classList.remove('audit-locked');
     document.documentElement.classList.remove('audit-locked');
@@ -4318,7 +4553,7 @@
   function animateNumber(sel, from, to, ms) {
     const el = $(sel);
     const start = performance.now();
-    // Elastic overshoot — number races up, slightly overshoots, settles. Matches the ring fill feel.
+    // Elastic overshoot - number races up, slightly overshoots, settles. Matches the ring fill feel.
     function easeOutBack(t) {
       const c1 = 1.70158, c3 = c1 + 1;
       return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
@@ -4368,7 +4603,7 @@
     setTimeout(() => layer.remove(), 1800);
   }
 
-  /* Personal-shape hexagon — mirror of the methodology hexagon, filled with the user's actual scores.
+  /* Personal-shape hexagon - mirror of the methodology hexagon, filled with the user's actual scores.
      Hover/tap any vertex → right-side summary updates with that dimension's commentary.
      Auto-cycles through all six on first reveal so the user sees every gap, then stops once they engage. */
   function renderSubscores(subs, commentary) {
@@ -4376,7 +4611,7 @@
     container.innerHTML = '';
 
     // Six vertices in hex order: top, upper-right, lower-right, bottom, lower-left, upper-left
-    // Map each dimension to its slot — must match the methodology hexagon ordering above
+    // Map each dimension to its slot - must match the methodology hexagon ordering above
     const VERTICES = [
       { key: 'footprint', cx: 270, cy: 90,  num: '01', label: 'Footprint',   anchor: 'middle', tx: 270, ty: 60,  ly: 78  },
       { key: 'clarity',   cx: 426, cy: 180, num: '02', label: 'Clarity',     anchor: 'start',  tx: 442, ty: 160, ly: 178 },
@@ -4386,7 +4621,7 @@
       { key: 'network',   cx: 114, cy: 180, num: '06', label: 'Network',     anchor: 'end',    tx: 98,  ty: 160, ly: 178 }
     ];
 
-    // Convert each dimension's 0–3 score to a position on the spoke from center (270,270) outward.
+    // Convert each dimension's 0-3 score to a position on the spoke from center (270,270) outward.
     // 0 = at center, 3 = at full vertex. Linear interpolation gives the user's personal shape.
     const cx0 = 270, cy0 = 270;
     const userPts = VERTICES.map(v => {
@@ -4398,15 +4633,15 @@
       };
     });
 
-    // Six purple shades — one per wedge. Each triangle from center → userPt[i] → userPt[i+1]
+    // Six purple shades - one per wedge. Each triangle from center → userPt[i] → userPt[i+1]
     // gets its own colour, walking from deep indigo around to pale lavender. Rotational gradient effect.
     const PURPLES = [
-      '#2A1F8C', // deep indigo (top — Digital Footprint)
-      '#3F36B2', // vp-indigo  (upper-right — Brand Clarity)
-      '#5A50CC', // mid        (lower-right — Authority)
-      '#7570D9', // mid-light  (bottom — Cadence)
-      '#8683E5', // vp-lavender(lower-left — Visual)
-      '#A6A4ED'  // pale       (upper-left — Network)
+      '#2A1F8C', // deep indigo (top - Digital Footprint)
+      '#3F36B2', // vp-indigo  (upper-right - Brand Clarity)
+      '#5A50CC', // mid        (lower-right - Authority)
+      '#7570D9', // mid-light  (bottom - Cadence)
+      '#8683E5', // vp-lavender(lower-left - Visual)
+      '#A6A4ED'  // pale       (upper-left - Network)
     ];
 
     // Build six animated wedges instead of a single polygon.
@@ -4425,7 +4660,7 @@
         </polygon>`;
     }).join('');
 
-    // Outline path on top — connects all 6 user points so the whole shape reads as one unit
+    // Outline path on top - connects all 6 user points so the whole shape reads as one unit
     const outlinePoints = userPts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -4500,7 +4735,7 @@
       svg.querySelectorAll('.phex-vertex').forEach(g => {
         g.classList.toggle('is-active', g.dataset.dim === key);
       });
-      // Shape gravitates toward the active vertex — compute unit vector from center to vertex
+      // Shape gravitates toward the active vertex - compute unit vector from center to vertex
       const dx = v.cx - 270, dy = v.cy - 270;
       const len = Math.hypot(dx, dy) || 1;
       const sx = (dx / len) * SHIFT;
@@ -4527,7 +4762,7 @@
       g.addEventListener('focus',      () => showVertex(key));
       g.addEventListener('click',      () => showVertex(key));
     });
-    // Auto-cycle through dimensions every 3s while idle (no hover yet) — gives the section life
+    // Auto-cycle through dimensions every 3s while idle (no hover yet) - gives the section life
     let cycleIdx = 0;
     let userInteracted = false;
     svg.addEventListener('mouseenter', () => { userInteracted = true; }, { once: true });
@@ -4546,11 +4781,11 @@
     return Math.max(1, Math.min(cohort, Math.round(pct * cohort) + jitter));
   }
 
-  /* — Top 3 peer pool. Pseudonymous names (first name + last initial), varied region/industry/standout.
+  /* - Top 3 peer pool. Pseudonymous names (first name + last initial), varied region/industry/standout.
        Each row's "standout" maps to one of the six dimensions, so the trio teaches three different
-       wins. Selected deterministically from the user's profile so the same user sees the same peers. — */
+       wins. Selected deterministically from the user's profile so the same user sees the same peers. - */
   const PEER_POOL = [
-    { name:'Lina K.',  initials:'LK', role:'Founder',     stage:'Series C',  region:'DACH',     score:17, dim:'cadence',   standout:'Posts every Tuesday — 47-week streak.' },
+    { name:'Lina K.',  initials:'LK', role:'Founder',     stage:'Series C',  region:'DACH',     score:17, dim:'cadence',   standout:'Posts every Tuesday - 47-week streak.' },
     { name:'M. Patel', initials:'MP', role:'CFO',         stage:'Public',    region:'UK',       score:16, dim:'authority', standout:'Quoted in 12 tier-1 publications this year.' },
     { name:'S. Müller',initials:'SM', role:'COO',         stage:'Series B',  region:'DACH',     score:15, dim:'network',   standout:'63k engaged followers, 2.4k average reactions.' },
     { name:'A. Chen',  initials:'AC', role:'CMO',         stage:'Public',    region:'US',       score:18, dim:'clarity',   standout:'Headline names her audience in five words.' },
@@ -4684,7 +4919,7 @@
       });
     }
 
-    // (Roadmap section removed per request — moves above are the takeaway)
+    // (Roadmap section removed per request - moves above are the takeaway)
 
     // Reveal + scroll
     section.classList.remove('hidden');
@@ -4776,19 +5011,19 @@
         })
       });
       const data = await res.json().catch(() => ({}));
-      // Diagnostic — surface delivery status so we can debug Resend issues without log-diving
+      // Diagnostic - surface delivery status so we can debug Resend issues without log-diving
       console.log('[VI] /api/lead response:', {
         ok: data.ok, emailDelivered: data.emailDelivered,
         mailchimpOk: data.mailchimpOk, hasPdf: !!data.pdf
       });
       if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed.');
 
-      // PDF returned as base64 — auto-trigger download for instant gratification
+      // PDF returned as base64 - auto-trigger download for instant gratification
       if (data.pdf) downloadPDF(data.pdf, `visibility-index-${(lastProfile?.firstName || 'report').toLowerCase()}.pdf`);
-      else console.warn('[VI] No PDF in response — pdf-lib likely threw on the server. Check Vercel logs.');
+      else console.warn('[VI] No PDF in response - pdf-lib likely threw on the server. Check Vercel logs.');
       if (data.emailDelivered === false) console.warn('[VI] Email NOT delivered. Most likely cause: Resend free tier only sends to your registered email. Verify domain in Resend → Domains, or test with the email you used to sign up.');
 
-      // Swap the gate-card for the success state — clear visual signal the report is on its way
+      // Swap the gate-card for the success state - clear visual signal the report is on its way
       const gateCard    = document.getElementById('gate-card');
       const gateSuccess = document.getElementById('gate-success');
       const successEmail = document.getElementById('gate-success-email');
