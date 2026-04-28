@@ -5470,6 +5470,18 @@
     document.documentElement.style.overflow = '';
     document.body.classList.add('audit-complete');
 
+    // Belt-and-braces: directly hide the hero + nav via inline styles too.
+    // This defeats any CSS race, browser cache stale-CSS, or specificity override.
+    // Inline styles always win unless the override is `!important`, which nothing here uses.
+    const hideNodes = [
+      document.querySelector('nav.top'),
+      document.querySelector('.hero'),
+      document.querySelector('.action-card'),
+      document.querySelector('.scroll-hint'),
+      document.querySelector('.pillars')
+    ];
+    hideNodes.forEach(n => { if (n) n.style.display = 'none'; });
+
     // Reset scroll to top so the now-first-visible #results sits at the top of the viewport
     window.scrollTo(0, 0);
   }
