@@ -11,6 +11,34 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
 <meta name="theme-color" content="#3F36B2" />
 
+<!-- ─────────── GOOGLE ANALYTICS 4 ───────────
+     Replace G-XXXXXXXXXX with your real Measurement ID from analytics.google.com.
+     Setup: Admin → Data Streams → Add Stream → Web → enter https://index.vonpeach.com → copy ID.
+     Tracks page views automatically + custom events fired by track() in the page JS:
+       - audit_started     (Calculate clicked)
+       - audit_completed   (score lands; includes tier + score)
+       - lead_captured     (email submitted; includes tier + role + goal)
+       - cta_calendly      (Calendly link clicked)
+       - report_downloaded (PDF downloaded after lead capture) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX', {
+    'cookie_domain': '.vonpeach.com',
+    'cookie_flags':  'SameSite=None;Secure'
+  });
+  // Helper used everywhere else in the page JS - never throws if GA fails to load.
+  window.track = function(name, params) {
+    try {
+      if (typeof gtag === 'function') gtag('event', name, params || {});
+      // Mirror to console so you can verify in dev without opening GA Realtime
+      if (window.location.hostname === 'localhost') console.log('[track]', name, params);
+    } catch (_) {}
+  };
+</script>
+
 <!-- General Sans (body). Aileron should be self-hosted from brand assets in v1. -->
 <link rel="preconnect" href="https://api.fontshare.com" />
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap" rel="stylesheet" />
@@ -3208,6 +3236,37 @@
     touch-action: none;
   }
 
+  /* Temporary bug-report button - bottom-left, removable for prod once testing settles */
+  .bug-report {
+    position: fixed;
+    left: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    z-index: 9998;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--vp-cream, #fafafa);
+    border: 1px solid rgba(15,15,15,0.12);
+    box-shadow: 0 6px 18px rgba(11,3,89,0.20);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    line-height: 1;
+    text-decoration: none;
+    transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background .18s ease;
+  }
+  .bug-report:hover {
+    transform: scale(1.08) rotate(-6deg);
+    box-shadow: 0 12px 28px rgba(11,3,89,0.30);
+    background: #fff;
+  }
+  .bug-report:active { transform: scale(0.96); }
+  /* Hide bug button when the audit lock is active so it doesn't fight the loading panel */
+  body.audit-locked .bug-report,
+  body.menu-open .bug-report { display: none; }
+
   /* ═══════════════════════════════════════════════════════════════════════════════════════
      MOBILE-APP TREATMENT  ·  Level 1 + Level 2
      Activates only on <768px. Desktop stays untouched.
@@ -3473,8 +3532,13 @@
     }
     .logo { height: 36px !important; flex-shrink: 0; }
 
-    /* Hide the inline desktop links - they live in the slide-down panel on mobile */
-    .nav-link-desktop { display: none !important; }
+    /* Hide ALL inline nav text links on mobile - they live in the slide-down panel.
+       Using both `.nav-link` and `.nav-link-desktop` so cached deploys without the new class still hide. */
+    nav.top .nav-right .nav-link,
+    nav.top .nav-link-desktop,
+    nav.top a.nav-link {
+      display: none !important;
+    }
 
     /* Keep the CTA visible but tight; never wrap, never grow */
     nav.top .nav-cta {
@@ -3484,9 +3548,12 @@
       flex-shrink: 0;
     }
 
-    /* Show the hamburger button */
-    .nav-burger {
-      display: inline-flex;
+    /* Show the hamburger button - !important so cached deploys without the new HTML still
+       fail safely (no double-burger), and so cascade can't hide it from a desktop rule. */
+    .nav-burger,
+    nav.top .nav-burger,
+    button.nav-burger {
+      display: inline-flex !important;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -3813,6 +3880,57 @@
     .score-reveal-tier-name { font-size: clamp(26px, 7vw, 32px) !important; }
   }
 
+  /* ═══════════════════════════════════════════════════════════════════════════
+     HOW IT WORKS (the geeky version) - linked from the footer
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .howitworks-wrap {
+    background: var(--vp-cream, #fafafa);
+    color: var(--vp-deep-black, #0c0b09);
+    padding: clamp(64px, 8vw, 120px) 0;
+    border-top: 1px solid rgba(15,15,15,0.06);
+  }
+  .howitworks-wrap .h2 {
+    color: var(--vp-deep-black, #0c0b09);
+  }
+  .howitworks-table-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    overflow-x: auto;
+  }
+  .howitworks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-body);
+  }
+  .howitworks-table thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vp-indigo);
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(63,54,178,0.20);
+  }
+  .howitworks-table tbody td {
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(15,15,15,0.78);
+    padding: 16px;
+    border-bottom: 1px solid rgba(15,15,15,0.06);
+    vertical-align: top;
+  }
+  .howitworks-table tbody tr:last-child td { border-bottom: 0; }
+  .howitworks-table tbody td:first-child {
+    font-weight: 600;
+    color: var(--vp-deep-black, #0c0b09);
+    white-space: nowrap;
+  }
+  @media (max-width: 600px) {
+    .howitworks-table tbody td { font-size: 13px; padding: 12px 8px; }
+    .howitworks-table tbody td:first-child { white-space: normal; }
+  }
+
   /* Footer legal row stacks on very small screens */
   @media (max-width: 480px) {
     footer .footer-legal-row {
@@ -4106,12 +4224,11 @@
   <div class="container-narrow" style="max-width: 1140px;">
     <div class="eyebrow-row" style="justify-content: center; margin-bottom: 18px;">
       <span class="dot"></span>
-      <span class="eyebrow">Methodology</span>
+      <span class="eyebrow">How we measure</span>
     </div>
-    <h2 class="h2" style="text-align: center; margin-bottom: 18px;">What we actually measure.</h2>
+    <h2 class="h2" style="text-align: center; margin-bottom: 18px;">What we look at.</h2>
     <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65); max-width: 720px;">
-      Six signals, all from your public LinkedIn. No surveys, no self-report. Each one scored
-      0&ndash;3 and summed to your 0&ndash;18 Visibility Index.
+      Six things we check on your LinkedIn. No surveys. No forms. We just look at what's already there and add it up. You get a score out of 100.
     </p>
 
     <!-- 2-col grid: hexagon left, dimension detail right (stacks on mobile) -->
@@ -4202,28 +4319,38 @@
       <p class="method-detail-body"     id="method-detail-body">Each of the six points scores 0-3 from your public LinkedIn signals. Together they sum to your 0-18 Visibility Index.</p>
     </div>
 
-    </div><!-- /.method-split -->
+  </div>
+</section>
 
-    <!-- Technical detail tucked into one accordion for skeptics -->
-    <details class="method">
-      <summary>The technical detail (for the curious)</summary>
-      <div class="method-body">
-        Each dimension scores 0&ndash;3 against a transparent rubric and sums to a 0&ndash;18 composite that places you in one of four tiers (Hidden Gem 0&ndash;5, Rising Voice 6&ndash;10, Emerging Authority 11&ndash;15, Recognised Leader 16&ndash;18). The data sources behind each dimension:
-        <table>
-          <thead><tr><th>Dimension</th><th>Source</th></tr></thead>
-          <tbody>
-            <tr><td>Digital Footprint</td><td>LinkedIn profile completeness + Google search of name + company</td></tr>
-            <tr><td>Brand Clarity</td><td>Claude Haiku scores LinkedIn headline + About section</td></tr>
-            <tr><td>Authority Signals</td><td>Featured items, articles, recommendations, honors, press keywords in headline/About</td></tr>
-            <tr><td>Content Cadence</td><td>Posts &amp; articles published in the last 90 days (post-scraper actor)</td></tr>
-            <tr><td>Visual Identity</td><td>Profile photo, banner image, About-section quality</td></tr>
-            <tr><td>Network Recognition</td><td>Followers, connections, recommendation count</td></tr>
-          </tbody>
-        </table>
-        Peer benchmarks in v1 are calibrated against synthetic baselines from published research (Edelman Trust Barometer, BrandZ Top 100 leadership data, Weber Shandwick &ldquo;CEO Reputation Premium&rdquo;). From v2 onward, ranking is against the live Visibility Index cohort built from opted-in profiles.
-      </div>
-    </details>
+<!-- ─────────── HOW IT WORKS (the geeky version) - linked from the footer ─────────── -->
+<section class="howitworks-wrap" id="how-it-works">
+  <div class="container-narrow">
+    <div class="eyebrow-row" style="justify-content: center; margin-bottom: 18px;">
+      <span class="dot"></span>
+      <span class="eyebrow">How it works</span>
+    </div>
+    <h2 class="h2" style="text-align: center; margin-bottom: 18px;">The geeky version.</h2>
+    <p class="lede" style="text-align: center; margin: 0 auto 40px; color: rgba(15,15,15,0.65); max-width: 640px;">
+      Each dimension scores 0&ndash;3 against a transparent rubric and sums to a 0&ndash;18 composite (displayed as 0&ndash;100). The composite places you in one of four tiers: Hidden Gem (0&ndash;5), Rising Voice (6&ndash;10), Emerging Authority (11&ndash;15), Recognised Leader (16&ndash;18).
+    </p>
 
+    <div class="howitworks-table-wrap">
+      <table class="howitworks-table">
+        <thead><tr><th>Dimension</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Digital Footprint</td><td>LinkedIn profile completeness + Google search of name + company</td></tr>
+          <tr><td>Brand Clarity</td><td>Claude Haiku scores LinkedIn headline + About section</td></tr>
+          <tr><td>Authority Signals</td><td>Featured items, articles, recommendations, honors, tier-1 press hits</td></tr>
+          <tr><td>Content Cadence</td><td>Posts &amp; articles published in the last 90 days</td></tr>
+          <tr><td>Visual Identity</td><td>Profile photo, banner image, About-section quality</td></tr>
+          <tr><td>Network Recognition</td><td>Followers, connections, recommendation count</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="lede" style="text-align: center; margin: 32px auto 0; color: rgba(15,15,15,0.55); max-width: 640px; font-size: 14px;">
+      Peer benchmarks in v1 are calibrated against published research (Edelman Trust Barometer, BrandZ Top 100 leadership data, Weber Shandwick &ldquo;CEO Reputation Premium&rdquo;). From v2 onward, ranking is against the live Visibility Index cohort built from opted-in profiles.
+    </p>
   </div>
 </section>
 
@@ -4303,6 +4430,7 @@
           <li><a href="https://www.vonpeach.com/personal-branding" target="_blank" rel="noopener">FutureMakers</a></li>
           <li><a href="https://www.vonpeach.com/about" target="_blank" rel="noopener">About</a></li>
           <li><a href="#methodology">Methodology</a></li>
+          <li><a href="#how-it-works">How it works (the geeky version)</a></li>
         </ul>
       </div>
 
@@ -4336,8 +4464,51 @@
   <!-- Decorative PEACH wordmark removed per request -->
 </footer>
 
+<!-- ─────────── TEMPORARY BUG REPORT BUTTON ───────────
+     Removable once testing settles - opens a pre-filled mailto so beta testers
+     can flag bugs in one tap. Bottom-LEFT to avoid clashing with sticky bottom CTA. -->
+<a class="bug-report"
+   id="bug-report"
+   href="mailto:hello@vonpeach.com?subject=Visibility%20Index%20Bug&body=What%20went%20wrong%3F%0A%0A---%0AURL%3A%20"
+   title="Found a bug? Tell us!"
+   aria-label="Submit a bug report">🐛</a>
+
 <!-- ─────────── JS ─────────── -->
 <script>
+  /* ────────── BUG REPORT — auto-fill mailto with page context ────────── */
+  (function () {
+    const link = document.getElementById('bug-report');
+    if (!link) return;
+    function buildHref() {
+      const subject = encodeURIComponent('Visibility Index bug');
+      const body = encodeURIComponent(
+        "What went wrong?\n\n\n---\n" +
+        "URL: " + window.location.href + "\n" +
+        "Viewport: " + window.innerWidth + " x " + window.innerHeight + "\n" +
+        "Browser: " + navigator.userAgent + "\n" +
+        "Time: " + new Date().toISOString()
+      );
+      link.href = `mailto:hello@vonpeach.com?subject=${subject}&body=${body}`;
+    }
+    buildHref();
+    // Refresh on click in case the user navigated within the page (audit-complete state etc.)
+    link.addEventListener('click', buildHref);
+  })();
+
+  /* ────────── ANALYTICS — Calendly click delegation (catches every CTA) ────────── */
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href*="calendly.com"]');
+    if (!a || !window.track) return;
+    // Source = where on the page the user clicked from (nav, hero, results, footer, etc.)
+    const source = a.closest('nav.top') ? 'nav'
+                 : a.closest('.next-moves-wrap') ? 'next-moves'
+                 : a.closest('.circle-wrap')     ? 'circle'
+                 : a.closest('footer')           ? 'footer'
+                 : a.closest('.help-cta')        ? 'help-cta'
+                 : 'other';
+    window.track('cta_calendly', { source, label: (a.textContent || '').trim().slice(0, 40) });
+  });
+
   /* ────────── MOBILE NAV — hamburger toggle ────────── */
   (function () {
     const burger = document.getElementById('nav-burger');
@@ -4618,6 +4789,10 @@
   if (calcBtn) {
     calcBtn.addEventListener('click', (e) => {
       console.log('[VI] Calculate clicked', { handle: linkInput && linkInput.value, role: roleSelect && roleSelect.value, goal: goalSelect && goalSelect.value });
+      if (window.track) window.track('audit_started', {
+        role: roleSelect && roleSelect.value,
+        goal: goalSelect && goalSelect.value
+      });
       startAudit();
     });
   }
@@ -4720,33 +4895,33 @@
   const HEX_COPY = {
     footprint: {
       num:   '01 - Digital Footprint',
-      title: 'What shows up when someone Googles you.',
-      body:  'Your LinkedIn presence and your top-10 search results. Are you on page one for your own name, with the story you want - or is someone else?'
+      title: 'Can people find you online?',
+      body:  "We Google your name and check your LinkedIn. Are you on the first page? Or is someone else getting all the attention when people look you up?"
     },
     clarity: {
       num:   '02 - Brand Clarity',
-      title: 'Could a stranger explain what you do in one line?',
-      body:  'An LLM scores your headline and About against a sharpness rubric. Vague titles like "transforming the future of work" score zero.'
+      title: "Does what you do make sense?",
+      body:  "If a stranger reads your headline, can they tell what you do in one sentence? \"Transforming the future of work\" tells them nothing. We check if your words actually mean something."
     },
     authority: {
       num:   '03 - Authority Signals',
-      title: 'The proof that other people already vouch for you.',
-      body:  'Press mentions, speaking gigs, recommendations, awards, featured items. Borrowed credibility you can point to.'
+      title: "Has anyone said you're good?",
+      body:  "Press mentions, speaking gigs, awards, recommendations. The proof that other people already vouch for you. The more people speak for you, the less you have to."
     },
     cadence: {
       num:   '04 - Content Cadence',
-      title: 'How often and how consistently you publish.',
-      body:  'Top-decile executives don’t post more - they post on a rhythm. We measure posts and articles in the last 90 days against a target band.'
+      title: "Are you actually showing up?",
+      body:  "We count your posts in the last 90 days. The best people don't post more - they post on a rhythm. Once a week beats five posts in one day."
     },
     visual: {
       num:   '05 - Visual Identity',
-      title: 'Profile photo, banner, the small craft details.',
-      body:  'Your face is the most-clicked thing on your profile. We score photo quality, banner presence, and whether the visual matches your stated brand.'
+      title: "Does it look like you mean it?",
+      body:  "A clear photo. A real banner. Profile bits that match. Your face is the most-clicked thing on LinkedIn - we look at whether it's working hard enough."
     },
     network: {
       num:   '06 - Network Recognition',
-      title: 'Whether your network actually knows what you stand for.',
-      body:  'Followers, connections, engagement on recent posts. Reach without recognition is just noise - we weight engagement over raw follower count.'
+      title: "Do people actually care?",
+      body:  "Followers, connections, and the people who like and comment. Lots of followers but no engagement is just a number. We weigh real attention over loud silence."
     }
   };
 
@@ -4981,6 +5156,19 @@
   function revealResults(total, subs, url, payload) {
     const results = $('#results');
     results.classList.remove('hidden');
+
+    // Analytics: score landed
+    if (window.track) {
+      const display = Math.round((total / 18) * 100);
+      const tierName = (tierFor(total) || {}).name || 'unknown';
+      window.track('audit_completed', {
+        score:    display,
+        score_18: total,
+        tier:     tierName,
+        role:     lastRole || (roleSelect && roleSelect.value),
+        goal:     lastGoal || (goalSelect && goalSelect.value)
+      });
+    }
 
     // Hide the loading panel; the score-reveal block lives in the results-wrap section now
     loadingPanel.classList.add('hidden');
@@ -5567,9 +5755,23 @@
       });
       if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed.');
 
+      // Analytics: lead captured (the conversion that matters for paid ads)
+      if (window.track) window.track('lead_captured', {
+        score:        Math.round((lastScore / 18) * 100),
+        tier:         lastTier?.name || '',
+        role:         lastRole,
+        goal:         lastGoal,
+        utm_source:   ATTRIBUTION?.utm_source   || '',
+        utm_campaign: ATTRIBUTION?.utm_campaign || ''
+      });
+
       // PDF returned as base64 - auto-trigger download for instant gratification
-      if (data.pdf) downloadPDF(data.pdf, `visibility-index-${(lastProfile?.firstName || 'report').toLowerCase()}.pdf`);
-      else console.warn('[VI] No PDF in response - pdf-lib likely threw on the server. Check Vercel logs.');
+      if (data.pdf) {
+        downloadPDF(data.pdf, `visibility-index-${(lastProfile?.firstName || 'report').toLowerCase()}.pdf`);
+        if (window.track) window.track('report_downloaded', { tier: lastTier?.name || '' });
+      } else {
+        console.warn('[VI] No PDF in response - pdf-lib likely threw on the server. Check Vercel logs.');
+      }
       if (data.emailDelivered === false) console.warn('[VI] Email NOT delivered. Most likely cause: Resend free tier only sends to your registered email. Verify domain in Resend → Domains, or test with the email you used to sign up.');
 
       // Swap the gate-card for the success state - clear visual signal the report is on its way
