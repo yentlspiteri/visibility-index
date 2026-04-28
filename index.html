@@ -5364,6 +5364,22 @@
     document.body.classList.remove('audit-locked');
     document.documentElement.classList.remove('audit-locked');
 
+    // CRITICAL: Hide the hero/nav RIGHT NOW, before any rendering can throw.
+    // Bug history: a single rendering crash inside revealResults (e.g. renderLeaderboard
+    // when its host element was removed) blocked these state transitions for an entire deploy.
+    // By doing them upfront we guarantee the user lands in the results state regardless.
+    document.body.classList.add('audit-complete');
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    [
+      document.querySelector('nav.top'),
+      document.querySelector('.hero'),
+      document.querySelector('.action-card'),
+      document.querySelector('.scroll-hint'),
+      document.querySelector('.pillars')
+    ].forEach(n => { if (n) n.style.display = 'none'; });
+    window.scrollTo(0, 0);
+
     const tier = tierFor(total);
     // Save for the lead capture call + the post-submit reveal
     lastScore = total; lastSubs = subs; lastTier = tier; lastUrl = url;
@@ -5419,17 +5435,20 @@
       personalCard.classList.remove('hidden');
     }
 
-    $('#tier-name').textContent     = tier.name;
-    $('#tier-tagline').textContent  = tier.tagline;
-    $('#tier-cta').textContent      = 'See full report';
-    // Goal-aware gate copy: mirror their stated goal back at them on the unlock card
-    $('#gate-cta-line').textContent = GOAL_HEADLINES[lastGoal] || (tier.cta + '.');
+    // Defensive: any of these could be missing in the DOM after a markup tweak.
+    // Don't let a single missing element block the rest of the reveal flow.
+    const setText = (sel, text) => { const el = document.querySelector(sel); if (el) el.textContent = text; };
+    setText('#tier-name',     tier.name);
+    setText('#tier-tagline',  tier.tagline);
+    setText('#tier-cta',      'See full report');
+    setText('#gate-cta-line', GOAL_HEADLINES[lastGoal] || (tier.cta + '.'));
 
     // Score reveal ring (r=120) → circumference ≈ 754
     const circumference = 754;
     const ringDash = (total / 18) * circumference;
     setTimeout(() => {
-      $('#ring-fg').setAttribute('stroke-dasharray', `${ringDash} ${circumference}`);
+      const ring = document.getElementById('ring-fg');
+      if (ring) ring.setAttribute('stroke-dasharray', `${ringDash} ${circumference}`);
     }, 60);
 
     // Display the score as a percentage (0-100) - feels more familiar than /18.
@@ -5453,12 +5472,12 @@
       }
     }
 
-    const cohortSize = 240 + (hashStr(url) % 180);
-    const userRank   = synthRank(total, cohortSize);
-    renderLeaderboard(userRank, cohortSize, total);
+    // Leaderboard removed from markup; the call is gone (was the source of the recent revealResults crash).
 
-    $('#tier-cta').onclick = () => {
-      $('#gate-standalone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const tierCtaEl = document.getElementById('tier-cta');
+    if (tierCtaEl) tierCtaEl.onclick = () => {
+      const gate = document.getElementById('gate-standalone');
+      if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     // Smartest scroll-to-results: hide everything ABOVE the score reveal entirely.
@@ -5468,26 +5487,12 @@
     document.documentElement.classList.remove('audit-locked');
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
-    document.body.classList.add('audit-complete');
-
-    // Belt-and-braces: directly hide the hero + nav via inline styles too.
-    // This defeats any CSS race, browser cache stale-CSS, or specificity override.
-    // Inline styles always win unless the override is `!important`, which nothing here uses.
-    const hideNodes = [
-      document.querySelector('nav.top'),
-      document.querySelector('.hero'),
-      document.querySelector('.action-card'),
-      document.querySelector('.scroll-hint'),
-      document.querySelector('.pillars')
-    ];
-    hideNodes.forEach(n => { if (n) n.style.display = 'none'; });
-
-    // Reset scroll to top so the now-first-visible #results sits at the top of the viewport
-    window.scrollTo(0, 0);
+    // (audit-complete state already applied at top of function — nothing more to do here.)
   }
 
   function animateNumber(sel, from, to, ms) {
-    const el = $(sel);
+    const el = document.querySelector(sel);
+    if (!el) return;     // defensive: don't throw if the score element is missing
     const start = performance.now();
     // Elastic overshoot - number races up, slightly overshoots, settles. Matches the ring fill feel.
     function easeOutBack(t) {
@@ -5495,6 +5500,7 @@
       return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
     }
     function step(t) {
+      if (!el.isConnected) return;     // element was removed mid-animation
       const p = Math.min(1, (t - start) / ms);
       const eased = easeOutBack(p);
       el.textContent = Math.round(from + (to - from) * eased);
@@ -5769,6 +5775,11 @@
   }
 
   function renderLeaderboard(userRank, cohort, userScore) {
+    // The #leaderboard element was removed from the markup (synthetic peer placeholder).
+    // Bail out cleanly if the host element doesn't exist - throwing here was crashing
+    // revealResults mid-execution and stopping the audit-complete class from being added.
+    const host = document.getElementById('leaderboard');
+    if (!host) return;
     const peers = pickTopThreePeers(lastSubs, lastUrl || 'top3');
     const profileFirst = (lastProfile && lastProfile.firstName) || 'You';
     const profilePic   = (lastProfile && lastProfile.pictureUrl) || '';
@@ -5803,7 +5814,7 @@
         <span class="leaderboard-score">${Math.round((userScore / 18) * 100)} <span class="leaderboard-score-of">/ 100</span></span>
       </li>`;
 
-    $('#leaderboard').innerHTML = peerRows + youRow;
+    host.innerHTML = peerRows + youRow;
   }
 
   /* ────────── Reveal the post-submit "Three moves" section + tier roadmap + CTAs ────────── */
