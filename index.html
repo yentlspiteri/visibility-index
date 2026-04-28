@@ -1601,6 +1601,175 @@
     line-height: 1.55;
   }
 
+  /* — Next-moves section (post-submit unlock) — */
+  .next-moves-wrap {
+    background: var(--vp-navy);
+    color: var(--vp-white);
+    padding: 120px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-moves-wrap.hidden { display: none; }
+  .next-moves-wrap::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(at 75% 20%, rgba(134,131,229,0.18), transparent 50%),
+      radial-gradient(at 20% 80%, rgba(63,54,178,0.22), transparent 55%);
+    pointer-events: none;
+  }
+  .next-moves-wrap .container { position: relative; z-index: 1; }
+
+  .moves-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 56px;
+  }
+  @media (max-width: 880px) { .moves-grid { grid-template-columns: 1fr; } }
+
+  .move-card {
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(134,131,229,0.25);
+    border-radius: 18px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 18px 50px rgba(11,3,89,0.18);
+  }
+  .move-num {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vp-lavender);
+    letter-spacing: 0.12em;
+  }
+  .move-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: var(--vp-white);
+  }
+  .move-why {
+    color: rgba(252,252,252,0.78);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .move-step {
+    background: rgba(63,54,178,0.18);
+    border-left: 3px solid var(--vp-lavender);
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(252,252,252,0.88);
+  }
+  .move-step-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+    margin-bottom: 4px;
+  }
+  .move-service {
+    margin-top: auto;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--vp-lavender);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    background: rgba(134,131,229,0.12);
+    border-radius: 999px;
+  }
+
+  .roadmap-card {
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(252,252,252,0.08);
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 48px;
+  }
+  .roadmap-list {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; gap: 12px;
+  }
+  .roadmap-list li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 14px;
+    align-items: start;
+    color: rgba(252,252,252,0.85);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .roadmap-list li::before {
+    content: "→";
+    color: var(--vp-lavender);
+    font-weight: 600;
+    line-height: 1.55;
+  }
+
+  .next-cta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 700px) { .next-cta-row { grid-template-columns: 1fr; } }
+  .next-cta-card {
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(134,131,229,0.25);
+    border-radius: 18px;
+    padding: 32px;
+    text-decoration: none;
+    color: var(--vp-white);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  }
+  .next-cta-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(134,131,229,0.5);
+    background: rgba(134,131,229,0.06);
+  }
+  .next-cta-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+  }
+  .next-cta-card h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 4px 0 0;
+    color: var(--vp-white);
+  }
+  .next-cta-card p {
+    color: rgba(252,252,252,0.72);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .next-cta-arrow {
+    position: absolute;
+    top: 28px; right: 28px;
+    font-size: 22px;
+    color: var(--vp-lavender);
+  }
+
   /* — Methodology section: friendly grid + image — */
   .method-image {
     width: 100%;
@@ -1729,7 +1898,7 @@
     <div class="nav-right">
       <a href="#methodology" class="nav-link">Methodology</a>
       <a href="#circle" class="nav-link">The Circle</a>
-      <a href="https://calendar.app.google/dNHASAcZwzbtFDZE6" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
+      <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
     </div>
   </div>
 </nav>
@@ -1957,6 +2126,46 @@
   </div>
 </section>
 
+<!-- ─────────── NEXT MOVES (revealed after email submit) ─────────── -->
+<section class="next-moves-wrap hidden" id="next-moves">
+  <div class="container">
+    <div class="eyebrow-row" style="justify-content: center;">
+      <span class="dot"></span>
+      <span class="eyebrow">Your highest-leverage moves</span>
+    </div>
+    <h2 class="h2" style="text-align: center; margin: 18px auto;">Three moves to make this quarter.</h2>
+    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(252,252,252,0.72);">
+      Specific to your profile. Pulled from your audit. Each one ties to a FutureMakers service we can run with you.
+    </p>
+
+    <div class="moves-grid" id="moves-grid"><!-- populated by JS --></div>
+
+    <div class="roadmap-card">
+      <div class="eyebrow-row">
+        <span class="dot"></span>
+        <span class="eyebrow" id="roadmap-eyebrow">Path to the next tier</span>
+      </div>
+      <h3 class="h3" style="margin: 12px 0 22px; color: var(--vp-white);" id="roadmap-title">From your tier to the next.</h3>
+      <ul class="roadmap-list" id="roadmap-list"><!-- populated by JS --></ul>
+    </div>
+
+    <div class="next-cta-row">
+      <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="next-cta-card next-cta-soft">
+        <span class="next-cta-eyebrow">Talk it through</span>
+        <h3>Book a 30-minute call</h3>
+        <p>Walk through these moves with one of the Von Peach team. No pitch — just clarity.</p>
+        <span class="next-cta-arrow">→</span>
+      </a>
+      <a href="#circle" class="next-cta-card next-cta-hard">
+        <span class="next-cta-eyebrow">Or</span>
+        <h3>Apply for The Circle</h3>
+        <p>A small circle of clients we work with directly. Twelve seats per quarter.</p>
+        <span class="next-cta-arrow">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- ─────────── METHODOLOGY (now BEFORE Circle — Circle is the bottom-of-page CTA) ─────────── -->
 <section class="method-wrap" id="methodology">
   <div class="container-narrow">
@@ -2077,7 +2286,7 @@
             </div>
           </div>
         </div>
-        <a href="https://calendar.app.google/dNHASAcZwzbtFDZE6" target="_blank" rel="noopener" class="btn btn-primary btn-arrow" id="apply-cta">Book a call</a>
+        <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="btn btn-primary btn-arrow" id="apply-cta">Book a call</a>
       </div>
 
       <div class="circle-stats">
@@ -2355,6 +2564,18 @@
   /* Latest audit state — passed to /api/lead on email submit */
   let lastScore = 0, lastSubs = {}, lastTier = null, lastUrl = '';
   let lastRole = '', lastGoal = '';
+  let lastMoves = [], lastTierRoadmap = [], lastNextTier = null;
+
+  // Maps Claude's service token → human label shown on the move-card service tag
+  const SERVICE_LABELS = {
+    strategy: 'Brand strategy',
+    content:  'Content production',
+    video:    'Video',
+    photo:    'Photoshoot',
+    linkedin: 'LinkedIn',
+    speaker:  'Speaking kit',
+    pr:       'PR advisory'
+  };
 
   async function startAudit(opts = {}) {
     // Capture mad-libs context (role + goal) for the result copy and the lead capture
@@ -2445,8 +2666,11 @@
     previewResult.classList.add('active');
 
     const tier = tierFor(total);
-    // Save for the lead capture call
+    // Save for the lead capture call + the post-submit reveal
     lastScore = total; lastSubs = subs; lastTier = tier; lastUrl = url;
+    lastMoves        = (payload && payload.moves)        || [];
+    lastTierRoadmap  = (payload && payload.tierRoadmap)  || [];
+    lastNextTier     = (payload && payload.nextTier)     || TIERS.find(t => t.min > tier.max) || tier;
 
     // Personalize the result with profile data + Claude analysis from /api/score response
     if (payload && payload.profile) {
@@ -2506,7 +2730,7 @@
 
     animateNumber('#score-num', 0, total, 1400);
 
-    renderSubscores(subs);
+    renderSubscores(subs, (payload && payload.dimensionCommentary) || null);
 
     const cohortSize = 240 + (hashStr(url) % 180);
     const userRank   = synthRank(total, cohortSize);
@@ -2531,18 +2755,42 @@
     requestAnimationFrame(step);
   }
 
-  function renderSubscores(subs) {
-    const html = DIMENSIONS.map(d => {
+  function renderSubscores(subs, commentary) {
+    const container = $('#subscores');
+    container.innerHTML = '';
+    DIMENSIONS.forEach(d => {
       const v = subs[d.key];
-      return `
-        <div class="subscore">
-          <div class="subscore-label">${d.label}</div>
-          <div class="subscore-value">${v}<span class="subscore-value-suffix"> / 3</span></div>
-          <div class="subscore-bar"><div class="subscore-bar-fill" data-target="${(v/3)*100}"></div></div>
-          <div class="subscore-context">${d.ctxByLevel[v]}</div>
-        </div>`;
-    }).join('');
-    $('#subscores').innerHTML = html;
+      // Prefer Claude's profile-specific line if available, fall back to generic level text
+      const ctxText = (commentary && commentary[d.key]) ? commentary[d.key] : d.ctxByLevel[v];
+
+      const card = document.createElement('div');
+      card.className = 'subscore';
+      const label = document.createElement('div');
+      label.className = 'subscore-label';
+      label.textContent = d.label;
+      const value = document.createElement('div');
+      value.className = 'subscore-value';
+      value.textContent = String(v);
+      const suffix = document.createElement('span');
+      suffix.className = 'subscore-value-suffix';
+      suffix.textContent = ' / 3';
+      value.appendChild(suffix);
+      const bar = document.createElement('div');
+      bar.className = 'subscore-bar';
+      const fill = document.createElement('div');
+      fill.className = 'subscore-bar-fill';
+      fill.dataset.target = String((v / 3) * 100);
+      bar.appendChild(fill);
+      const ctx = document.createElement('div');
+      ctx.className = 'subscore-context';
+      ctx.textContent = ctxText;
+
+      card.appendChild(label);
+      card.appendChild(value);
+      card.appendChild(bar);
+      card.appendChild(ctx);
+      container.appendChild(card);
+    });
     setTimeout(() => {
       $$('.subscore-bar-fill').forEach(b => b.style.width = b.dataset.target + '%');
     }, 80);
@@ -2586,6 +2834,98 @@
     $('#leaderboard').innerHTML = rows;
   }
 
+  /* ────────── Reveal the post-submit "Three moves" section + tier roadmap + CTAs ────────── */
+  function revealNextMoves() {
+    const section = $('#next-moves');
+    if (!section) return;
+
+    // Render move cards (sample-pill audits use lastMoves which may be empty if no API call ran)
+    const grid = $('#moves-grid');
+    if (grid) {
+      grid.innerHTML = '';
+      const moves = lastMoves.length ? lastMoves : fallbackMoves();
+      moves.forEach((m, i) => {
+        const card = document.createElement('div');
+        card.className = 'move-card';
+
+        const num = document.createElement('div');
+        num.className = 'move-num';
+        num.textContent = '0' + (i + 1);
+
+        const title = document.createElement('div');
+        title.className = 'move-title';
+        title.textContent = m.title || '';
+
+        const why = document.createElement('p');
+        why.className = 'move-why';
+        why.textContent = m.why || '';
+
+        const stepWrap = document.createElement('div');
+        stepWrap.className = 'move-step';
+        const stepLabel = document.createElement('span');
+        stepLabel.className = 'move-step-label';
+        stepLabel.textContent = 'First step today';
+        const stepText = document.createElement('div');
+        stepText.textContent = m.firstStep || '';
+        stepWrap.appendChild(stepLabel);
+        stepWrap.appendChild(stepText);
+
+        const service = document.createElement('span');
+        service.className = 'move-service';
+        service.textContent = SERVICE_LABELS[m.service] || 'Brand strategy';
+
+        card.appendChild(num);
+        card.appendChild(title);
+        card.appendChild(why);
+        card.appendChild(stepWrap);
+        card.appendChild(service);
+        grid.appendChild(card);
+      });
+    }
+
+    // Roadmap heading + list
+    if (lastTier && lastNextTier) {
+      const goingUp = lastNextTier.min > lastTier.max;
+      const header = goingUp
+        ? `From ${lastTier.name} to ${lastNextTier.name}`
+        : `Holding the ${lastTier.name} tier`;
+      $('#roadmap-eyebrow').textContent = goingUp ? 'Path to the next tier' : 'Sharpen your edge';
+      $('#roadmap-title').textContent   = header;
+    }
+    const list = $('#roadmap-list');
+    if (list) {
+      list.innerHTML = '';
+      const items = lastTierRoadmap.length ? lastTierRoadmap : fallbackRoadmap();
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        list.appendChild(li);
+      });
+    }
+
+    // Reveal + scroll
+    section.classList.remove('hidden');
+    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }
+
+  // Fallbacks for the sample-pill demo path (no API call → no live moves/roadmap)
+  function fallbackMoves() {
+    return [
+      { title: 'Rewrite your headline around an audience.', why: 'Your headline names what you do but not who you help. Top-tier executives in your cohort name the audience explicitly.', firstStep: 'Open LinkedIn → headline → write three audience-specific drafts.', service: 'strategy' },
+      { title: 'Set a weekly posting cadence.', why: 'Cadence outperforms volume. A reliable rhythm signals a serious operator; sporadic posting reads as an afterthought.', firstStep: 'Block 60 minutes Friday morning. Write next Tuesday’s post.', service: 'content' },
+      { title: 'Pitch one tier-1 publication this quarter.', why: 'External authority signals are the single biggest gap between Emerging Authority and Recognised Leader.', firstStep: 'Pick one outlet. Identify the editor. Draft a 200-word pitch by EOD.', service: 'pr' }
+    ];
+  }
+  function fallbackRoadmap() {
+    return [
+      'Publish weekly. The platform doesn’t matter; the rhythm does.',
+      'Land one tier-1 press mention. We’ll tell you which five outlets your peers pitch first.',
+      'Refresh your About to lead with a thesis, not a CV summary.',
+      'Quote yourself: a one-line POV you can repeat across three platforms.',
+      'Schedule the one keynote. Tier-1 founders book speaking six months out.'
+    ];
+  }
+
   /* ────────── Email gate → POST /api/lead (Mailchimp upsert) ────────── */
   $('#gate-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2617,7 +2957,7 @@
 
       $('#leaderboard-wrap').classList.remove('locked');
       $('#gate').remove();
-      setTimeout(() => $('#circle').scrollIntoView({ behavior: 'smooth', block: 'start' }), 800);
+      revealNextMoves();
     } catch (err) {
       submitBtn.disabled = false;
       submitBtn.textContent = origText;

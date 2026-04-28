@@ -84,30 +84,44 @@ export default async function handler(req, res) {
     const profile = profileRes.value;
     const serp    = serpRes.status === 'fulfilled' ? serpRes.value : null;
 
-    // 2) Run Claude analysis (LLM) — returns clarityScore + personalSummary + reportTeasers in one call
-    const analysis = await analyzeProfile(profile).catch(err => {
+    // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
+    //    Visual is provisional (depends on clarity); we recompute after Claude returns.
+    const heuristic = {
+      footprint: scoreFootprint(profile, serp),
+      authority: scoreAuthority(profile),
+      cadence:   scoreCadence(profile),
+      visual:    scoreVisual(profile, { score: 1 }),
+      network:   scoreNetwork(profile)
+    };
+
+    // 3) Run Claude analysis with profile + heuristic scores. Returns clarity + rich content payload.
+    const analysis = await analyzeProfile(profile, heuristic).catch(err => {
       console.error('Claude analysis failed:', err);
-      return { clarityScore: 1, clarityRationale: 'Fallback heuristic — LLM unavailable.', personalSummary: '', reportTeasers: [] };
+      return {
+        clarityScore: 1, clarityRationale: 'Fallback heuristic — LLM unavailable.',
+        executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: []
+      };
     });
     const clarity = { score: analysis.clarityScore, rationale: analysis.clarityRationale };
 
-    // 3) Compute the six dimensions
+    // 4) Final sub-scores — re-compute visual with the real clarity now
     const subs = {
-      footprint: scoreFootprint(profile, serp),
+      footprint: heuristic.footprint,
       clarity:   clarity.score,
-      authority: scoreAuthority(profile),
-      cadence:   scoreCadence(profile),
+      authority: heuristic.authority,
+      cadence:   heuristic.cadence,
       visual:    scoreVisual(profile, clarity),
-      network:   scoreNetwork(profile)
+      network:   heuristic.network
     };
 
     const total = Object.values(subs).reduce((a, b) => a + b, 0);
     const tier  = tierFor(total);
+    const nextTier = TIERS.find(t => t.min > tier.max) || tier;
 
     return res.status(200).json({
-      total, subs, tier,
+      total, subs, tier, nextTier,
       normalisedUrl: normalised,
-      // Personalization payload — used by the frontend to greet by name + show photo + render the personal summary
+      // Personalization payload — feeds the on-page reveal and the PDF report
       profile: {
         firstName:        profile.firstName || '',
         lastName:         profile.lastName  || '',
@@ -119,8 +133,13 @@ export default async function handler(req, res) {
         isCreator:        !!profile.creator,
         isVerified:       !!profile.isVerified
       },
-      personalSummary: analysis.personalSummary,
-      reportTeasers:   analysis.reportTeasers,
+      executiveSummary:    analysis.executiveSummary,
+      dimensionCommentary: analysis.dimensionCommentary,
+      moves:               analysis.moves,
+      tierRoadmap:         analysis.tierRoadmap,
+      // Backward-compat: keep older field names mapped from the new payload
+      personalSummary:     analysis.executiveSummary,
+      reportTeasers:       (analysis.moves || []).map(m => m.title),
       _meta: { clarityRationale: clarity.rationale }
     });
   } catch (err) {
@@ -178,7 +197,7 @@ async function fetchSerpFootprint(normalisedUrl) {
   return r.json();
 }
 
-async function analyzeProfile(profile) {
+async function analyzeProfile(profile, heuristic) {
   const firstName    = profile.firstName || 'there';
   const headline     = (getHeadline(profile) || '').slice(0, 400);
   const about        = (getAbout(profile)    || '').slice(0, 2000);
@@ -188,7 +207,7 @@ async function analyzeProfile(profile) {
   const isCreator    = !!profile.creator;
   const isVerified   = !!profile.isVerified;
 
-  const prompt = `You are a brand strategist running a personalized visibility audit for an executive based on their LinkedIn profile. The audit scores six dimensions (footprint, clarity, authority, cadence, visual, network) on 0-3 each, summed to 0-18.
+  const prompt = `You are a brand strategist running a personalised visibility audit for an executive based on their LinkedIn profile. The audit scores six dimensions on 0-3 each, summed to 0-18.
 
 PROFILE DATA:
 - First name: ${firstName}
@@ -200,20 +219,53 @@ PROFILE DATA:
 - LinkedIn Creator profile: ${isCreator ? 'yes' : 'no'}
 - LinkedIn verified: ${isVerified ? 'yes' : 'no'}
 
-YOUR JOB — return THREE things:
+PROVISIONAL SCORES (already computed from public signals — you fill in Brand Clarity):
+- Digital Footprint: ${heuristic.footprint}/3
+- Brand Clarity: TBD — you score this
+- Authority Signals: ${heuristic.authority}/3
+- Content Cadence: ${heuristic.cadence}/3
+- Visual Identity: ${heuristic.visual}/3
+- Network Recognition: ${heuristic.network}/3
 
-1. clarityScore (0-3) for the BRAND CLARITY dimension only:
-   • 0 = No discernible message. Generic title, empty/vague About.
-   • 1 = Rough idea visible, but the message is unclear or the audience is undefined.
-   • 2 = Clear value prop and audience, but generic phrasing.
-   • 3 = Crystal clear who they help, how, what makes them different.
+YOUR JOB — return JSON with EVERY field below. No markdown fences, no prose around it:
 
-2. personalSummary — 2 sentences addressed to ${firstName} by name. Reference SPECIFIC things in their profile (their actual headline, their About, their follower-to-connection ratio, etc.). Sound like a confident strategist talking to a peer. No fluff, no chatbot tone, no "great work!" affirmations.
+{
+  "clarityScore": 0|1|2|3,
+  "clarityRationale": "<one sentence>",
+  "executiveSummary": "<3 sentences. Address ${firstName} by name. Quote specific profile content (the actual headline, an excerpt of the About, the follower:connection ratio). Sound like a confident strategist talking to a peer. Tie observations to the score. No fluff. No 'great work!' affirmations.>",
+  "dimensionCommentary": {
+    "footprint":  "<one sentence on what their footprint score (${heuristic.footprint}/3) means specifically for THIS profile>",
+    "clarity":    "<one sentence on the brand-clarity gap or strength based on their actual headline + About>",
+    "authority":  "<one sentence referencing their actual recommendations / press / featured items (or absence thereof)>",
+    "cadence":    "<one sentence on their actual posting cadence (${heuristic.cadence}/3)>",
+    "visual":     "<one sentence on their actual photo / banner / visual polish>",
+    "network":    "<one sentence on their actual follower count / connection count and what it signals>"
+  },
+  "moves": [
+    {"title":"<imperative, 5-9 words>","why":"<2-3 sentences specific to THIS executive>","firstStep":"<one concrete action under 30 minutes>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
+    {"title":"...","why":"...","firstStep":"...","service":"..."},
+    {"title":"...","why":"...","firstStep":"...","service":"..."}
+  ],
+  "tierRoadmap": [
+    "<tactic to reach the next tier — punchy, ~10-14 words>",
+    "<another>","<another>","<another>","<one more>"
+  ]
+}
 
-3. reportTeasers — exactly THREE strings. Each one a specific gap or move visible from this profile. ~10-14 words each. Concrete + actionable, not generic.
+VOICE NOTES — match the FutureMakers brand:
+- Confident, aspirational, action-oriented.
+- Echo the brand: "done playing small", "ideas that deserve the spotlight".
+- Specific over generic. Quote profile content, don't generalise.
+- No chatbot tone. No "great work!" affirmations.
 
-OUTPUT FORMAT — JSON only, no markdown fences, no prose around it:
-{"clarityScore": 0|1|2|3, "clarityRationale": "<one sentence>", "personalSummary": "<2 sentences>", "reportTeasers": ["...", "...", "..."]}`;
+SERVICES KEY (use exact lowercase tokens for the "service" field):
+- strategy = Personal Brand Strategy & Discovery (1-on-1 session)
+- content  = Strategic content plan + production
+- video    = Video content production (ideas in motion, podcast-style interviews)
+- photo    = Personal photoshoot & visual branding
+- linkedin = LinkedIn & platform optimisation
+- speaker  = Keynote speaking kit + public-speaking coaching
+- pr       = PR advisory`;
 
   const r = await fetch(ANTHROPIC_API, {
     method: 'POST',
@@ -224,7 +276,7 @@ OUTPUT FORMAT — JSON only, no markdown fences, no prose around it:
     },
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
-      max_tokens: 600,
+      max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }]
     })
   });
@@ -235,18 +287,34 @@ OUTPUT FORMAT — JSON only, no markdown fences, no prose around it:
   const fallback = {
     clarityScore: 1,
     clarityRationale: 'Parse fallback.',
-    personalSummary: '',
-    reportTeasers: []
+    executiveSummary: '',
+    dimensionCommentary: {},
+    moves: [],
+    tierRoadmap: []
   };
   if (!match) return fallback;
   try {
-    const parsed = JSON.parse(match[0]);
+    const p = JSON.parse(match[0]);
     return {
-      clarityScore:     Math.max(0, Math.min(3, Math.round(Number(parsed.clarityScore) || 0))),
-      clarityRationale: String(parsed.clarityRationale || '').slice(0, 200),
-      personalSummary:  String(parsed.personalSummary  || '').slice(0, 600),
-      reportTeasers:    Array.isArray(parsed.reportTeasers)
-        ? parsed.reportTeasers.slice(0, 3).map(t => String(t).slice(0, 140))
+      clarityScore:     Math.max(0, Math.min(3, Math.round(Number(p.clarityScore) || 0))),
+      clarityRationale: String(p.clarityRationale || '').slice(0, 200),
+      executiveSummary: String(p.executiveSummary  || '').slice(0, 800),
+      dimensionCommentary: (p.dimensionCommentary && typeof p.dimensionCommentary === 'object') ? {
+        footprint: String(p.dimensionCommentary.footprint || '').slice(0, 240),
+        clarity:   String(p.dimensionCommentary.clarity   || '').slice(0, 240),
+        authority: String(p.dimensionCommentary.authority || '').slice(0, 240),
+        cadence:   String(p.dimensionCommentary.cadence   || '').slice(0, 240),
+        visual:    String(p.dimensionCommentary.visual    || '').slice(0, 240),
+        network:   String(p.dimensionCommentary.network   || '').slice(0, 240)
+      } : {},
+      moves: Array.isArray(p.moves) ? p.moves.slice(0, 3).map(m => ({
+        title:     String(m?.title     || '').slice(0, 140),
+        why:       String(m?.why       || '').slice(0, 500),
+        firstStep: String(m?.firstStep || '').slice(0, 280),
+        service:   ['strategy','content','video','photo','linkedin','speaker','pr'].includes(m?.service) ? m.service : 'strategy'
+      })) : [],
+      tierRoadmap: Array.isArray(p.tierRoadmap)
+        ? p.tierRoadmap.slice(0, 5).map(t => String(t).slice(0, 160))
         : []
     };
   } catch {
