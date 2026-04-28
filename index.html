@@ -1306,13 +1306,18 @@
     left: 0;
     min-width: 260px;
     max-width: 360px;
+    /* Cap height — internal scroll instead of getting clipped by neighbouring sections */
+    max-height: min(60vh, 480px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 8px;
     background: var(--vp-white);
     border-radius: 16px;
     box-shadow:
       0 24px 64px rgba(11,3,89,0.24),
       0 4px 16px rgba(11,3,89,0.10);
-    z-index: 100;
+    /* High z-index — sits above everything including the next section */
+    z-index: 9999;
     /* closed */
     opacity: 0;
     transform: scale(0.94) translateY(-6px);
@@ -2065,6 +2070,23 @@
   }
   .score-reveal-avatar:not([src]),
   .score-reveal-avatar[src=""] { display: none; }
+  /* Initial-letter fallback when LinkedIn's CDN blocks the photo (broken-image state) */
+  .score-reveal-avatar-fallback {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vp-lavender), var(--vp-indigo));
+    border: 2px solid rgba(134,131,229,0.4);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--vp-cream, #fafafa);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .score-reveal-avatar-fallback.hidden { display: none; }
   .score-reveal-greeting-text {
     display: flex; flex-direction: column;
     align-items: flex-start;
@@ -2704,32 +2726,125 @@
     text-align: center;
   }
 
-  /* — Footer: LIGHT, matches vonpeach.com — */
+  /* — Footer: LIGHT, mirrors vonpeach.com (3-col layout + giant PEACH wordmark) — */
   footer {
-    background: var(--vp-cream);
-    color: var(--vp-text-grey);
-    border-top: 1px solid rgba(15,15,15,0.08);
+    background: var(--vp-cream, #fafafa);
+    color: var(--vp-deep-black, #0c0b09);
+    padding: 80px 0 0;
+    overflow: hidden;
   }
-  footer .logo svg g,
-  footer .logo svg path {
-    fill: var(--vp-deep-black);
-    opacity: 1;
+  footer .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+    margin-bottom: 56px;
   }
-  footer .footer-links a {
-    color: var(--vp-text-grey);
+  @media (max-width: 720px) {
+    footer .footer-grid { grid-template-columns: 1fr; gap: 40px; text-align: left; }
+    footer .footer-col-center, footer .footer-col-right { text-align: left !important; }
   }
-  footer .footer-links a:hover {
-    color: var(--vp-deep-black);
-  }
-  /* The bottom legal line — match the vonpeach.com "VON PEACH GMBH 2026" treatment */
-  footer .footer-legal {
-    color: var(--vp-text-grey);
+  footer .footer-col-eyebrow {
     font-family: var(--font-body);
-    font-size: 14px;
-    letter-spacing: 0;
-    margin-top: 32px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    line-height: 1.4;
+    color: rgba(15,15,15,0.5);
+    margin: 0 0 28px;
+  }
+  footer .footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  footer .footer-col a {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--vp-deep-black, #0c0b09);
+    text-decoration: none;
+    transition: opacity .15s ease;
+  }
+  footer .footer-col a:hover { opacity: 0.55; }
+
+  footer .footer-col-center { text-align: center; }
+  footer .footer-col-right  { text-align: right; }
+
+  footer .footer-email {
+    font-family: var(--font-body);
+    font-size: 17px;
+    color: var(--vp-deep-black, #0c0b09);
+    text-decoration: none;
+    margin-bottom: 28px;
+    display: inline-block;
+  }
+  footer .footer-email:hover { opacity: 0.6; }
+
+  footer .footer-cta {
+    display: inline-flex;
+    align-items: center;
+    background: var(--vp-deep-black, #0c0b09);
+    color: var(--vp-cream, #fafafa);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: 999px;
+    transition: transform .18s ease, background .18s ease;
+  }
+  footer .footer-cta:hover {
+    transform: translateY(-1px);
+    background: #1a1815;
+  }
+
+  /* Bottom legal strip */
+  footer .footer-legal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 0 0 36px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(15,15,15,0.5);
+  }
+  footer .footer-legal-row a {
+    color: var(--vp-deep-black, #0c0b09);
+    text-decoration: none;
+    margin-right: 24px;
+  }
+  footer .footer-legal-row a:hover { opacity: 0.6; }
+
+  /* Giant PEACH wordmark — clipped at the bottom, decorative */
+  footer .footer-mark {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    line-height: 0.78;
+  }
+  footer .footer-mark svg {
+    display: block;
+    width: 102%;
+    margin: 0 -1%;
+    height: auto;
+  }
+  footer .footer-mark text {
+    font-family: var(--font-display, "Aileron", system-ui, sans-serif);
+    font-weight: 900;
+    fill: var(--vp-deep-black, #0c0b09);
+    letter-spacing: -0.04em;
   }
 
   .hidden { display: none !important; }
@@ -2787,9 +2902,8 @@
               <span class="picker-label" data-picker-label>CEO</span>
             </button>
             <div class="picker-popover" role="listbox" aria-label="Choose your role">
-              <button type="button" class="picker-option" role="option" data-value="ceo" aria-selected="true">CEO</button>
+              <button type="button" class="picker-option" role="option" data-value="ceo" aria-selected="true">CEO / C-suite</button>
               <button type="button" class="picker-option" role="option" data-value="founder">Founder</button>
-              <button type="button" class="picker-option" role="option" data-value="csuite">C-suite executive</button>
               <button type="button" class="picker-option" role="option" data-value="investor">Investor</button>
               <button type="button" class="picker-option" role="option" data-value="board">Board member / NED</button>
               <button type="button" class="picker-option" role="option" data-value="consultant">Consultant / Advisor</button>
@@ -2801,9 +2915,8 @@
               <button type="button" class="picker-option" role="option" data-value="senior">Senior leader</button>
             </div>
             <select class="picker-native" id="ml-role" aria-hidden="true" tabindex="-1">
-              <option value="ceo">CEO</option>
+              <option value="ceo">CEO / C-suite</option>
               <option value="founder">Founder</option>
-              <option value="csuite">C-suite executive</option>
               <option value="investor">Investor</option>
               <option value="board">Board member / NED</option>
               <option value="consultant">Consultant / Advisor</option>
@@ -2880,7 +2993,8 @@
     <!-- Score reveal at the top of results (moved from preview-card; IDs preserved so JS still works) -->
     <div class="score-reveal" id="score-reveal">
       <div class="score-reveal-greeting">
-        <img class="score-reveal-avatar" id="preview-avatar" src="" alt="" />
+        <img class="score-reveal-avatar" id="preview-avatar" src="" alt="" referrerpolicy="no-referrer" />
+        <span class="score-reveal-avatar-fallback hidden" id="preview-avatar-fallback" aria-hidden="true">·</span>
         <div class="score-reveal-greeting-text">
           <span class="score-reveal-eyebrow">Your Visibility Index</span>
           <span class="score-reveal-name" id="preview-name">—</span>
@@ -2910,18 +3024,18 @@
     <!-- Personalized analysis (Claude-generated from real LinkedIn profile data) -->
     <div class="personal-card hidden" id="personal-card">
       <div class="personal-summary-row">
-        <img class="personal-avatar" id="personal-avatar" src="" alt="" />
+        <img class="personal-avatar" id="personal-avatar" src="" alt="" referrerpolicy="no-referrer" />
         <p class="personal-summary" id="personal-summary"></p>
       </div>
       <div class="personal-teasers" id="personal-teasers-wrap">
-        <div class="personal-teasers-label">Your full report digs into:</div>
+        <div class="personal-teasers-label">In your full report:</div>
         <ul id="personal-teasers"></ul>
       </div>
       <div class="personal-cta-row">
         <button type="button" class="personal-cta" id="personal-cta">
-          Get my full PDF report
+          Get my full report
         </button>
-        <span class="personal-cta-hint">Free · arrives in your inbox · 4-page strategic memo</span>
+        <span class="personal-cta-hint">Free · 4-page PDF · in your inbox</span>
       </div>
     </div>
 
@@ -2930,15 +3044,15 @@
     <!-- Standalone email gate (leaderboard removed — was placeholder content; replace in v0.5 with real research-backed distribution chart) -->
     <div class="gate-standalone" id="gate-standalone">
       <div class="gate-card">
-        <div class="gate-eyebrow">Get your full report</div>
+        <div class="gate-eyebrow">Your full report</div>
         <h3 id="gate-cta-line">Here's what to build first.</h3>
-        <p>Your sub-score breakdown, the three highest-leverage moves, and a 4-page PDF report — delivered to your inbox in seconds.</p>
+        <p>4-page PDF. Three moves. In your inbox.</p>
         <form class="gate-form" id="gate-form" novalidate>
           <span class="gate-label">Work email</span>
           <input type="email" id="gate-email" placeholder="you@company.com" required />
           <button type="submit">Send me my report</button>
         </form>
-        <div class="gate-disclaimer">We email your report once. No lists, no resale. Unsubscribe in one click.</div>
+        <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime.</div>
       </div>
     </div>
   </div>
@@ -3351,10 +3465,10 @@
 
   // Goal-specific subhead that appears in the result block — mirrors the user's stated goal back at them.
   const GOAL_HEADLINES = {
-    clients:     "Here's what's between you and better clients.",
-    speaking:    "Here's what's between you and the speaking circuit.",
-    credibility: "Here's what's between you and recognition in your industry.",
-    legacy:      "Here's what's between you and a legacy that lasts."
+    clients:     "What's between you and better clients.",
+    speaking:    "What's between you and the speaking circuit.",
+    credibility: "What's between you and recognition.",
+    legacy:      "What's between you and a legacy."
   };
 
   // Goal-aware HERO subhead — primes the value prop based on the user's role + goal selection.
@@ -3366,9 +3480,8 @@
     legacy:      '{role} building lasting legacies outscore peers by 4.5 points on visibility — see where you sit.'
   };
   const ROLE_PLURALS = {
-    ceo:        'CEOs',
+    ceo:        'CEOs and C-suite leaders',
     founder:    'Founders',
-    csuite:     'C-suite executives',
     investor:   'Investors',
     board:      'Board members',
     consultant: 'Consultants',

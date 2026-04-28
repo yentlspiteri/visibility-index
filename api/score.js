@@ -26,21 +26,21 @@ const HOUR_MS = 3_600_000;
 
 const TIERS = [
   { min:0,  max:5,  name:'The Hidden Gem',
-    tagline:'Real expertise. The world just doesn’t know it yet.',
-    blurb:'Your brand is nearly invisible. The good news? Everything is ahead of you. With the right foundations, you can fast-track from unknown to unmissable.',
-    cta:"Here's your roadmap from invisible to unmissable" },
+    tagline:'Real expertise. The world doesn’t know it yet.',
+    blurb:'Nearly invisible — but everything is ahead of you.',
+    cta:"See the roadmap" },
   { min:6,  max:10, name:'The Rising Voice',
-    tagline:'Building momentum, but gaps are holding you back.',
-    blurb:'You have something to say, but your brand isn’t amplifying it yet. Closing a few key gaps could dramatically shift how the right people find and perceive you.',
-    cta:"Here's exactly what to build first" },
+    tagline:'Building momentum. A few gaps holding you back.',
+    blurb:'You have something to say. Your brand isn’t amplifying it yet.',
+    cta:"See what to build first" },
   { min:11, max:15, name:'The Emerging Authority',
-    tagline:'Solid foundations. Time to scale your reach.',
-    blurb:'You’re doing more right than most. Your challenge now is consistency and intentionality — turning effort into a brand that reliably attracts the right opportunities.',
-    cta:"Here's how to close the gaps fast" },
+    tagline:'Solid foundations. Time to scale.',
+    blurb:'Doing more right than most. Now: consistency.',
+    cta:"See the gaps to close" },
   { min:16, max:18, name:'The Recognised Leader',
-    tagline:'Strong brand. Let’s make it legacy-level.',
-    blurb:'You’ve built real authority. The next level is about sharpening your signature, deepening your impact, and ensuring every asset is working as hard as you are.',
-    cta:"Here's how to sharpen your edge" }
+    tagline:'Strong brand. Make it legacy-level.',
+    blurb:'Real authority built. Next: sharpen the signature.',
+    cta:"See how to sharpen" }
 ];
 
 export default async function handler(req, res) {
@@ -313,24 +313,24 @@ YOUR JOB — return JSON with EVERY field below. No markdown fences, no prose ar
 
 {
   "clarityScore": 0|1|2|3,
-  "clarityRationale": "<one sentence>",
-  "executiveSummary": "<3 sentences. Address ${firstName} by name. Quote specific profile content (the actual headline, an excerpt of the About, the follower:connection ratio). Sound like a confident strategist talking to a peer. Tie observations to the score. No fluff. No 'great work!' affirmations.>",
+  "clarityRationale": "<8-12 words max>",
+  "executiveSummary": "<TWO sentences. Address ${firstName} by name. Sentence 1: name the biggest single gap, quoting one piece of their actual profile (their headline OR a follower stat). Sentence 2: one specific action that closes it. Max 32 words total. No 'you're doing great' fluff.>",
   "dimensionCommentary": {
-    "footprint":  "<one sentence on what their footprint score (${heuristic.footprint}/3) means specifically for THIS profile>",
-    "clarity":    "<one sentence on the brand-clarity gap or strength based on their actual headline + About>",
-    "authority":  "<one sentence referencing their actual recommendations / press / featured items (or absence thereof)>",
-    "cadence":    "<one sentence on their actual posting cadence (${heuristic.cadence}/3)>",
-    "visual":     "<one sentence on their actual photo / banner / visual polish>",
-    "network":    "<one sentence on their actual follower count / connection count and what it signals>"
+    "footprint":  "<max 14 words. One specific observation tied to their score.>",
+    "clarity":    "<max 14 words. Reference their actual headline.>",
+    "authority":  "<max 14 words. Name one missing or present signal.>",
+    "cadence":    "<max 14 words. State the rhythm or its absence.>",
+    "visual":     "<max 14 words. Name one specific craft detail.>",
+    "network":    "<max 14 words. Quote their follower or connection number.>"
   },
   "moves": [
-    {"title":"<imperative, 4-7 words>","why":"<ONE sentence, max 18 words. Specific to THIS executive — quote actual profile content where possible.>","firstStep":"<ONE short sentence, max 14 words. Concrete.>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
+    {"title":"<imperative, 3-6 words>","why":"<ONE sentence, max 14 words. Specific to THIS profile.>","firstStep":"<max 10 words. Concrete first action.>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
     {"title":"...","why":"...","firstStep":"...","service":"..."},
     {"title":"...","why":"...","firstStep":"...","service":"..."}
   ],
   "tierRoadmap": [
-    "<tactic to reach the next tier — punchy, ~10-14 words>",
-    "<another>","<another>","<another>","<one more>"
+    "<max 10 words, punchy>",
+    "<max 10 words>","<max 10 words>","<max 10 words>","<max 10 words>"
   ]
 }
 
