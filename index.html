@@ -487,15 +487,61 @@
   .tier-cta-btn::after { content: "→"; font-size: 18px; transition: transform .2s ease; }
   .tier-cta-btn:hover::after { transform: translateX(4px); }
 
+  /* — Results split: hexagon left, Claude summary right (mirrors methodology layout) — */
+  .results-split {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: clamp(24px, 4vw, 56px);
+    align-items: center;
+    max-width: 1080px;
+    margin: 32px auto 56px;
+  }
+  @media (max-width: 880px) {
+    .results-split { grid-template-columns: 1fr; }
+    .results-summary { text-align: center !important; padding: 0 16px; }
+  }
+  .results-summary {
+    text-align: left;
+    color: var(--vp-white);
+  }
+  .results-summary-eyebrow {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+    margin-bottom: 14px;
+  }
+  .results-summary-title {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 2.6vw, 32px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.18;
+    color: var(--vp-white);
+    margin: 0 0 16px;
+  }
+  .results-summary-body {
+    font-family: var(--font-body);
+    font-size: clamp(15px, 1.05vw, 17px);
+    line-height: 1.6;
+    color: rgba(252,252,252,0.78);
+    margin: 0;
+  }
+
   /* — Personal hex shape (replaces the verbose 6-card subscore strip) — */
   .personal-hex {
     width: 100%;
-    max-width: 520px;
+    max-width: 720px;
     height: auto;
-    margin: 24px auto 8px;
+    margin: 32px auto 16px;
     display: block;
     overflow: visible;
   }
+  .personal-hex .phex-label { font-size: 16px; }
+  .personal-hex .phex-num   { font-size: 12px; }
   .personal-hex .phex-ring {
     fill: none;
     stroke: rgba(134,131,229,0.22);
@@ -3188,7 +3234,15 @@
       </div>
     </div>
 
-    <div class="subscores" id="subscores"><!-- populated by JS --></div>
+    <!-- Personal hexagon (left) + Claude-generated summary (right) — 2-col, stacks on mobile -->
+    <div class="results-split">
+      <div class="subscores" id="subscores"><!-- populated by JS — renders the hexagon SVG --></div>
+      <div class="results-summary" id="results-summary">
+        <span class="results-summary-eyebrow">Your shape</span>
+        <h3 class="results-summary-title" id="results-summary-title">What this means.</h3>
+        <p class="results-summary-body" id="results-summary-body">Each side of the hexagon is one of the six dimensions. The bigger your shape, the more visible you are. Your weakest sides are where the easy wins live.</p>
+      </div>
+    </div>
 
     <!-- Standalone email gate (leaderboard removed — was placeholder content; replace in v0.5 with real research-backed distribution chart) -->
     <div class="gate-standalone" id="gate-standalone">
@@ -4075,18 +4129,22 @@
     lastExecutiveSummary    = (payload && payload.executiveSummary)    || '';
     lastDimensionCommentary = (payload && payload.dimensionCommentary) || {};
 
-    // Personalize the result with profile data + Claude analysis from /api/score response
+    // Personalize the result with profile data + Claude analysis from /api/score response.
+    // We DON'T try to load the LinkedIn CDN photo any more — LinkedIn's media.licdn.com blocks
+    // hot-linking from third-party domains and it broke ~50% of avatars. Initial-letter circle
+    // is faster, never broken, and looks intentional.
     if (payload && payload.profile) {
       const p = payload.profile;
       const firstName = p.firstName || 'You';
-      const photo     = p.pictureUrl || '';
-      // Greeting in the preview card
       const previewName = $('#preview-name');
       const previewAvatar = $('#preview-avatar');
-      if (previewName)   previewName.textContent = firstName;
-      if (previewAvatar) {
-        if (photo) { previewAvatar.src = photo; previewAvatar.style.visibility = 'visible'; }
-        else { previewAvatar.removeAttribute('src'); }
+      const previewFallback = document.getElementById('preview-avatar-fallback');
+      if (previewName) previewName.textContent = firstName;
+      // Hide the broken img element entirely; show the initial circle instead.
+      if (previewAvatar) previewAvatar.style.display = 'none';
+      if (previewFallback) {
+        previewFallback.textContent = (firstName.charAt(0) || '·').toUpperCase();
+        previewFallback.classList.remove('hidden');
       }
     }
     // Personal summary card in the results section
@@ -4140,6 +4198,15 @@
 
     renderSubscores(subs, (payload && payload.dimensionCommentary) || null);
 
+    // Right-column summary beside the hexagon — uses Claude's 2-sentence executiveSummary if available
+    const summaryBody = document.getElementById('results-summary-body');
+    if (summaryBody) {
+      const claudeSummary = payload?.executiveSummary || lastExecutiveSummary || '';
+      if (claudeSummary) {
+        summaryBody.textContent = claudeSummary;
+      }
+    }
+
     const cohortSize = 240 + (hashStr(url) % 180);
     const userRank   = synthRank(total, cohortSize);
     renderLeaderboard(userRank, cohortSize, total);
@@ -4148,12 +4215,22 @@
       $('#gate-standalone').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    // Scroll directly to the score reveal block the moment results render — not the section start.
-    // requestAnimationFrame ensures the reveal element has its final height before we measure scroll.
-    requestAnimationFrame(() => {
-      const target = $('#score-reveal') || results;
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    // Scroll to the score reveal — three-step robustness:
+    //   1. Wait two animation frames for layout to settle after `results.classList.remove('hidden')`
+    //   2. Measure with getBoundingClientRect (scrollIntoView is unreliable across browsers)
+    //   3. Use window.scrollTo with a small top offset so the section breathes
+    function scrollToScore() {
+      const target = document.getElementById('score-reveal') || results;
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const y = rect.top + window.scrollY - 24;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      scrollToScore();
+      // Belt-and-braces — fire again after a beat in case the first scroll was interrupted
+      setTimeout(scrollToScore, 250);
+    }));
   }
 
   function animateNumber(sel, from, to, ms) {

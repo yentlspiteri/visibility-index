@@ -24,6 +24,7 @@
 
 import { createHash } from 'node:crypto';
 import { buildReportPDF } from '../lib/buildReport.js';
+import { notifyOps }    from '../lib/notify.js';
 
 const RESEND_API = 'https://api.resend.com/emails';
 
@@ -66,6 +67,13 @@ export default async function handler(req, res) {
     pdfBase64 = Buffer.from(pdfBytes).toString('base64');
   } catch (err) {
     console.error('PDF build failed:', err);
+    // Page Yentl — PDF builder is a load-bearing piece of the magnet. Failure = lead gets no report.
+    notifyOps({
+      category: 'pdf-build-failed',
+      subject:  '🚨 Visibility Index: PDF generation crashed',
+      body:     `pdf-lib threw during buildReportPDF. Lead got an empty download.\n\n${err?.stack || err?.message || String(err)}`,
+      context:  { email, firstName: profile?.firstName, score, tier: tier?.name }
+    }).catch(() => {});
     // We continue — Mailchimp upsert still happens, frontend still gets a success path
   }
 
@@ -99,10 +107,32 @@ export default async function handler(req, res) {
       if (!resendRes.ok) {
         const errText = await resendRes.text().catch(() => '');
         console.error('Resend failed:', resendRes.status, errText);
+        // Page Yentl — most common cause is unverified domain on Resend free tier
+        notifyOps({
+          category: 'resend-failed',
+          subject:  '🚨 Visibility Index: report email NOT delivered',
+          body:     `Resend rejected the send. Lead won't receive the PDF in their inbox (page download still worked if they clicked allow).\n\nResend status: ${resendRes.status}\nResend body: ${errText.slice(0, 400)}\n\nMost likely cause: vonpeach.com isn't verified in Resend → Domains, so onboarding@resend.dev only delivers to your registered Resend email.`,
+          context:  { lead: email, from: fromAddress, status: resendRes.status }
+        }).catch(() => {});
       }
     } catch (err) {
       console.error('Resend error:', err);
+      notifyOps({
+        category: 'resend-crash',
+        subject:  '🚨 Visibility Index: Resend call crashed',
+        body:     `Threw before getting a response from Resend.\n\n${err?.stack || err?.message || String(err)}`,
+        context:  { lead: email }
+      }).catch(() => {});
     }
+  }
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[lead] RESEND_API_KEY missing — emails are silently disabled.');
+    notifyOps({
+      category: 'resend-missing-key',
+      subject:  '🚨 Visibility Index: RESEND_API_KEY missing on Vercel',
+      body:     `A lead just submitted but no email could be sent because RESEND_API_KEY is not configured. Set it in Vercel → Project → Settings → Environment Variables.`,
+      context:  { lead: email }
+    }).catch(() => {});
   }
 
   // ── 3) Mailchimp upsert (lead store + segmentation, independent of email delivery) ──
