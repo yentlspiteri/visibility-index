@@ -1730,13 +1730,26 @@
   }
   .audit-prose {
     font-family: var(--font-display);
-    font-size: clamp(28px, 3.6vw, 44px);
-    line-height: 1.35;
+    font-size: clamp(28px, 3.2vw, 40px);
+    line-height: 1.45;
     font-weight: 500;
     letter-spacing: -0.018em;
     color: var(--vp-deep-black, #0c0b09);
-    margin: 0 0 8px;
+    margin: 0 0 12px;
     text-align: left;
+  }
+  /* Force every child (picker buttons, input, prefix) to inherit the SAME size.
+     Browser default UA stylesheet on <input>/<button> overrides `font: inherit` in some cases. */
+  .audit-prose,
+  .audit-prose .picker-label,
+  .audit-prose .picker-trigger,
+  .audit-prose .picker-trigger--inline,
+  .audit-prose .audit-prefix,
+  .audit-prose .audit-input {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3.2vw, 40px);
+    line-height: 1.45;
+    letter-spacing: -0.018em;
   }
   /* Inline picker trigger — text in lavender with a subtle underline, no chip background */
   .picker-trigger--inline {
@@ -3012,8 +3025,18 @@
     }
   });
 
-  calcBtn.addEventListener('click', () => startAudit());
-  linkInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAudit(); });
+  if (!calcBtn) console.error('[VI] btn-calculate not found — form will not work');
+  if (!linkInput) console.error('[VI] input-linkedin not found');
+  if (!loadingPanel) console.error('[VI] loading-panel not found');
+  if (calcBtn) {
+    calcBtn.addEventListener('click', (e) => {
+      console.log('[VI] Calculate clicked', { handle: linkInput && linkInput.value, role: roleSelect && roleSelect.value, goal: goalSelect && goalSelect.value });
+      startAudit();
+    });
+  }
+  if (linkInput) {
+    linkInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAudit(); });
+  }
 
   /* ─────────── Custom popover Picker — replaces the native <select>s ─────────── */
   class Picker {
