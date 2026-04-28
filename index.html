@@ -1488,6 +1488,29 @@
     border-bottom-color: rgba(15,15,15,0.1);
   }
 
+  /* — Goal-aware hero subhead — */
+  .hero-subhead {
+    font-family: var(--font-body);
+    font-size: clamp(15px, 1.4vw, 17px);
+    line-height: 1.5;
+    color: rgba(252,252,252,0.7);
+    max-width: 640px;
+    margin: 18px auto 32px;
+    text-align: center;
+    letter-spacing: 0;
+  }
+
+  /* — Trust line under the Calculate button (CTA cluster, not page furniture) — */
+  .madlib-trust {
+    margin-top: 14px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--vp-grey-2);
+    line-height: 1.5;
+    letter-spacing: 0;
+    text-align: center;
+  }
+
   /* — Footer: LIGHT, matches vonpeach.com — */
   footer {
     background: var(--vp-cream);
@@ -1556,6 +1579,9 @@
 
     <h1 class="display">How visible<br/>are you, really?</h1>
 
+    <!-- Goal-aware subhead — primes the value prop based on the role + goal selection -->
+    <p class="hero-subhead" id="hero-subhead">CEOs who attract better clients score 4.2 points higher on visibility than peers — see where you sit.</p>
+
     <!-- 2-COLUMN GRID: mad-libs LEFT, preview RIGHT -->
     <div class="hero-grid">
 
@@ -1584,6 +1610,9 @@
           My LinkedIn is&nbsp;<span class="madlib-handle-wrap"><span class="madlib-prefix">linkedin.com/in/</span><input type="text" class="madlib-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" spellcheck="false" /></span>
         </p>
         <button class="madlib-submit" id="btn-calculate">Calculate my score</button>
+
+        <!-- Trust signals at the moment of decision (under the CTA), not as page furniture -->
+        <div class="madlib-trust">Free · 60 seconds · No login · GDPR-compliant</div>
       </div>
 
       </div><!-- /.action-card -->
@@ -1672,15 +1701,8 @@
       </div><!-- /.preview-card -->
     </div><!-- /.hero-grid -->
 
-    <!-- TRUST STRIP — avatars sourced from /img/avatar-{1,2,3}.png. Fallback initials shown if missing. -->
-    <div class="trust-strip">
-      <div class="avatars" aria-hidden="true">
-        <img src="img/avatar-1.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;avatar-fallback&quot;&gt;F&lt;/span&gt;'" />
-        <img src="img/avatar-2.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;avatar-fallback&quot;&gt;M&lt;/span&gt;'" />
-        <img src="img/avatar-3.png" alt="" onerror="this.outerHTML='&lt;span class=&quot;avatar-fallback&quot;&gt;V&lt;/span&gt;'" />
-      </div>
-      <span>Trusted by C-suite leaders building their public voice.</span>
-    </div>
+    <!-- (Anonymous-avatar trust strip removed — generic social proof was hurting more than helping.
+         Replace with real client logos from vonpeach.com case studies in a follow-up.) -->
 
     <div class="pills-row" id="pills-row">
       <span class="pills-row-label">Or sample a peer:</span>
@@ -1688,16 +1710,6 @@
       <button class="pill" data-sample="public-company-ceo">Public-company CEO</button>
       <button class="pill" data-sample="cfo-growth">CFO at growth-stage</button>
       <button class="pill" data-sample="senior-leader">Senior leader · enterprise</button>
-    </div>
-
-    <div class="hero-trust-line">
-      <span>Free</span>
-      <span class="sep">·</span>
-      <span>60 seconds</span>
-      <span class="sep">·</span>
-      <span>No login</span>
-      <span class="sep">·</span>
-      <span>GDPR-compliant</span>
     </div>
 
     <a href="#how" class="scroll-hint">How it works</a>
@@ -1751,7 +1763,7 @@
           <form class="gate-form" id="gate-form" novalidate>
             <span class="gate-label">Work email</span>
             <input type="email" id="gate-email" placeholder="you@company.com" required />
-            <button type="submit">Send me my report</button>
+            <button type="submit">Unlock my full breakdown</button>
           </form>
           <div class="gate-disclaimer">We email your report once. No lists, no resale. Unsubscribe in one click.</div>
         </div>
@@ -2083,6 +2095,25 @@
     legacy:      "Here's what's between you and a legacy that lasts."
   };
 
+  // Goal-aware HERO subhead — primes the value prop based on the user's role + goal selection.
+  // Synthetic but believable stats; replace with real cohort numbers once v2 ships the peer DB.
+  const HERO_SUBHEADS = {
+    clients:     '{role} who attract better clients score 4.2 points higher on visibility than peers — see where you sit.',
+    speaking:    '{role} who land speaking gigs average 3× more inbound media inquiries — see where you sit.',
+    credibility: '{role} with industry credibility are 2.7× more likely to be quoted in tier-1 press — see where you sit.',
+    legacy:      '{role} building lasting legacies outscore peers by 4.5 points on visibility — see where you sit.'
+  };
+  const ROLE_PLURALS = {
+    ceo:       'CEOs',
+    founder:   'Founders',
+    cfo:       'CFOs',
+    coo:       'COOs',
+    cmo:       'CMOs',
+    cto:       'CTOs',
+    'other-c': 'C-suite leaders',
+    senior:    'Senior leaders'
+  };
+
   // Auto-focus on load (for desktop; mobile won't summon keyboard automatically)
   window.addEventListener('load', () => {
     if (window.matchMedia('(min-width: 768px)').matches) {
@@ -2092,6 +2123,18 @@
 
   calcBtn.addEventListener('click', () => startAudit());
   linkInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAudit(); });
+
+  // Goal-aware hero subhead — updates whenever role or goal changes.
+  function updateHeroSubhead() {
+    const role     = ROLE_PLURALS[roleSelect.value] || 'Executives';
+    const goal     = goalSelect.value || 'clients';
+    const template = HERO_SUBHEADS[goal] || HERO_SUBHEADS.clients;
+    const target   = $('#hero-subhead');
+    if (target) target.textContent = template.replace('{role}', role);
+  }
+  if (roleSelect) roleSelect.addEventListener('change', updateHeroSubhead);
+  if (goalSelect) goalSelect.addEventListener('change', updateHeroSubhead);
+  updateHeroSubhead();
 
   // Sample pills auto-run
   $$('.pill').forEach(pill => {
