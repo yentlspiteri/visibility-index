@@ -81,7 +81,9 @@ export default async function handler(req, res) {
   let emailDelivered = false;
   if (pdfBase64 && process.env.RESEND_API_KEY) {
     try {
-      const fromAddress = process.env.RESEND_FROM || 'Von Peach <onboarding@resend.dev>';
+      // Defaults to a vonpeach.com sender now that the domain is verified on Resend.
+      // Override via RESEND_FROM env var on Vercel if you want a different name/address.
+      const fromAddress = process.env.RESEND_FROM || 'Visibility Index <hello@vonpeach.com>';
       const firstName   = profile?.firstName || '';
       const tierName    = tier?.name || 'your tier';
       const subject     = `${firstName ? firstName + ', y' : 'Y'}our Visibility Index report`;
