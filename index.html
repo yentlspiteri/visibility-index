@@ -1716,6 +1716,245 @@
     border-bottom-color: rgba(15,15,15,0.1);
   }
 
+  /* ─────────── Editorial prose form (replaces mad-libs) ─────────── */
+  .audit-prose {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3.4vw, 44px);
+    line-height: 1.35;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: rgba(252,252,252,0.92);
+    margin: 0 0 14px;
+    text-align: left;
+  }
+  /* Inline picker trigger — text with a purple underline, not a chip */
+  .picker-trigger--inline {
+    display: inline-flex;
+    align-items: baseline;
+    background: transparent;
+    color: var(--vp-lavender);
+    border: 0;
+    border-bottom: 2px solid var(--vp-lavender);
+    border-radius: 0;
+    font: inherit;
+    font-weight: 600;
+    padding: 0 6px 2px;
+    margin: 0 2px;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .picker-trigger--inline:hover {
+    background: rgba(134,131,229,0.16);
+    color: var(--vp-white);
+    transform: none;
+    box-shadow: none;
+  }
+  .picker-trigger--inline:focus-visible {
+    outline: 0;
+    background: rgba(134,131,229,0.18);
+    color: var(--vp-white);
+    box-shadow: 0 0 0 3px rgba(134,131,229,0.32);
+  }
+  .picker-trigger--inline[aria-expanded="true"] {
+    background: rgba(134,131,229,0.22);
+    color: var(--vp-white);
+    box-shadow: none;
+  }
+  .picker-trigger--inline .picker-chevron { display: none; }
+
+  .audit-prefix {
+    color: rgba(252,252,252,0.5);
+    font-weight: 400;
+  }
+  .audit-input {
+    display: inline-block;
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid var(--vp-lavender);
+    border-radius: 0;
+    padding: 0 6px 2px;
+    font: inherit;
+    font-weight: 600;
+    color: var(--vp-lavender);
+    outline: none;
+    width: 14ch;
+    transition: background .15s ease, color .15s ease;
+  }
+  .audit-input:hover { background: rgba(134,131,229,0.14); }
+  .audit-input:focus { background: rgba(134,131,229,0.18); color: var(--vp-white); }
+  .audit-input::placeholder { color: rgba(134,131,229,0.55); font-weight: 500; }
+
+  .audit-submit {
+    margin-top: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--vp-white);
+    color: var(--vp-deep-black, #0c0b09);
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    border: 0;
+    border-radius: 999px;
+    padding: 18px 32px;
+    cursor: pointer;
+    transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+  .audit-submit:hover {
+    transform: translateY(-1px);
+    background: var(--vp-ice);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.24);
+  }
+  .audit-submit::after { content: "→"; font-size: 18px; transition: transform .2s ease; }
+  .audit-submit:hover::after { transform: translateX(4px); }
+
+  .audit-trust {
+    margin-top: 22px;
+    font-size: 13px;
+    color: rgba(252,252,252,0.55);
+    letter-spacing: 0.02em;
+  }
+
+  /* Loading panel — now inside action-card (preview-card was removed) */
+  .action-card .loading-panel {
+    padding: 8px 0;
+  }
+  .action-card .loading-panel.hidden { display: none; }
+  .action-card .loading-panel .loading-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--vp-white);
+    margin-bottom: 6px;
+  }
+  .action-card .loading-panel .loading-subtitle {
+    color: rgba(252,252,252,0.65);
+    font-size: 14px;
+    margin-bottom: 22px;
+  }
+  .action-card .loading-panel .loading-list {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .action-card .loading-panel .loading-row {
+    background: rgba(252,252,252,0.04);
+    border-color: rgba(252,252,252,0.06);
+    color: rgba(252,252,252,0.6);
+  }
+  .action-card .loading-panel .loading-row.running {
+    background: rgba(134,131,229,0.12);
+    border-color: rgba(134,131,229,0.3);
+    color: var(--vp-white);
+  }
+  .action-card .loading-panel .loading-row .loading-icon::before {
+    border-color: rgba(252,252,252,0.25);
+  }
+  .action-card .loading-panel .loading-row.running .loading-icon::before {
+    border-color: var(--vp-lavender);
+    border-top-color: transparent;
+  }
+  .action-card .loading-panel .loading-row.done .loading-icon::before {
+    background: var(--vp-lavender);
+    border-color: var(--vp-lavender);
+  }
+
+  /* ─────────── Score reveal (moved into results-wrap, was preview-result) ─────────── */
+  .score-reveal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 20px auto 56px;
+    max-width: 640px;
+  }
+  .score-reveal-greeting {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .score-reveal-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(134,131,229,0.2);
+    border: 2px solid rgba(134,131,229,0.4);
+  }
+  .score-reveal-avatar:not([src]),
+  .score-reveal-avatar[src=""] { display: none; }
+  .score-reveal-greeting-text {
+    display: flex; flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
+  .score-reveal-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+  }
+  .score-reveal-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--vp-white);
+    letter-spacing: -0.015em;
+  }
+  .score-reveal-ring {
+    position: relative;
+    width: 280px; height: 280px;
+    margin-bottom: 24px;
+  }
+  .score-reveal-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-reveal-ring .ring-bg { fill: none; stroke: rgba(252,252,252,0.08); stroke-width: 14; }
+  .score-reveal-ring .ring-fg {
+    fill: none;
+    stroke: url(#ringGradient);
+    stroke-width: 14;
+    stroke-linecap: round;
+    transition: stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);
+  }
+  .score-reveal-ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-reveal-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 96px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--vp-white);
+  }
+  .score-reveal-suffix {
+    font-size: 18px;
+    color: rgba(252,252,252,0.55);
+    margin-top: 8px;
+  }
+  .score-reveal-tier-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(32px, 4vw, 48px);
+    letter-spacing: -0.02em;
+    color: var(--vp-white);
+    margin-bottom: 12px;
+  }
+  .score-reveal-tier-tagline {
+    font-style: italic;
+    color: var(--vp-lavender);
+    font-size: 17px;
+    line-height: 1.5;
+    max-width: 480px;
+  }
+
   /* — Preview greeting (avatar + first name above the score ring) — */
   .preview-greeting {
     display: flex;
@@ -2193,17 +2432,15 @@
     <p class="hero-subhead" id="hero-subhead">CEOs who attract better clients score 4.2 points higher on visibility than peers — see where you sit.</p>
 
     <!-- 2-COLUMN GRID: mad-libs LEFT, preview RIGHT -->
-    <div class="hero-grid">
+    <!-- Single full-width action area: editorial prose form + loading panel.
+         Preview card (Visibility Ladder) removed; score reveal moved to the top of the results section. -->
+    <div class="action-card" id="action-card">
 
-      <!-- LEFT: action card with the mad-libs sentence -->
-      <div class="action-card" id="action-card">
-
-        <div class="input-panel" id="input-panel">
-        <p class="madlib">
-          Audit my visibility as a&nbsp;<span class="picker" data-picker-name="role">
-            <button type="button" class="picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Your role">
+      <div class="input-panel" id="input-panel">
+        <p class="audit-prose">
+          I'm a&nbsp;<span class="picker" data-picker-name="role">
+            <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your role">
               <span class="picker-label" data-picker-label>CEO</span>
-              <svg class="picker-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             </button>
             <div class="picker-popover" role="listbox" aria-label="Choose your role">
               <button type="button" class="picker-option" role="option" data-value="ceo" aria-selected="true">CEO</button>
@@ -2226,9 +2463,8 @@
               <option value="senior">Senior leader</option>
             </select>
           </span>&nbsp;who wants to&nbsp;<span class="picker" data-picker-name="goal">
-            <button type="button" class="picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Your goal">
+            <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your goal">
               <span class="picker-label" data-picker-label>attract better clients &amp; investors</span>
-              <svg class="picker-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             </button>
             <div class="picker-popover" role="listbox" aria-label="Choose your goal">
               <button type="button" class="picker-option" role="option" data-value="clients" aria-selected="true">attract better clients &amp; investors</button>
@@ -2244,107 +2480,32 @@
             </select>
           </span>.
         </p>
-        <p class="madlib">
-          My LinkedIn is&nbsp;<span class="madlib-handle-wrap"><span class="madlib-prefix">linkedin.com/in/</span><input type="text" class="madlib-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" spellcheck="false" /></span>
-        </p>
-        <button class="madlib-submit" id="btn-calculate">Calculate my score</button>
 
-        <!-- Trust signals at the moment of decision (under the CTA), not as page furniture -->
-        <div class="madlib-trust">Free · 60 seconds · No login · GDPR-compliant</div>
+        <p class="audit-prose">
+          You can find me at&nbsp;<span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" spellcheck="false" />
+        </p>
+
+        <button type="button" class="audit-submit" id="btn-calculate">Calculate my score</button>
+
+        <div class="audit-trust">Free · 60 seconds · No login · GDPR-compliant</div>
       </div>
 
-      </div><!-- /.action-card -->
+      <div class="loading-panel hidden" id="loading-panel">
+        <div class="loading-title">Running the audit…</div>
+        <div class="loading-subtitle">Six dimensions, public signals only.</div>
+        <ul class="loading-list" id="loading-list">
+          <li class="loading-row" data-step="0"><span class="loading-icon"></span><span>Verifying LinkedIn profile</span></li>
+          <li class="loading-row" data-step="1"><span class="loading-icon"></span><span>Mapping digital footprint</span></li>
+          <li class="loading-row" data-step="2"><span class="loading-icon"></span><span>Scoring brand clarity</span></li>
+          <li class="loading-row" data-step="3"><span class="loading-icon"></span><span>Reading authority signals</span></li>
+          <li class="loading-row" data-step="4"><span class="loading-icon"></span><span>Measuring content cadence</span></li>
+          <li class="loading-row" data-step="5"><span class="loading-icon"></span><span>Auditing visual identity</span></li>
+          <li class="loading-row" data-step="6"><span class="loading-icon"></span><span>Calculating network recognition</span></li>
+          <li class="loading-row" data-step="7"><span class="loading-icon"></span><span>Computing your Visibility Index</span></li>
+        </ul>
+      </div>
 
-      <!-- RIGHT: preview card — ladder pre-audit, loading during, result after -->
-      <div class="preview-card" id="preview-card">
-
-        <!-- State A: tier ladder (default) -->
-        <div class="preview-ladder" id="preview-ladder">
-          <div class="preview-eyebrow">The Visibility Ladder</div>
-          <div class="ladder">
-            <div class="ladder-row">
-              <span class="ladder-icon">★</span>
-              <div class="ladder-text">
-                <div class="ladder-name">The Recognised Leader</div>
-                <div class="ladder-tag">Strong brand. Legacy-level.</div>
-              </div>
-              <span class="ladder-score">16–18</span>
-            </div>
-            <div class="ladder-row">
-              <span class="ladder-icon">↗</span>
-              <div class="ladder-text">
-                <div class="ladder-name">The Emerging Authority</div>
-                <div class="ladder-tag">Solid foundations. Time to scale.</div>
-              </div>
-              <span class="ladder-score">11–15</span>
-            </div>
-            <div class="ladder-row">
-              <span class="ladder-icon">◐</span>
-              <div class="ladder-text">
-                <div class="ladder-name">The Rising Voice</div>
-                <div class="ladder-tag">Building momentum, gaps remain.</div>
-              </div>
-              <span class="ladder-score">6–10</span>
-            </div>
-            <div class="ladder-row">
-              <span class="ladder-icon">○</span>
-              <div class="ladder-text">
-                <div class="ladder-name">The Hidden Gem</div>
-                <div class="ladder-tag">Real expertise, hidden.</div>
-              </div>
-              <span class="ladder-score">0–5</span>
-            </div>
-          </div>
-          <p class="ladder-prompt">Where will you land?</p>
-        </div>
-
-        <!-- State B: loading -->
-        <div class="preview-loading" id="preview-loading">
-          <div class="preview-eyebrow">Running the audit</div>
-          <ul class="loading-list" id="loading-list">
-            <li class="loading-row" data-step="0"><span class="loading-icon"></span><span>Verifying LinkedIn profile</span></li>
-            <li class="loading-row" data-step="1"><span class="loading-icon"></span><span>Mapping digital footprint</span></li>
-            <li class="loading-row" data-step="2"><span class="loading-icon"></span><span>Scoring brand clarity</span></li>
-            <li class="loading-row" data-step="3"><span class="loading-icon"></span><span>Reading authority signals</span></li>
-            <li class="loading-row" data-step="4"><span class="loading-icon"></span><span>Measuring content cadence</span></li>
-            <li class="loading-row" data-step="5"><span class="loading-icon"></span><span>Auditing visual identity</span></li>
-            <li class="loading-row" data-step="6"><span class="loading-icon"></span><span>Calculating network recognition</span></li>
-            <li class="loading-row" data-step="7"><span class="loading-icon"></span><span>Computing your Visibility Index</span></li>
-          </ul>
-        </div>
-
-        <!-- State C: result -->
-        <div class="preview-result" id="preview-result">
-          <div class="preview-greeting" id="preview-greeting">
-            <img class="preview-avatar" id="preview-avatar" src="" alt="" />
-            <div class="preview-greeting-text">
-              <span class="preview-greeting-eyebrow">Your Visibility Index</span>
-              <span class="preview-name" id="preview-name">—</span>
-            </div>
-          </div>
-          <div class="preview-ring">
-            <svg viewBox="0 0 220 220">
-              <defs>
-                <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#3F36B2"/>
-                  <stop offset="100%" stop-color="#8683E5"/>
-                </linearGradient>
-              </defs>
-              <circle class="ring-bg" cx="110" cy="110" r="96" />
-              <circle class="ring-fg" id="ring-fg" cx="110" cy="110" r="96" stroke-dasharray="0 600" />
-            </svg>
-            <div class="preview-ring-center">
-              <div class="preview-score-num" id="score-num">0</div>
-              <div class="preview-score-suffix">/ 18</div>
-            </div>
-          </div>
-          <div class="preview-tier-name" id="tier-name">—</div>
-          <div class="preview-tier-tagline" id="tier-tagline">—</div>
-          <button class="preview-cta" id="tier-cta">See full report</button>
-        </div>
-
-      </div><!-- /.preview-card -->
-    </div><!-- /.hero-grid -->
+    </div><!-- /.action-card -->
 
     <!-- (Anonymous-avatar trust strip removed — generic social proof was hurting more than helping.
          Replace with real client logos from vonpeach.com case studies in a follow-up.) -->
@@ -2383,6 +2544,36 @@
     <div class="results-eyebrow-row">
       <span class="dot"></span>
       <span class="eyebrow">Your result</span>
+    </div>
+
+    <!-- Score reveal at the top of results (moved from preview-card; IDs preserved so JS still works) -->
+    <div class="score-reveal" id="score-reveal">
+      <div class="score-reveal-greeting">
+        <img class="score-reveal-avatar" id="preview-avatar" src="" alt="" />
+        <div class="score-reveal-greeting-text">
+          <span class="score-reveal-eyebrow">Your Visibility Index</span>
+          <span class="score-reveal-name" id="preview-name">—</span>
+        </div>
+      </div>
+      <div class="score-reveal-ring">
+        <svg viewBox="0 0 280 280">
+          <defs>
+            <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#3F36B2"/>
+              <stop offset="100%" stop-color="#8683E5"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="140" cy="140" r="120" />
+          <circle class="ring-fg" id="ring-fg" cx="140" cy="140" r="120" stroke-dasharray="0 754" />
+        </svg>
+        <div class="score-reveal-ring-center">
+          <div class="score-reveal-num" id="score-num">0</div>
+          <div class="score-reveal-suffix">/ 18</div>
+        </div>
+      </div>
+      <div class="score-reveal-tier-name" id="tier-name">—</div>
+      <div class="score-reveal-tier-tagline" id="tier-tagline">—</div>
+      <span class="hidden" id="tier-cta"></span>
     </div>
 
     <!-- Personalized analysis (Claude-generated from real LinkedIn profile data) -->
@@ -2771,9 +2962,7 @@
   /* ────────── Flow ────────── */
   const actionCard     = $('#action-card');
   const inputPanel     = $('#input-panel');
-  const previewLadder  = $('#preview-ladder');
-  const previewLoading = $('#preview-loading');
-  const previewResult  = $('#preview-result');
+  const loadingPanel   = $('#loading-panel');
   const calcBtn        = $('#btn-calculate');
   const linkInput      = $('#input-linkedin');
   const roleSelect     = $('#ml-role');
@@ -2978,11 +3167,9 @@
     const raw = linkInput.value.trim();
     const normalised = normaliseLinkedIn(raw) || 'demo-profile';
 
-    // Switch the preview card into loading state. Mad-libs stays visible so the user
-    // can change role/goal/handle and re-run — same pattern as FIN's calculator.
-    previewLadder.classList.add('hidden');
-    previewResult.classList.remove('active');
-    previewLoading.classList.add('active');
+    // Action-card transitions: hide the input prose, show the loading list inside the same card
+    inputPanel.classList.add('hidden');
+    loadingPanel.classList.remove('hidden');
 
     // Sample pills — mock data, no API call (so demo costs nothing). Wait for animation
     // to reach the last step, finish it, then reveal.
@@ -3026,10 +3213,9 @@
   }
 
   function showError(msg) {
-    // Reset preview back to the ladder state so the user sees what's at stake again
-    previewLoading.classList.remove('active');
-    previewResult.classList.remove('active');
-    previewLadder.classList.remove('hidden');
+    // Bring the form back so the user can retry
+    loadingPanel.classList.add('hidden');
+    inputPanel.classList.remove('hidden');
     $$('.loading-row').forEach(r => { r.classList.remove('running'); r.classList.remove('done'); });
     let errEl = document.getElementById('hero-error');
     if (!errEl) {
@@ -3074,9 +3260,8 @@
     const results = $('#results');
     results.classList.remove('hidden');
 
-    // Switch preview card from loading → result
-    previewLoading.classList.remove('active');
-    previewResult.classList.add('active');
+    // Hide the loading panel; the score-reveal block lives in the results-wrap section now
+    loadingPanel.classList.add('hidden');
 
     const tier = tierFor(total);
     // Save for the lead capture call + the post-submit reveal
@@ -3137,8 +3322,8 @@
     // Goal-aware gate copy: mirror their stated goal back at them on the unlock card
     $('#gate-cta-line').textContent = GOAL_HEADLINES[lastGoal] || (tier.cta + '.');
 
-    // Smaller ring (r=96) → circumference ≈ 603.2
-    const circumference = 603.2;
+    // Score reveal ring (r=120) → circumference ≈ 754
+    const circumference = 754;
     const ringDash = (total / 18) * circumference;
     setTimeout(() => {
       $('#ring-fg').setAttribute('stroke-dasharray', `${ringDash} ${circumference}`);
