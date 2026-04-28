@@ -540,16 +540,59 @@
   .leaderboard-card h2 { margin-bottom: 8px; }
   .leaderboard-card .lede { margin-bottom: 28px; max-width: 540px; }
 
-  .leaderboard-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .leaderboard-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
   .leaderboard-row {
     display: grid;
-    grid-template-columns: 60px 1fr auto;
+    grid-template-columns: 48px 48px 1fr auto;
     align-items: center;
     gap: 16px;
-    padding: 14px 18px;
-    border-radius: 12px;
-    background: rgba(252,252,252,0.02);
-    border: 1px solid rgba(252,252,252,0.04);
+    padding: 18px 22px;
+    border-radius: 16px;
+    background: rgba(252,252,252,0.03);
+    border: 1px solid rgba(252,252,252,0.06);
+  }
+  .leaderboard-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--vp-white);
+    letter-spacing: 0.04em;
+  }
+  .leaderboard-avatar-img { object-fit: cover; }
+  .leaderboard-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .leaderboard-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--vp-white);
+    line-height: 1.2;
+  }
+  .leaderboard-sub {
+    font-size: 12px;
+    color: rgba(252,252,252,0.55);
+    line-height: 1.4;
+  }
+  .leaderboard-standout {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--vp-lavender);
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+  .leaderboard-score-of {
+    font-size: 13px;
+    color: rgba(252,252,252,0.45);
+    font-weight: 500;
+    margin-left: 2px;
   }
   .leaderboard-row.you {
     background: rgba(63,54,178,0.18);
@@ -1770,6 +1813,49 @@
     color: var(--vp-lavender);
   }
 
+  /* — Personal-card CTA (in the score-reveal block, jumps to the email gate) — */
+  .personal-cta-row {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(252,252,252,0.08);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .personal-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--vp-white);
+    color: var(--vp-navy);
+    border: 0;
+    border-radius: 999px;
+    height: 52px;
+    padding: 0 26px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+  }
+  .personal-cta:hover {
+    transform: translateY(-1px);
+    background: var(--vp-ice);
+  }
+  .personal-cta::after {
+    content: "→";
+    font-size: 18px;
+    transition: transform .2s ease;
+  }
+  .personal-cta:hover::after { transform: translateX(4px); }
+  .personal-cta-hint {
+    font-size: 13px;
+    color: rgba(252,252,252,0.6);
+    line-height: 1.4;
+  }
+
   /* — Methodology section: friendly grid + image — */
   .method-image {
     width: 100%;
@@ -2099,14 +2185,24 @@
         <div class="personal-teasers-label">Your full report digs into:</div>
         <ul id="personal-teasers"></ul>
       </div>
+      <div class="personal-cta-row">
+        <button type="button" class="personal-cta" id="personal-cta">
+          Get my full PDF report
+        </button>
+        <span class="personal-cta-hint">Free · arrives in your inbox · 4-page strategic memo</span>
+      </div>
     </div>
 
     <div class="subscores" id="subscores"><!-- populated by JS --></div>
 
     <div class="leaderboard-wrap locked" id="leaderboard-wrap">
       <div class="leaderboard-card">
-        <h2 class="h2">Your peer leaderboard</h2>
-        <p class="lede">A live snapshot of the top 10 in your cohort, plus your position in the full ranking.</p>
+        <div class="eyebrow-row" style="margin-bottom: 14px;">
+          <span class="dot"></span>
+          <span class="eyebrow">Top 3 in your network</span>
+        </div>
+        <h2 class="h2">Three executives ahead of you.</h2>
+        <p class="lede">Same role, same cohort, slightly higher up. Each one crushes a dimension you don't — yet.</p>
         <ul class="leaderboard-list" id="leaderboard"><!-- populated by JS --></ul>
       </div>
       <div class="gate" id="gate">
@@ -2807,36 +2903,93 @@
     return Math.max(1, Math.min(cohort, Math.round(pct * cohort) + jitter));
   }
 
+  /* — Top 3 peer pool. Pseudonymous names (first name + last initial), varied region/industry/standout.
+       Each row's "standout" maps to one of the six dimensions, so the trio teaches three different
+       wins. Selected deterministically from the user's profile so the same user sees the same peers. — */
+  const PEER_POOL = [
+    { name:'Lina K.',  initials:'LK', role:'Founder',     stage:'Series C',  region:'DACH',     score:17, dim:'cadence',   standout:'Posts every Tuesday — 47-week streak.' },
+    { name:'M. Patel', initials:'MP', role:'CFO',         stage:'Public',    region:'UK',       score:16, dim:'authority', standout:'Quoted in 12 tier-1 publications this year.' },
+    { name:'S. Müller',initials:'SM', role:'COO',         stage:'Series B',  region:'DACH',     score:15, dim:'network',   standout:'63k engaged followers, 2.4k average reactions.' },
+    { name:'A. Chen',  initials:'AC', role:'CMO',         stage:'Public',    region:'US',       score:18, dim:'clarity',   standout:'Headline names her audience in five words.' },
+    { name:'R. Okafor',initials:'RO', role:'Founder',     stage:'Series B',  region:'UK',       score:16, dim:'visual',    standout:'On-brand photoshoot + every asset coordinated.' },
+    { name:'D. Rossi', initials:'DR', role:'CEO',         stage:'Established',region:'EU',      score:17, dim:'footprint', standout:'Owns position 1 on Google for her thesis.' },
+    { name:'J. Hansen',initials:'JH', role:'CTO',         stage:'Series C',  region:'Nordics',  score:15, dim:'cadence',   standout:'Twice-weekly long-form essays on systems.' },
+    { name:'K. Singh', initials:'KS', role:'Founder',     stage:'Series A',  region:'US',       score:16, dim:'authority', standout:'Two TEDx talks plus a podcast residency.' }
+  ];
+
+  // Deterministic 3-peer pick: pull peers whose "standout" dimension matches the user's WEAKEST 3 sub-scores.
+  // Falls back to random pool selection if subs aren't available.
+  function pickTopThreePeers(subs, seedKey) {
+    const dims = ['footprint','clarity','authority','cadence','visual','network'];
+    const scored = subs && Object.keys(subs).length
+      ? dims.slice().sort((a, b) => (subs[a] || 0) - (subs[b] || 0))   // weakest first
+      : dims;
+    const wantedDims = scored.slice(0, 3);
+    const rand = pseudoRand(hashStr(seedKey || 'top3'));
+
+    const picks = [];
+    for (const d of wantedDims) {
+      const candidates = PEER_POOL.filter(p => p.dim === d && !picks.includes(p));
+      if (candidates.length) picks.push(candidates[Math.floor(rand() * candidates.length)]);
+    }
+    // Pad if any dimension had no match
+    while (picks.length < 3) {
+      const rest = PEER_POOL.filter(p => !picks.includes(p));
+      picks.push(rest[Math.floor(rand() * rest.length)]);
+    }
+    // Sort by score descending so the leaderboard reads top-down
+    return picks.sort((a, b) => b.score - a.score);
+  }
+
+  // Stable pastel gradient per peer for the avatar circle
+  function gradientForName(name) {
+    const palettes = [
+      ['#3F36B2','#8683E5'],
+      ['#0B0359','#3F36B2'],
+      ['#8683E5','#EBF0FF'],
+      ['#01565E','#67D6C1'],
+      ['#99112F','#FD8839'],
+      ['#5B5B02','#CCCC69']
+    ];
+    return palettes[hashStr(name) % palettes.length];
+  }
+
   function renderLeaderboard(userRank, cohort, userScore) {
-    const stages = ['Series C+','Public','Established','Series B','Growth-stage','Series A'];
-    const rand = pseudoRand(hashStr('top10'));
-    const top = [];
-    for (let i = 1; i <= 10; i++) {
-      const s = 18 - Math.floor(rand() * 4) - Math.floor(i / 3);
-      const stage = stages[Math.floor(rand() * stages.length)];
-      top.push({ rank: i, label: `C-suite · ${stage}`, score: Math.max(13, s) });
-    }
-    let rows = top.map(p => `
-      <li class="leaderboard-row">
-        <span class="leaderboard-rank">#${p.rank}</span>
-        <span class="leaderboard-meta">${p.label}</span>
-        <span class="leaderboard-score">${p.score} / 18</span>
-      </li>
-    `).join('');
-    if (userRank > 10) {
-      rows += `
-        <li class="leaderboard-row" style="opacity:0.4">
-          <span class="leaderboard-rank">···</span>
-          <span class="leaderboard-meta">${userRank - 11} others between</span>
-          <span class="leaderboard-score">···</span>
-        </li>
-        <li class="leaderboard-row you">
-          <span class="leaderboard-rank">#${userRank}</span>
-          <span class="leaderboard-meta">You · in your cohort</span>
-          <span class="leaderboard-score">${userScore} / 18</span>
+    const peers = pickTopThreePeers(lastSubs, lastUrl || 'top3');
+    const profileFirst = (lastProfile && lastProfile.firstName) || 'You';
+    const profilePic   = (lastProfile && lastProfile.pictureUrl) || '';
+
+    const peerRows = peers.map((p, i) => {
+      const [c1, c2] = gradientForName(p.name);
+      return `
+        <li class="leaderboard-row">
+          <span class="leaderboard-rank">#${i + 1}</span>
+          <span class="leaderboard-avatar" style="background: linear-gradient(135deg, ${c1}, ${c2});" aria-hidden="true">${p.initials}</span>
+          <span class="leaderboard-meta">
+            <span class="leaderboard-name">${p.name}</span>
+            <span class="leaderboard-sub">${p.role} · ${p.stage} · ${p.region}</span>
+            <span class="leaderboard-standout">↑ ${p.standout}</span>
+          </span>
+          <span class="leaderboard-score">${p.score} <span class="leaderboard-score-of">/ 18</span></span>
         </li>`;
-    }
-    $('#leaderboard').innerHTML = rows;
+    }).join('');
+
+    const youAvatar = profilePic
+      ? `<img class="leaderboard-avatar leaderboard-avatar-img" src="${profilePic}" alt="" aria-hidden="true" />`
+      : `<span class="leaderboard-avatar" style="background: linear-gradient(135deg, #3F36B2, #8683E5);" aria-hidden="true">${(profileFirst[0] || 'Y').toUpperCase()}</span>`;
+
+    const youRow = `
+      <li class="leaderboard-row you">
+        <span class="leaderboard-rank">YOU</span>
+        ${youAvatar}
+        <span class="leaderboard-meta">
+          <span class="leaderboard-name">${profileFirst}</span>
+          <span class="leaderboard-sub">in your cohort</span>
+        </span>
+        <span class="leaderboard-score">${userScore} <span class="leaderboard-score-of">/ 18</span></span>
+      </li>`;
+
+    $('#leaderboard').innerHTML = peerRows + youRow;
   }
 
   /* ────────── Reveal the post-submit "Three moves" section + tier roadmap + CTAs ────────── */
@@ -2911,6 +3064,19 @@
     // Reveal + scroll
     section.classList.remove('hidden');
     setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }
+
+  // The "Get my full PDF report" button inside the personal-card → scroll to the gate + focus email
+  const personalCta = $('#personal-cta');
+  if (personalCta) {
+    personalCta.addEventListener('click', () => {
+      const target = $('#leaderboard-wrap');
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        const emailField = $('#gate-email');
+        if (emailField) emailField.focus();
+      }, 700);
+    });
   }
 
   // Decode base64 → Blob → trigger browser download of the PDF report
