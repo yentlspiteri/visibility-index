@@ -12,20 +12,20 @@
 <meta name="theme-color" content="#3F36B2" />
 
 <!-- ─────────── GOOGLE ANALYTICS 4 ───────────
-     Replace G-XXXXXXXXXX with your real Measurement ID from analytics.google.com.
-     Setup: Admin → Data Streams → Add Stream → Web → enter https://index.vonpeach.com → copy ID.
+     Measurement ID: G-2MKY8VPQBF (vonpeach.com property, web stream for index.vonpeach.com).
+     Setup ref: Admin → Data Streams → Web → https://index.vonpeach.com.
      Tracks page views automatically + custom events fired by track() in the page JS:
        - audit_started     (Calculate clicked)
        - audit_completed   (score lands; includes tier + score)
        - lead_captured     (email submitted; includes tier + role + goal)
        - cta_calendly      (Calendly link clicked)
        - report_downloaded (PDF downloaded after lead capture) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2MKY8VPQBF"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXXXX', {
+  gtag('config', 'G-2MKY8VPQBF', {
     'cookie_domain': '.vonpeach.com',
     'cookie_flags':  'SameSite=None;Secure'
   });
