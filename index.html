@@ -2135,6 +2135,7 @@
   .action-card .loading-panel .loading-list {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;     /* center the chips horizontally */
     gap: 8px;
     list-style: none;
     padding: 0;
@@ -3267,7 +3268,23 @@
     gap: 14px;
   }
   @media (max-width: 720px) {
-    .findings-grid { grid-template-columns: 1fr; }
+    .findings { padding: 0 16px; margin: 4px auto 36px; }
+    .findings-grid { grid-template-columns: 1fr; gap: 10px; }
+    .findings-eyebrow { font-size: 10px; letter-spacing: 0.16em; margin-bottom: 16px; }
+    .finding-card { padding: 14px 16px; border-radius: 14px; }
+    .finding-icon { font-size: 16px; margin-bottom: 6px; }
+    .finding-label { font-size: 10px; margin-bottom: 4px; }
+    .finding-value { font-size: 15px; line-height: 1.3; }
+    .finding-sub { font-size: 12px; margin-top: 4px; }
+    /* On the wide press card, truncate the article title aggressively so cards don't tower */
+    .finding-card.is-wide .finding-sub {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    /* Disable the hover-lift on touch (prevents sticky hover state on tap) */
+    .finding-card:hover { transform: none; }
   }
   .finding-card {
     background: rgba(252,252,252,0.04);
@@ -4366,7 +4383,7 @@
       <span class="eyebrow">FutureMakers · Visibility Index</span>
     </div>
 
-    <h1 class="display">How visible<br/>are you, really?</h1>
+    <h1 class="display">How visible are you, really?</h1>
 
     <!-- Goal-aware subhead - primes the value prop based on the role + goal selection -->
     <p class="hero-subhead" id="hero-subhead">The CEOs attracting the right clients are usually the ones easiest to find. See how findable you are.</p>
