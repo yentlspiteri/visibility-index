@@ -1347,6 +1347,175 @@
     vertical-align: top;
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     v0.3 BATCH 2 — Brand integration with vonpeach.com
+     Real tokens audited from www.vonpeach.com (Framer):
+       page bg #fafafa, primary dark #0c0b09, secondary text #666,
+       nav: General Sans 16px/500/0.01em, CTA: bg #0c0b09 / 9px radius
+     Page rhythm becomes: light nav → dark hero → light pillars →
+       dark results → dark circle → light methodology → light footer
+     ════════════════════════════════════════════════════════════════ */
+
+  :root {
+    --vp-cream:      #fafafa;  /* page bg on vonpeach.com */
+    --vp-deep-black: #0c0b09;  /* primary dark, CTAs */
+    --vp-text-grey:  #666666;  /* secondary text, legal line */
+  }
+
+  /* — Nav: light variant matching vonpeach.com — */
+  nav.top {
+    backdrop-filter: none;
+    background: var(--vp-cream);
+    border-bottom: 1px solid rgba(15,15,15,0.08);
+  }
+  nav.top .logo svg g,
+  nav.top .logo svg path {
+    fill: var(--vp-deep-black);
+  }
+  nav.top .container {
+    height: 72px;
+  }
+  nav.top .nav-right {
+    display: flex; align-items: center; gap: 28px;
+  }
+  nav.top .nav-link {
+    color: var(--vp-deep-black);
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  nav.top .nav-link:hover {
+    color: var(--vp-deep-black);
+    opacity: 0.7;
+  }
+  nav.top .nav-cta {
+    display: inline-flex;
+    align-items: center;
+    background: var(--vp-deep-black);
+    color: #fcfcfc;
+    padding: 11px 20px;
+    border-radius: 9px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    text-decoration: none;
+    text-transform: none;
+    transition: background .15s ease, transform .15s ease;
+  }
+  nav.top .nav-cta:hover {
+    background: #1a1815;
+    transform: translateY(-1px);
+    opacity: 1;
+  }
+
+  /* — Section markers (black square + uppercase label, matches vonpeach.com) — */
+  .eyebrow-row .dot,
+  .hero-eyebrow .dot,
+  .results-eyebrow-row .dot,
+  .circle-eyebrow-row .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 1.5px;
+    background: currentColor;
+    box-shadow: none;
+  }
+
+  /* — Pillars section: LIGHT — */
+  .pillars {
+    background: var(--vp-cream);
+    color: var(--vp-deep-black);
+    border-top: 0;
+    border-bottom: 0;
+  }
+  .pillars .pillar {
+    border-right-color: rgba(15,15,15,0.1);
+  }
+  .pillars .pillar:last-child {
+    border-right-color: transparent;
+  }
+  .pillars .pillar .num {
+    color: var(--vp-deep-black);
+    opacity: 0.55;
+  }
+  .pillars .pillar .h3 {
+    color: var(--vp-deep-black);
+  }
+  .pillars .pillar p {
+    color: rgba(15,15,15,0.7);
+  }
+  @media (max-width: 760px) {
+    .pillars .pillar {
+      border-bottom-color: rgba(15,15,15,0.1);
+    }
+  }
+
+  /* — Methodology section: LIGHT — */
+  .method-wrap {
+    background: var(--vp-cream);
+    color: var(--vp-deep-black);
+    border-top: 1px solid rgba(15,15,15,0.08);
+  }
+  .method-wrap .eyebrow {
+    color: var(--vp-deep-black);
+    opacity: 0.7;
+  }
+  .method-wrap .h2 {
+    color: var(--vp-deep-black);
+  }
+  details.method {
+    border-bottom-color: rgba(15,15,15,0.1);
+  }
+  details.method summary {
+    color: var(--vp-deep-black);
+  }
+  details.method summary::after {
+    color: var(--vp-deep-black);
+    opacity: 0.6;
+  }
+  details.method .method-body {
+    color: rgba(15,15,15,0.72);
+  }
+  details.method .method-body th {
+    color: var(--vp-deep-black);
+    opacity: 0.7;
+  }
+  details.method .method-body td {
+    border-bottom-color: rgba(15,15,15,0.1);
+  }
+
+  /* — Footer: LIGHT, matches vonpeach.com — */
+  footer {
+    background: var(--vp-cream);
+    color: var(--vp-text-grey);
+    border-top: 1px solid rgba(15,15,15,0.08);
+  }
+  footer .logo svg g,
+  footer .logo svg path {
+    fill: var(--vp-deep-black);
+    opacity: 1;
+  }
+  footer .footer-links a {
+    color: var(--vp-text-grey);
+  }
+  footer .footer-links a:hover {
+    color: var(--vp-deep-black);
+  }
+  /* The bottom legal line — match the vonpeach.com "VON PEACH GMBH 2026" treatment */
+  footer .footer-legal {
+    color: var(--vp-text-grey);
+    font-family: var(--font-body);
+    font-size: 14px;
+    letter-spacing: 0;
+    margin-top: 32px;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -1371,6 +1540,7 @@
     <div class="nav-right">
       <a href="#methodology" class="nav-link">Methodology</a>
       <a href="#circle" class="nav-link">The Circle</a>
+      <a href="#circle" class="nav-cta">Request an invitation</a>
     </div>
   </div>
 </nav>
@@ -1737,8 +1907,8 @@
         <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
       </div>
     </div>
-    <div style="margin-top:32px; font-size:12px; color:rgba(252,252,252,0.4);">
-      © 2026 Von Peach GmbH · FutureMakers · The Visibility Index — v0.2
+    <div class="footer-legal">
+      VON PEACH GMBH 2026 · FUTUREMAKERS · THE VISIBILITY INDEX
     </div>
   </div>
 </footer>
