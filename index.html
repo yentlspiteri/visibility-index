@@ -24,8 +24,63 @@
     --vp-grey-1:    #ADADAD;
     --vp-grey-2:    #666666;
 
+    /* Both display and body use Aileron — full family loaded via @font-face below.
+       Helvetica Neue fallback covers the brief moment before the OTF weights download. */
     --font-display: 'Aileron', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
-    --font-body:    'General Sans', 'Inter', system-ui, sans-serif;
+    --font-body:    'Aileron', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
+  }
+
+  /* — Aileron family — served from the Fonts/ folder at project root.
+     `font-display: swap` shows system fonts first, swaps to Aileron when ready
+     so the page never renders blank. */
+  @font-face {
+    font-family: 'Aileron';
+    src: url('Fonts/Aileron-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Aileron';
+    src: url('Fonts/Aileron-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Aileron';
+    src: url('Fonts/Aileron-Italic.otf') format('opentype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Aileron';
+    src: url('Fonts/Aileron-SemiBold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Aileron';
+    src: url('Fonts/Aileron-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Aileron';
+    src: url('Fonts/Aileron-Heavy.otf') format('opentype');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Aileron';
+    src: url('Fonts/Aileron-Black.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
