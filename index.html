@@ -3396,6 +3396,15 @@
     padding: 0 !important;
     background: transparent !important;
     pointer-events: none;            /* clicks fall through everywhere except the card */
+    /* Hidden until first scroll - .gate-revealed class is added by JS once the user
+       scrolls past the score reveal. Keeps the score moment uncluttered. */
+    transform: translateY(110%);
+    transition: transform .42s cubic-bezier(.34, 1.56, .64, 1);
+    visibility: hidden;
+  }
+  body.audit-complete.gate-revealed .gate-standalone {
+    transform: translateY(0);
+    visibility: visible;
   }
   body.audit-complete .gate-standalone .gate-card {
     pointer-events: auto;
@@ -4324,6 +4333,261 @@
     /* Extra padding so footer never sits under the sticky CTA */
     body.cta-pin footer { padding-bottom: 96px !important; }
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     MOBILE FINAL POLISH — checklist sweep at 360 / 390 / 414 / 430px
+     One consolidated block. Wins specificity by being the last @media in the file.
+     ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Sticky header height token - referenced for scroll-margin + hero top padding */
+  :root { --header-h: 56px; }
+  @media (min-width: 769px) { :root { --header-h: 180px; } }
+  /* Anchored sections clear the sticky header on jump */
+  #methodology, #circle, #results, #next-moves, #how, #how-it-works {
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+
+  @media (max-width: 768px) {
+    /* Consistent outer gutter via clamp - applies to every container */
+    .container,
+    .container-narrow,
+    .container-action,
+    .container-hero {
+      padding-inline: clamp(16px, 5vw, 24px) !important;
+      max-width: 100% !important;
+    }
+    /* Reduce default 24px to 20px on very narrow */
+    @media (max-width: 480px) {
+      .container, .container-narrow, .container-action, .container-hero {
+        padding-inline: 20px !important;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    /* Hero clears the sticky header on first paint */
+    .hero {
+      padding-top: calc(var(--header-h) + 24px) !important;
+    }
+
+    /* Hero headline: clean wrapping, balanced lines, no orphan */
+    .hero .display {
+      font-size: clamp(2rem, 8vw, 4.5rem) !important;
+      line-height: 1.05 !important;
+      text-wrap: balance;
+      letter-spacing: -0.02em !important;
+    }
+
+    /* Lead paragraph: constrained width, smaller mobile size, AA contrast */
+    .hero-subhead {
+      max-width: 36ch;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: clamp(0.95rem, 4vw, 1.125rem) !important;
+      line-height: 1.5 !important;
+      color: rgba(252, 252, 252, 0.82);   /* >4.5:1 against navy */
+      text-wrap: pretty;
+    }
+
+    /* Form card uniform labels - all three look identical */
+    .input-panel .mobile-label,
+    .input-panel label.mobile-label {
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      color: var(--vp-indigo) !important;
+      margin: 16px 0 6px !important;
+    }
+    .input-panel .mobile-label:first-of-type { margin-top: 4px !important; }
+    .action-card { padding: 20px !important; }
+    .input-panel > * + * { margin-top: 0 !important; }
+    .input-panel > .audit-prose,
+    .input-panel > label + .audit-prose { margin-bottom: 16px !important; }
+
+    /* Inputs/selects 48px tall + 16px font (kills iOS zoom) */
+    .input-panel .picker-trigger--inline,
+    .input-panel .audit-input,
+    .input-panel input[type="text"],
+    .input-panel input[type="email"],
+    .input-panel select {
+      min-height: 48px !important;
+      font-size: 16px !important;
+    }
+
+    /* LinkedIn prefix collision - true input group with prefix as left adornment */
+    .input-panel .audit-prose:has(.audit-input) {
+      position: relative;
+      padding-left: 0 !important;
+    }
+    .input-panel .audit-prefix {
+      padding: 0 0 0 14px !important;
+      font-size: 14px !important;
+      color: rgba(15,15,15,0.55) !important;
+    }
+    .input-panel .audit-input {
+      padding-left: 6px !important;
+    }
+    /* On very narrow phones drop the prefix to a helper line above */
+    @media (max-width: 360px) {
+      .input-panel .audit-prose:has(.audit-input) { display: block !important; }
+      .input-panel .audit-prefix {
+        display: block !important;
+        padding: 0 0 4px 2px !important;
+        font-size: 12px !important;
+      }
+      .input-panel .audit-input {
+        width: 100% !important;
+        padding: 12px 14px !important;
+      }
+    }
+
+    /* Primary CTA: full-width, 56px tall, centered + arrow, same radius as inputs */
+    .audit-submit {
+      width: 100% !important;
+      min-height: 56px !important;
+      padding: 0 24px !important;
+      border-radius: 12px !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      font-size: 16px !important;
+      letter-spacing: 0.02em !important;
+    }
+    .audit-submit:active { transform: scale(0.98); }
+    .audit-submit:focus-visible { outline: 2px solid var(--vp-lavender); outline-offset: 3px; }
+
+    /* Trust line - centered, wraps with bullet preserved */
+    .audit-trust {
+      display: flex !important;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 10px;
+      font-size: 13px !important;
+      color: rgba(15,15,15,0.5);
+      text-align: center;
+      margin-top: 14px !important;
+    }
+  }
+
+  /* Hexagon: touch awareness — vertices are real buttons via aria, hover hint swaps to tap */
+  @media (pointer: coarse) {
+    .method-hint::before { content: attr(data-tap-text) !important; }
+  }
+  .method-diagram .hex-vertex {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .method-diagram .hex-vertex:focus-visible .hex-node {
+    stroke: var(--vp-cream);
+    stroke-width: 3;
+    filter: drop-shadow(0 0 0 3px rgba(134,131,229,0.6));
+  }
+
+  /* Loader: 2-col grid on small phones (full-bleed loading already overrides this on mobile,
+     but apply when the chip layout is visible at <=480px on the cream card) */
+  @media (max-width: 480px) {
+    .action-card:not(.is-loading) .loading-panel .loading-list {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+    }
+  }
+
+  /* Result section + email gate: cleaner mobile sizing */
+  @media (max-width: 768px) {
+    .results-wrap .h2,
+    .next-moves-wrap .h2,
+    .method-wrap .h2,
+    .results-summary-title,
+    .gate-card h3 {
+      text-wrap: balance;
+    }
+    .score-reveal-num { font-size: clamp(3.5rem, 18vw, 6rem) !important; }
+    /* Email gate (the static one if NOT in audit-complete sticky mode) */
+    body:not(.audit-complete) .gate-form input[type="email"] {
+      width: 100%;
+      min-height: 48px !important;
+      font-size: 16px !important;
+    }
+    body:not(.audit-complete) .gate-form button[type="submit"] {
+      width: 100%;
+      margin-top: 16px !important;
+      min-height: 48px !important;
+      font-size: 16px !important;
+    }
+  }
+
+  /* Circle section: 4 features stacked + 2x2 stats grid on small phones */
+  @media (max-width: 768px) {
+    .circle-features { display: flex !important; flex-direction: column !important; gap: 24px !important; }
+    .circle-stats {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 12px !important;
+    }
+    .circle-stats > div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(252,252,252,0.04);
+      border: 1px solid rgba(134,131,229,0.18);
+      min-height: 100px;
+    }
+  }
+
+  /* Footer: stacked sections, centered, divider before copyright on small */
+  @media (max-width: 640px) {
+    footer .footer-grid {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 24px !important;
+      text-align: center;
+    }
+    footer .footer-col,
+    footer .footer-col-center,
+    footer .footer-col-right { text-align: center !important; }
+    footer .footer-col ul { gap: 8px !important; }
+    footer .footer-col a,
+    footer .footer-email {
+      display: inline-block;
+      padding: 8px 0;
+      word-break: break-word;
+    }
+    footer .footer-legal-row {
+      border-top: 1px solid rgba(15,15,15,0.10);
+      padding-top: 20px !important;
+      margin-top: 8px !important;
+    }
+  }
+
+  /* Tap targets minimum 44x44 across the board */
+  @media (max-width: 768px) {
+    nav a, nav button,
+    footer a,
+    .nav-link, .nav-cta, .nav-mobile-link, .nav-mobile-cta,
+    .footer-cta, .help-cta,
+    .hex-vertex,
+    .picker-trigger,
+    .picker-option {
+      min-height: 44px;
+    }
+  }
+
+  /* Floating helpers stack bottom-right + safe-area, pointer-events trick lets tap-through happen */
+  .floating-helpers {
+    position: fixed;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom, 12px));
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 90;
+    pointer-events: none;
+  }
+  .floating-helpers > * { pointer-events: auto; }
 </style>
 </head>
 <body>
@@ -4659,42 +4923,42 @@
         </polygon>
 
         <!-- Interactive vertex groups: pulse-ring (decoration) + hit-target + node + labels -->
-        <g class="hex-vertex" data-dim="footprint" tabindex="0">
+        <g class="hex-vertex" data-dim="footprint" tabindex="0" role="button" aria-pressed="false" aria-label="footprint dimension - tap to read more">
           <circle class="hex-pulse-ring" cx="270" cy="90"  r="6"/>
           <circle class="hex-hit"        cx="270" cy="90"  r="34"/>
           <circle class="hex-node"       cx="270" cy="90"  r="7"/>
           <text class="hex-num"   x="270" y="60"  text-anchor="middle">01</text>
           <text class="hex-label" x="270" y="78"  text-anchor="middle">Digital Footprint</text>
         </g>
-        <g class="hex-vertex" data-dim="clarity" tabindex="0">
+        <g class="hex-vertex" data-dim="clarity" tabindex="0" role="button" aria-pressed="false" aria-label="clarity dimension - tap to read more">
           <circle class="hex-pulse-ring" cx="426" cy="180" r="6"/>
           <circle class="hex-hit"        cx="426" cy="180" r="34"/>
           <circle class="hex-node"       cx="426" cy="180" r="7"/>
           <text class="hex-num"   x="442" y="160" text-anchor="start">02</text>
           <text class="hex-label" x="442" y="178" text-anchor="start">Brand Clarity</text>
         </g>
-        <g class="hex-vertex" data-dim="authority" tabindex="0">
+        <g class="hex-vertex" data-dim="authority" tabindex="0" role="button" aria-pressed="false" aria-label="authority dimension - tap to read more">
           <circle class="hex-pulse-ring" cx="426" cy="360" r="6"/>
           <circle class="hex-hit"        cx="426" cy="360" r="34"/>
           <circle class="hex-node"       cx="426" cy="360" r="7"/>
           <text class="hex-num"   x="442" y="358" text-anchor="start">03</text>
           <text class="hex-label" x="442" y="376" text-anchor="start">Authority</text>
         </g>
-        <g class="hex-vertex" data-dim="cadence" tabindex="0">
+        <g class="hex-vertex" data-dim="cadence" tabindex="0" role="button" aria-pressed="false" aria-label="cadence dimension - tap to read more">
           <circle class="hex-pulse-ring" cx="270" cy="450" r="6"/>
           <circle class="hex-hit"        cx="270" cy="450" r="34"/>
           <circle class="hex-node"       cx="270" cy="450" r="7"/>
           <text class="hex-num"   x="270" y="478" text-anchor="middle">04</text>
           <text class="hex-label" x="270" y="496" text-anchor="middle">Content Cadence</text>
         </g>
-        <g class="hex-vertex" data-dim="visual" tabindex="0">
+        <g class="hex-vertex" data-dim="visual" tabindex="0" role="button" aria-pressed="false" aria-label="visual dimension - tap to read more">
           <circle class="hex-pulse-ring" cx="114" cy="360" r="6"/>
           <circle class="hex-hit"        cx="114" cy="360" r="34"/>
           <circle class="hex-node"       cx="114" cy="360" r="7"/>
           <text class="hex-num"   x="98"  y="358" text-anchor="end">05</text>
           <text class="hex-label" x="98"  y="376" text-anchor="end">Visual Identity</text>
         </g>
-        <g class="hex-vertex" data-dim="network" tabindex="0">
+        <g class="hex-vertex" data-dim="network" tabindex="0" role="button" aria-pressed="false" aria-label="network dimension - tap to read more">
           <circle class="hex-pulse-ring" cx="114" cy="180" r="6"/>
           <circle class="hex-hit"        cx="114" cy="180" r="34"/>
           <circle class="hex-node"       cx="114" cy="180" r="7"/>
@@ -4852,6 +5116,31 @@
 
 <!-- ─────────── JS ─────────── -->
 <script>
+  /* ────────── STICKY GATE REVEAL — slide up the bottom email gate on first scroll after the score ──────────
+     Better UX than always-visible: the user gets to enjoy their score first, then the gate
+     "rises" once they show interest by scrolling. Triggers once per session, never re-hides. */
+  (function () {
+    let revealed = false;
+    function maybeReveal() {
+      if (revealed) return;
+      if (!document.body.classList.contains('audit-complete')) return;
+      // Trigger once user has scrolled at least 80px past the top of the results page
+      if (window.scrollY > 80) {
+        document.body.classList.add('gate-revealed');
+        revealed = true;
+        window.removeEventListener('scroll', maybeReveal);
+      }
+    }
+    window.addEventListener('scroll', maybeReveal, { passive: true });
+    // Also reveal after 6s of inaction so users who don't scroll still see the CTA
+    setTimeout(() => {
+      if (!revealed && document.body.classList.contains('audit-complete')) {
+        document.body.classList.add('gate-revealed');
+        revealed = true;
+      }
+    }, 6000);
+  })();
+
   /* ────────── GLOBAL ERROR HANDLER — auto-files a bug report on uncaught crashes ──────────
      Catches anything that escapes try/catch in the page JS and POSTs it to /api/feedback
      so Yentl + the Notion DB see it within seconds. Throttled to 1 report per error message
@@ -5392,7 +5681,11 @@
 
     function showDim(key) {
       const c = HEX_COPY[key]; if (!c) return;
-      vertices.forEach(v => v.classList.toggle('is-active', v.dataset.dim === key));
+      vertices.forEach(v => {
+        const active = v.dataset.dim === key;
+        v.classList.toggle('is-active', active);
+        v.setAttribute('aria-pressed', String(active));
+      });
       detailNum.textContent   = c.num;
       detailTitle.textContent = c.title;
       detailBody.textContent  = c.body;
@@ -5883,13 +6176,21 @@
       });
     }
 
-    // ── Press hits (real Tier-1 mentions found via SerpAPI) ──
+    // ── Press hits — surface real mentions with "last 90 days" badge on recent ones ──
     if (press.hits && press.hits.length > 0) {
-      const outletList = press.hits.slice(0, 4).map(h => h.outlet).filter(Boolean).join(' · ');
+      const recentN = press.recentCount || press.hits.filter(h => h.recent).length;
+      const outletList = press.hits.slice(0, 4)
+        .map(h => h.recent
+          ? `<strong style="color:var(--vp-cream)">${escapeHtmlPage(h.outlet)}</strong>`
+          : escapeHtmlPage(h.outlet || ''))
+        .filter(Boolean).join(' · ');
       const topHit = press.hits[0];
+      const labelText = recentN > 0
+        ? `In the press · ${recentN} fresh in last 90 days`
+        : `Found in ${press.count} outlet${press.count > 1 ? 's' : ''}`;
       cards.push({
         wide: true,
-        icon: '📰', label: `Found in ${press.count} tier-1 outlet${press.count > 1 ? 's' : ''}`,
+        icon: '📰', label: labelText,
         valueHTML: outletList,
         sub: topHit && topHit.title ? `"${escapeHtmlPage(topHit.title.slice(0, 140))}"` : ''
       });
@@ -5899,23 +6200,20 @@
         wide: false,
         gap: true,
         icon: '📰', label: 'In the press',
-        valueHTML: 'Not found yet',
-        sub: 'Tier-1 mentions are the biggest gap in your tier.'
+        valueHTML: 'Nothing landed yet',
+        sub: 'Press is the biggest jump for your tier - we can help.'
       });
     }
 
-    // ── Score-derived flag if cadence is 0 ──
-    if (subs && subs.cadence === 0) {
-      cards.push({
-        gap: true,
-        icon: '📅', label: 'Recent posts',
-        valueHTML: 'No posts in 90 days',
-        sub: 'Your platform is quiet. The easiest fix on this list.'
-      });
-    } else if (subs && subs.cadence >= 2) {
+    // ── Posting rhythm — only claim something if we have high confidence.
+    // Cadence=0 from supreme_coder usually means "we couldn't see posts", not "no posts".
+    // We now default to neutral on the backend if no activity field was returned, so 0 here
+    // means we DID see posts data and found nothing. Still: skip the card unless cadence is
+    // clearly strong (≥2). No more false negatives. ──
+    if (subs && subs.cadence >= 2) {
       cards.push({
         icon: '📅', label: 'Posting rhythm',
-        valueHTML: 'You\'re on a cadence',
+        valueHTML: "You're on a cadence",
         sub: 'Keep it up - rhythm beats volume.'
       });
     }

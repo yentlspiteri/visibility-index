@@ -130,16 +130,23 @@ export default async function handler(req, res) {
     }
     const profile = profileRes.value;
 
-    // Now run the press search with the real first+last name and company - far more accurate than handle
-    const serpRes = await fetchSerpFootprint(normalised, {
+    // Press search: TWO parallel SerpAPI calls.
+    //   1. All-time: catches established mentions (Forbes piece from 2 years ago etc.)
+    //   2. Last 3 months: surfaces fresh mentions, podcast appearances, recent posts
+    // Merging both gives the user a complete picture with `recent: true` flagged on fresh hits.
+    const queryArgs = {
       firstName:   getFirstName(profile),
       lastName:    getLastName(profile),
       companyName: getCompany(profile)
-    }).then(v => ({ status: 'fulfilled', value: v }), e => ({ status: 'rejected', reason: e }));
-    const serp  = serpRes.status === 'fulfilled' ? serpRes.value : null;
-
-    // Tier-1 press detection - surfaces actual outlet names and URLs in the response
-    const press = serp ? extractTier1Press(serp) : { count: 0, outlets: [], hits: [] };
+    };
+    const [serpAllRes, serpRecentRes] = await Promise.allSettled([
+      fetchSerpFootprint(normalised, queryArgs, false),
+      fetchSerpFootprint(normalised, queryArgs, true)
+    ]);
+    const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
+    const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
+    const serp = serpAll;     // alias for older usage in scoreFootprint
+    const press = mergePressResults(serpAll, serpRecent);
 
     // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
@@ -288,7 +295,16 @@ const TIER_1_PRESS = [
   'economist.com', 'theatlantic.com', 'newyorker.com', 'wired.com',
   'techcrunch.com', 'fastcompany.com', 'hbr.org', 'inc.com', 'fortune.com',
   'businessinsider.com', 'theguardian.com', 'cnbc.com', 'cnn.com', 'bbc.com',
-  'theinformation.com', 'axios.com'
+  'theinformation.com', 'axios.com',
+  // Tier-2: smaller-but-real press, podcasts, industry outlets. Surfaces mentions for
+  // creators / founders who haven't made Forbes yet but have legit coverage.
+  'sifted.eu', 'eu-startups.com', 'tech.eu', 'protocol.com', 'thenextweb.com',
+  'venturebeat.com', 'theverge.com', 'arstechnica.com', 'engadget.com',
+  'medium.com', 'substack.com',
+  'podcasts.apple.com', 'spotify.com', 'youtube.com',
+  'linkedin.com/pulse', 'linkedin.com/posts',
+  'ted.com', 'tedx.com', 'tedxtalks.ted.com',
+  'crunchbase.com', 'producthunt.com'
 ];
 
 // Friendly outlet name from a domain (forbes.com → Forbes)
@@ -305,6 +321,29 @@ function outletNameFromDomain(domain) {
     'theinformation.com': 'The Information', 'axios.com': 'Axios'
   };
   return map[domain] || domain.replace(/\.com$|\.org$|\.co$/, '').replace(/^./, c => c.toUpperCase());
+}
+
+// Merge two SerpAPI responses (all-time + last-90-days) into one combined press object.
+// Hits from the recent search are flagged `recent: true` and surfaced first.
+function mergePressResults(serpAll, serpRecent) {
+  const allHits    = serpAll    ? extractTier1Press(serpAll).hits    : [];
+  const recentHits = serpRecent ? extractTier1Press(serpRecent).hits : [];
+  // Mark recent hits + dedupe by link
+  const seen = new Set();
+  const merged = [];
+  recentHits.forEach(h => {
+    if (h.link && !seen.has(h.link)) { seen.add(h.link); merged.push({ ...h, recent: true }); }
+  });
+  allHits.forEach(h => {
+    if (h.link && !seen.has(h.link)) { seen.add(h.link); merged.push({ ...h, recent: false }); }
+  });
+  const finalHits = merged.slice(0, 6);
+  return {
+    count:       finalHits.length,
+    recentCount: finalHits.filter(h => h.recent).length,
+    outlets:     finalHits.map(h => h.outlet),
+    hits:        finalHits
+  };
 }
 
 // Extract Tier-1 press hits from raw SerpAPI organic_results.
@@ -337,7 +376,8 @@ function extractTier1Press(serp) {
 
 // SerpAPI footprint search - uses the real name + company when we have them, falls back to handle.
 // Quoted name forces exact match; company disambiguates from name overlap.
-async function fetchSerpFootprint(normalisedUrl, profileForQuery) {
+// `recentOnly` = true → adds tbs=qdr:m3 to restrict to the last 3 months.
+async function fetchSerpFootprint(normalisedUrl, profileForQuery, recentOnly = false) {
   let q;
   if (profileForQuery && (profileForQuery.firstName || profileForQuery.lastName)) {
     const fullName = `${profileForQuery.firstName || ''} ${profileForQuery.lastName || ''}`.trim();
@@ -353,6 +393,7 @@ async function fetchSerpFootprint(normalisedUrl, profileForQuery) {
     num: '10',
     api_key: process.env.SERPAPI_API_KEY
   });
+  if (recentOnly) params.append('tbs', 'qdr:m3');     // last 3 months
   const r = await fetch(`${SERPAPI_API}?${params}`);
   if (!r.ok) throw new Error(`SerpAPI ${r.status}`);
   return r.json();
@@ -637,6 +678,15 @@ function scoreAuthority(profile, press) {
 }
 
 function scoreCadence(profile) {
+  // KNOWN LIMITATION: supreme_coder/linkedin-profile-scraper does NOT return posts in the
+  // basic profile call - we'd need a separate post-scraper actor (parallel call, +cost).
+  // For now: if we have NO activity field at all, return 1 (neutral) so we don't falsely
+  // claim "no posts in 90 days" when we simply couldn't see them. Scoring 0 reserved for
+  // profiles where we DO have visibility into activities AND found nothing.
+  const hasActivityField =
+    'activities' in profile || 'posts' in profile ||
+    'recentActivities' in profile || 'recent_posts' in profile || 'updates' in profile;
+  if (!hasActivityField) return 1;     // we can't measure - neutral default
   const activities = getActivities(profile);
   if (activities.length >= 11) return 3;
   if (activities.length >= 4)  return 2;
