@@ -49,6 +49,7 @@ export default async function handler(req, res) {
 
   // ── 1) Build the PDF ──
   let pdfBase64 = null;
+  let pdfError  = null;   // surfaced in the response for browser-side debugging
   try {
     const pdfBytes = await buildReportPDF({
       firstName:           profile?.firstName  || '',
@@ -66,6 +67,8 @@ export default async function handler(req, res) {
     });
     pdfBase64 = Buffer.from(pdfBytes).toString('base64');
   } catch (err) {
+    pdfError = (err?.message || String(err)).slice(0, 600);
+    console.error('PDF stack:', err?.stack || err);
     console.error('PDF build failed:', err);
     // Page Yentl — PDF builder is a load-bearing piece of the magnet. Failure = lead gets no report.
     notifyOps({
@@ -210,7 +213,9 @@ export default async function handler(req, res) {
     ok:             true,
     emailDelivered: emailDelivered,
     mailchimpOk:    mailchimpOk,
-    pdf:            pdfBase64    // null if PDF build failed
+    pdf:            pdfBase64,    // null if PDF build failed
+    _pdfError:      pdfError,     // first 600 chars of the PDF error message — null when PDF built fine
+    _emailDebug:    emailDebug
   });
 }
 
