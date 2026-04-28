@@ -487,6 +487,64 @@
   .tier-cta-btn::after { content: "→"; font-size: 18px; transition: transform .2s ease; }
   .tier-cta-btn:hover::after { transform: translateX(4px); }
 
+  /* — Personal hex shape (replaces the verbose 6-card subscore strip) — */
+  .personal-hex {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    margin: 24px auto 8px;
+    display: block;
+    overflow: visible;
+  }
+  .personal-hex .phex-ring {
+    fill: none;
+    stroke: rgba(134,131,229,0.22);
+    stroke-width: 1;
+  }
+  .personal-hex .phex-axis {
+    stroke: rgba(134,131,229,0.18);
+    stroke-width: 1;
+  }
+  .personal-hex .phex-user {
+    fill: rgba(134,131,229,0.32);
+    stroke: var(--vp-lavender, #8683E5);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 8px 32px rgba(134,131,229,0.45));
+    /* Tiny wobble settle once the SMIL animation finishes — runs once on reveal */
+    animation: phex-settle 0.6s cubic-bezier(.34,1.56,.64,1) 0.9s both;
+    transform-origin: 270px 270px;
+    transform-box: view-box;
+  }
+  @keyframes phex-settle {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.025); }
+    70%  { transform: scale(0.992); }
+    100% { transform: scale(1); }
+  }
+  .personal-hex .phex-node {
+    fill: var(--vp-navy, #0B0359);
+    stroke: var(--vp-lavender, #8683E5);
+    stroke-width: 2;
+    transition: r .18s cubic-bezier(.2,.8,.25,1);
+  }
+  .personal-hex .phex-num {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--vp-lavender, #8683E5);
+    letter-spacing: 0.16em;
+    opacity: 0.7;
+  }
+  .personal-hex .phex-label {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--vp-cream, #fafafa);
+    letter-spacing: -0.005em;
+  }
+
+  /* Old `.subscores` grid is kept (now empty most of the time) — used as the SVG container */
   .subscores {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -2113,7 +2171,11 @@
   }
   .score-reveal-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .score-reveal-ring .ring-bg { fill: none; stroke: rgba(252,252,252,0.08); stroke-width: 14; }
+  /* Elastic spring fill — replaces the dull cubic-bezier */
   .score-reveal-ring .ring-fg {
+    transition: stroke-dasharray 1.6s cubic-bezier(.34, 1.56, .64, 1) !important;
+  }
+  .score-reveal-ring .ring-fg-orig-class {
     fill: none;
     stroke: url(#ringGradient);
     stroke-width: 14;
@@ -2297,64 +2359,133 @@
     background: rgba(252,252,252,0.04);
     border: 1px solid rgba(134,131,229,0.25);
     border-radius: 18px;
-    padding: 28px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     box-shadow: 0 18px 50px rgba(11,3,89,0.18);
   }
   .move-num {
-    font-family: var(--font-display);
-    font-size: 13px;
-    font-weight: 600;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
     color: var(--vp-lavender);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
+    margin-bottom: 4px;
   }
   .move-title {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 700;
     letter-spacing: -0.015em;
-    line-height: 1.25;
+    line-height: 1.22;
     color: var(--vp-white);
   }
   .move-why {
-    color: rgba(252,252,252,0.78);
-    font-size: 15px;
-    line-height: 1.55;
+    color: rgba(252,252,252,0.72);
+    font-size: 14px;
+    line-height: 1.5;
     margin: 0;
   }
+  /* First-step sub-line — inline, smaller, no big highlighted box */
   .move-step {
-    background: rgba(63,54,178,0.18);
-    border-left: 3px solid var(--vp-lavender);
-    padding: 12px 14px;
-    border-radius: 0 8px 8px 0;
-    font-size: 14px;
-    line-height: 1.55;
-    color: rgba(252,252,252,0.88);
+    margin-top: 6px;
+    padding: 10px 0 0;
+    border-top: 1px solid rgba(134,131,229,0.18);
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(252,252,252,0.78);
   }
   .move-step-label {
-    display: block;
-    font-size: 11px;
+    display: inline;
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--vp-lavender);
-    margin-bottom: 4px;
+    margin: 0;
   }
-  .move-service {
-    margin-top: auto;
-    align-self: flex-start;
+  .move-step-label::after { content: " "; }
+  /* Service tag removed from the card UI per simplification — kept in data for the PDF */
+  .move-service { display: none; }
+
+  /* — White help CTA on the dark next-moves section — */
+  .help-cta {
     display: inline-flex;
     align-items: center;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--vp-lavender);
-    letter-spacing: 0.12em;
+    background: var(--vp-cream, #fafafa);
+    color: var(--vp-deep-black, #0c0b09);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    padding: 6px 12px;
-    background: rgba(134,131,229,0.12);
+    text-decoration: none;
+    padding: 18px 36px;
     border-radius: 999px;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    margin: 24px auto 0;
+  }
+  .help-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 32px rgba(252,252,252,0.18);
+    background: #fff;
+  }
+  .next-cta-row--single { display: flex; justify-content: center; }
+
+  /* — Inbox-sent success state (replaces the gate-card form on submit) — */
+  .gate-success {
+    background: var(--vp-cream, #fafafa);
+    border-radius: 20px;
+    padding: 40px 32px 36px;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(11,3,89,0.18);
+    animation: gate-success-in .45s cubic-bezier(.34,1.56,.64,1);
+  }
+  .gate-success.hidden { display: none; }
+  @keyframes gate-success-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .gate-success-check {
+    color: var(--vp-indigo);
+    width: 56px; height: 56px;
+    margin: 0 auto 18px;
+  }
+  .gate-success-check svg { width: 100%; height: 100%; display: block; }
+  .gate-success-check .gs-circle {
+    stroke-dasharray: 151; stroke-dashoffset: 151;
+    animation: gs-circle-draw .55s ease-out forwards;
+  }
+  .gate-success-check .gs-tick {
+    stroke-dasharray: 50; stroke-dashoffset: 50;
+    animation: gs-tick-draw .35s ease-out .45s forwards;
+  }
+  @keyframes gs-circle-draw { to { stroke-dashoffset: 0; } }
+  @keyframes gs-tick-draw   { to { stroke-dashoffset: 0; } }
+  .gate-success-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--vp-deep-black, #0c0b09);
+    margin: 0 0 10px;
+  }
+  .gate-success-line {
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: rgba(15,15,15,0.7);
+    margin: 0 0 14px;
+  }
+  .gate-success-line strong {
+    color: var(--vp-deep-black, #0c0b09);
+    font-weight: 600;
+  }
+  .gate-success-hint {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: rgba(15,15,15,0.5);
+    margin: 0;
   }
 
   .roadmap-card {
@@ -2848,6 +2979,14 @@
   }
 
   .hidden { display: none !important; }
+
+  /* Scroll lock while the audit is running — keeps the loading state in view, no accidental scroll-away */
+  body.audit-locked,
+  html.audit-locked {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
 </style>
 </head>
 <body>
@@ -2959,14 +3098,14 @@
         <div class="loading-title">Running your audit</div>
         <div class="loading-subtitle" id="loading-subtitle">Pulling public LinkedIn signals — this takes ~15s.</div>
         <ul class="loading-list" id="loading-list">
-          <li class="loading-row" data-step="0" data-msg="Verifying your LinkedIn profile…"><span class="loading-icon"></span><span>Profile</span></li>
-          <li class="loading-row" data-step="1" data-msg="Googling you to see what shows up…"><span class="loading-icon"></span><span>Footprint</span></li>
-          <li class="loading-row" data-step="2" data-msg="Scoring how sharp your headline reads…"><span class="loading-icon"></span><span>Clarity</span></li>
-          <li class="loading-row" data-step="3" data-msg="Looking for press, awards, and proof…"><span class="loading-icon"></span><span>Authority</span></li>
-          <li class="loading-row" data-step="4" data-msg="Counting recent posts &amp; the rhythm…"><span class="loading-icon"></span><span>Cadence</span></li>
-          <li class="loading-row" data-step="5" data-msg="Checking photo, banner, and craft…"><span class="loading-icon"></span><span>Visual</span></li>
-          <li class="loading-row" data-step="6" data-msg="Weighing engagement vs raw reach…"><span class="loading-icon"></span><span>Network</span></li>
-          <li class="loading-row" data-step="7" data-msg="Composing your Visibility Index…"><span class="loading-icon"></span><span>Index</span></li>
+          <li class="loading-row" data-step="0" data-msg="Saying hi to your LinkedIn…"><span class="loading-icon"></span><span>Profile</span></li>
+          <li class="loading-row" data-step="1" data-msg="Asking Google about you…"><span class="loading-icon"></span><span>Footprint</span></li>
+          <li class="loading-row" data-step="2" data-msg="Reading your headline like a stranger would…"><span class="loading-icon"></span><span>Clarity</span></li>
+          <li class="loading-row" data-step="3" data-msg="Hunting for press, awards, and proof…"><span class="loading-icon"></span><span>Authority</span></li>
+          <li class="loading-row" data-step="4" data-msg="Counting your posts. Are you on a rhythm?"><span class="loading-icon"></span><span>Cadence</span></li>
+          <li class="loading-row" data-step="5" data-msg="Eyeing your photo and banner…"><span class="loading-icon"></span><span>Visual</span></li>
+          <li class="loading-row" data-step="6" data-msg="Counting your fans (and weighing them)…"><span class="loading-icon"></span><span>Network</span></li>
+          <li class="loading-row" data-step="7" data-msg="Adding it all up…"><span class="loading-icon"></span><span>Index</span></li>
         </ul>
       </div>
 
@@ -3043,7 +3182,7 @@
 
     <!-- Standalone email gate (leaderboard removed — was placeholder content; replace in v0.5 with real research-backed distribution chart) -->
     <div class="gate-standalone" id="gate-standalone">
-      <div class="gate-card">
+      <div class="gate-card" id="gate-card">
         <div class="gate-eyebrow">Your full report</div>
         <h3 id="gate-cta-line">Here's what to build first.</h3>
         <p>4-page PDF. Three moves. In your inbox.</p>
@@ -3054,6 +3193,19 @@
         </form>
         <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime.</div>
       </div>
+
+      <!-- Success state — replaces the form once /api/lead returns ok -->
+      <div class="gate-success hidden" id="gate-success" role="status" aria-live="polite">
+        <div class="gate-success-check" aria-hidden="true">
+          <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5" class="gs-circle"/>
+            <path d="M14 27 L23 36 L39 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="gs-tick"/>
+          </svg>
+        </div>
+        <h3 class="gate-success-title">Report on its way.</h3>
+        <p class="gate-success-line">We sent it to <strong id="gate-success-email">your inbox</strong>.</p>
+        <p class="gate-success-hint">Also downloaded to your device · check spam if it doesn’t land in 60 seconds</p>
+      </div>
     </div>
   </div>
 </section>
@@ -3063,30 +3215,20 @@
   <div class="container">
     <div class="eyebrow-row" style="justify-content: center;">
       <span class="dot"></span>
-      <span class="eyebrow">Your highest-leverage moves</span>
+      <span class="eyebrow">This quarter</span>
     </div>
-    <h2 class="h2" style="text-align: center; margin: 18px auto;">Three moves to make this quarter.</h2>
-    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(252,252,252,0.72);">
-      Specific to your profile. Pulled from your audit. Each one ties to a FutureMakers service we can run with you.
+    <h2 class="h2" style="text-align: center; margin: 18px auto;">Three tips to apply now.</h2>
+    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(252,252,252,0.72); max-width: 540px;">
+      Pulled from your audit. Specific to you.
     </p>
 
     <div class="moves-grid" id="moves-grid"><!-- populated by JS --></div>
 
-    <div class="roadmap-card">
-      <div class="eyebrow-row">
-        <span class="dot"></span>
-        <span class="eyebrow" id="roadmap-eyebrow">Path to the next tier</span>
-      </div>
-      <h3 class="h3" style="margin: 12px 0 22px; color: var(--vp-white);" id="roadmap-title">From your tier to the next.</h3>
-      <ul class="roadmap-list" id="roadmap-list"><!-- populated by JS --></ul>
-    </div>
+    <!-- "Path to the next tier" block removed per request — moves above are enough -->
 
     <div class="next-cta-row next-cta-row--single">
-      <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="next-cta-card next-cta-soft">
-        <span class="next-cta-eyebrow">Talk it through</span>
-        <h3>Book a 30-minute call with the Von Peach team</h3>
-        <p>Walk through these moves together. No pitch — just clarity on which ones matter most for you.</p>
-        <span class="next-cta-arrow">→</span>
+      <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="help-cta">
+        LET US HELP YOU
       </a>
     </div>
   </div>
@@ -3287,19 +3429,55 @@
   </div>
 </section>
 
-<!-- ─────────── FOOTER ─────────── -->
+<!-- ─────────── FOOTER (mirrors vonpeach.com — 3-col + giant decorative wordmark) ─────────── -->
 <footer>
   <div class="container">
-    <div class="footer-row">
-      <div class="footer-links">
-        <a href="https://www.vonpeach.com/personal-branding" target="_blank" rel="noopener">FutureMakers</a>
-        <a href="#methodology">Methodology</a>
-        <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
+
+    <div class="footer-grid">
+      <!-- Left column: company links -->
+      <div class="footer-col">
+        <p class="footer-col-eyebrow">Company</p>
+        <ul>
+          <li><a href="https://www.vonpeach.com" target="_blank" rel="noopener">Bored Peach Club</a></li>
+          <li><a href="https://www.vonpeach.com/personal-branding" target="_blank" rel="noopener">FutureMakers</a></li>
+          <li><a href="https://www.vonpeach.com/about" target="_blank" rel="noopener">About</a></li>
+          <li><a href="#methodology">Methodology</a></li>
+        </ul>
+      </div>
+
+      <!-- Center column: contact + CTA -->
+      <div class="footer-col footer-col-center">
+        <p class="footer-col-eyebrow">Reach out to us</p>
+        <a class="footer-email" href="mailto:hello@vonpeach.com">hello@vonpeach.com</a><br/>
+        <a class="footer-cta" href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener">Let's talk</a>
+      </div>
+
+      <!-- Right column: socials -->
+      <div class="footer-col footer-col-right">
+        <p class="footer-col-eyebrow">Socials</p>
+        <ul>
+          <li><a href="https://www.instagram.com/vonpeach.gmbh" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.linkedin.com/company/vonpeach" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.vonpeach.com/press" target="_blank" rel="noopener">Press</a></li>
+        </ul>
       </div>
     </div>
-    <div class="footer-legal">
-      VON PEACH GMBH 2026 · FUTUREMAKERS · THE VISIBILITY INDEX
+
+    <!-- Bottom legal strip -->
+    <div class="footer-legal-row">
+      <div>
+        <a href="https://www.vonpeach.com/terms" target="_blank" rel="noopener">Terms and conditions</a>
+        <a href="https://www.vonpeach.com/impressum" target="_blank" rel="noopener">Impressum</a>
+      </div>
+      <div>Von Peach GmbH 2026</div>
     </div>
+  </div>
+
+  <!-- Giant decorative PEACH wordmark, clipped at bottom — mirrors the vonpeach.com homepage finale -->
+  <div class="footer-mark" aria-hidden="true">
+    <svg viewBox="0 0 1200 220" preserveAspectRatio="xMidYEnd slice">
+      <text x="50%" y="100%" text-anchor="middle" font-size="320" dy="-10">PEACH</text>
+    </svg>
   </div>
 </footer>
 
@@ -3770,6 +3948,9 @@
     // panel overlays it. `is-loading` triggers the blur + animated orb in CSS.
     actionCard.classList.add('is-loading');
     loadingPanel.classList.remove('hidden');
+    // Scroll lock — keep the user staring at the loading state (and avoid accidental scroll-away)
+    document.body.classList.add('audit-locked');
+    document.documentElement.classList.add('audit-locked');
 
     // Sample pills — mock data, no API call (so demo costs nothing). Wait for animation
     // to reach the last step, finish it, then reveal.
@@ -3817,6 +3998,8 @@
     loadingPanel.classList.add('hidden');
     actionCard.classList.remove('is-loading');
     inputPanel.classList.remove('hidden');
+    document.body.classList.remove('audit-locked');
+    document.documentElement.classList.remove('audit-locked');
     $$('.loading-row').forEach(r => { r.classList.remove('running'); r.classList.remove('done'); });
     let errEl = document.getElementById('hero-error');
     if (!errEl) {
@@ -3868,6 +4051,9 @@
     // Hide the loading panel; the score-reveal block lives in the results-wrap section now
     loadingPanel.classList.add('hidden');
     actionCard.classList.remove('is-loading');
+    // Release scroll lock — score is up, user can now scroll the result page
+    document.body.classList.remove('audit-locked');
+    document.documentElement.classList.remove('audit-locked');
 
     const tier = tierFor(total);
     // Save for the lead capture call + the post-submit reveal
@@ -3937,6 +4123,11 @@
 
     animateNumber('#score-num', 0, total, 1400);
 
+    // Theatrical reveal — confetti for Recognised Leader tier (16+) only
+    if (total >= 16) {
+      setTimeout(() => fireConfetti(document.getElementById('score-reveal')), 800);
+    }
+
     renderSubscores(subs, (payload && payload.dimensionCommentary) || null);
 
     const cohortSize = 240 + (hashStr(url) % 180);
@@ -3958,54 +4149,121 @@
   function animateNumber(sel, from, to, ms) {
     const el = $(sel);
     const start = performance.now();
+    // Elastic overshoot — number races up, slightly overshoots, settles. Matches the ring fill feel.
+    function easeOutBack(t) {
+      const c1 = 1.70158, c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
     function step(t) {
       const p = Math.min(1, (t - start) / ms);
-      const eased = 1 - Math.pow(1 - p, 3);
+      const eased = easeOutBack(p);
       el.textContent = Math.round(from + (to - from) * eased);
       if (p < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
   }
 
-  function renderSubscores(subs, commentary) {
+  /* Confetti for high-tier reveals (16+). Single-shot, no loops, no library. */
+  function fireConfetti(target) {
+    const host = target || document.getElementById('score-reveal') || document.body;
+    const rect = host.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const colors = ['#3F36B2', '#8683E5', '#EBF0FF', '#fafafa'];
+    const layer = document.createElement('div');
+    layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;';
+    document.body.appendChild(layer);
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      const size = 6 + Math.random() * 8;
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 180 + Math.random() * 240;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist - 40; // bias upward
+      const rot = (Math.random() * 720 - 360) + 'deg';
+      p.style.cssText = `
+        position:absolute;left:${cx}px;top:${cy}px;
+        width:${size}px;height:${size * 0.4}px;
+        background:${colors[i % colors.length]};
+        border-radius:1px;
+        transform:translate(-50%,-50%) rotate(${Math.random() * 360}deg);
+        opacity:1;
+        transition:transform 1.4s cubic-bezier(.2,.8,.25,1), opacity 1.4s ease-out;
+      `;
+      layer.appendChild(p);
+      requestAnimationFrame(() => {
+        p.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy + 200}px)) rotate(${rot})`;
+        p.style.opacity = '0';
+      });
+    }
+    setTimeout(() => layer.remove(), 1800);
+  }
+
+  /* Personal-shape hexagon — mirror of the methodology hexagon, filled with the user's actual scores.
+     Replaces the 6 verbose cards. Zero text — the visual carries the meaning. Detailed commentary
+     stays in the PDF where readers expect depth. */
+  function renderSubscores(subs /*, commentary unused on page now */) {
     const container = $('#subscores');
     container.innerHTML = '';
-    DIMENSIONS.forEach(d => {
-      const v = subs[d.key];
-      // Prefer Claude's profile-specific line if available, fall back to generic level text
-      const ctxText = (commentary && commentary[d.key]) ? commentary[d.key] : d.ctxByLevel[v];
 
-      const card = document.createElement('div');
-      card.className = 'subscore';
-      const label = document.createElement('div');
-      label.className = 'subscore-label';
-      label.textContent = d.label;
-      const value = document.createElement('div');
-      value.className = 'subscore-value';
-      value.textContent = String(v);
-      const suffix = document.createElement('span');
-      suffix.className = 'subscore-value-suffix';
-      suffix.textContent = ' / 3';
-      value.appendChild(suffix);
-      const bar = document.createElement('div');
-      bar.className = 'subscore-bar';
-      const fill = document.createElement('div');
-      fill.className = 'subscore-bar-fill';
-      fill.dataset.target = String((v / 3) * 100);
-      bar.appendChild(fill);
-      const ctx = document.createElement('div');
-      ctx.className = 'subscore-context';
-      ctx.textContent = ctxText;
+    // Six vertices in hex order: top, upper-right, lower-right, bottom, lower-left, upper-left
+    // Map each dimension to its slot — must match the methodology hexagon ordering above
+    const VERTICES = [
+      { key: 'footprint', cx: 270, cy: 90,  num: '01', label: 'Footprint',   anchor: 'middle', tx: 270, ty: 60,  ly: 78  },
+      { key: 'clarity',   cx: 426, cy: 180, num: '02', label: 'Clarity',     anchor: 'start',  tx: 442, ty: 160, ly: 178 },
+      { key: 'authority', cx: 426, cy: 360, num: '03', label: 'Authority',   anchor: 'start',  tx: 442, ty: 358, ly: 376 },
+      { key: 'cadence',   cx: 270, cy: 450, num: '04', label: 'Cadence',     anchor: 'middle', tx: 270, ty: 478, ly: 496 },
+      { key: 'visual',    cx: 114, cy: 360, num: '05', label: 'Visual',      anchor: 'end',    tx: 98,  ty: 358, ly: 376 },
+      { key: 'network',   cx: 114, cy: 180, num: '06', label: 'Network',     anchor: 'end',    tx: 98,  ty: 160, ly: 178 }
+    ];
 
-      card.appendChild(label);
-      card.appendChild(value);
-      card.appendChild(bar);
-      card.appendChild(ctx);
-      container.appendChild(card);
-    });
-    setTimeout(() => {
-      $$('.subscore-bar-fill').forEach(b => b.style.width = b.dataset.target + '%');
-    }, 80);
+    // Convert each dimension's 0–3 score to a position on the spoke from center (270,270) outward.
+    // 0 = at center, 3 = at full vertex. Linear interpolation gives the user's personal shape.
+    const cx0 = 270, cy0 = 270;
+    const userPoints = VERTICES.map(v => {
+      const score = subs[v.key] ?? 0;
+      const t = score / 3;
+      const x = cx0 + (v.cx - cx0) * t;
+      const y = cy0 + (v.cy - cy0) * t;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
+    // Build the SVG markup with rings, axes, full-strength outline, the user's personal shape,
+    // and labels showing only "<dim> X" — no commentary.
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 40 540 480');
+    svg.setAttribute('class', 'personal-hex');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Your visibility shape across six dimensions');
+
+    svg.innerHTML = `
+      <!-- Concentric rings (ideal hex outline at full strength) -->
+      <polygon class="phex-ring" points="270,90 426,180 426,360 270,450 114,360 114,180" opacity="0.5"/>
+      <polygon class="phex-ring" points="270,150 374,210 374,330 270,390 166,330 166,210" opacity="0.32"/>
+      <polygon class="phex-ring" points="270,210 322,240 322,300 270,330 218,300 218,240" opacity="0.2"/>
+      <!-- Spokes -->
+      <line class="phex-axis" x1="270" y1="270" x2="270" y2="90"/>
+      <line class="phex-axis" x1="270" y1="270" x2="426" y2="180"/>
+      <line class="phex-axis" x1="270" y1="270" x2="426" y2="360"/>
+      <line class="phex-axis" x1="270" y1="270" x2="270" y2="450"/>
+      <line class="phex-axis" x1="270" y1="270" x2="114" y2="360"/>
+      <line class="phex-axis" x1="270" y1="270" x2="114" y2="180"/>
+      <!-- The user's actual shape — animates from center outward on reveal -->
+      <polygon class="phex-user" points="${userPoints}">
+        <animate attributeName="points" dur="0.9s" calcMode="spline"
+          keyTimes="0;1" keySplines="0.2 0.8 0.25 1"
+          values="270,270 270,270 270,270 270,270 270,270 270,270;${userPoints}"
+          fill="freeze"/>
+      </polygon>
+      ${VERTICES.map(v => `
+        <circle class="phex-node" cx="${v.cx}" cy="${v.cy}" r="6"/>
+        <text class="phex-num"   x="${v.tx}" y="${v.ty}" text-anchor="${v.anchor}">${v.num}</text>
+        <text class="phex-label" x="${v.tx}" y="${v.ly}" text-anchor="${v.anchor}">${v.label} ${subs[v.key] ?? 0}/3</text>
+      `).join('')}
+    `;
+
+    container.appendChild(svg);
   }
 
   function synthRank(score, cohort) {
@@ -4133,8 +4391,8 @@
         stepWrap.className = 'move-step';
         const stepLabel = document.createElement('span');
         stepLabel.className = 'move-step-label';
-        stepLabel.textContent = 'First step today';
-        const stepText = document.createElement('div');
+        stepLabel.textContent = 'Start:';
+        const stepText = document.createElement('span');
         stepText.textContent = m.firstStep || '';
         stepWrap.appendChild(stepLabel);
         stepWrap.appendChild(stepText);
@@ -4152,25 +4410,7 @@
       });
     }
 
-    // Roadmap heading + list
-    if (lastTier && lastNextTier) {
-      const goingUp = lastNextTier.min > lastTier.max;
-      const header = goingUp
-        ? `From ${lastTier.name} to ${lastNextTier.name}`
-        : `Holding the ${lastTier.name} tier`;
-      $('#roadmap-eyebrow').textContent = goingUp ? 'Path to the next tier' : 'Sharpen your edge';
-      $('#roadmap-title').textContent   = header;
-    }
-    const list = $('#roadmap-list');
-    if (list) {
-      list.innerHTML = '';
-      const items = lastTierRoadmap.length ? lastTierRoadmap : fallbackRoadmap();
-      items.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        list.appendChild(li);
-      });
-    }
+    // (Roadmap section removed per request — moves above are the takeaway)
 
     // Reveal + scroll
     section.classList.remove('hidden');
@@ -4274,9 +4514,13 @@
       else console.warn('[VI] No PDF in response — pdf-lib likely threw on the server. Check Vercel logs.');
       if (data.emailDelivered === false) console.warn('[VI] Email NOT delivered. Most likely cause: Resend free tier only sends to your registered email. Verify domain in Resend → Domains, or test with the email you used to sign up.');
 
-      // Hide the gate card after successful submit; PDF auto-downloads (already triggered above)
-      const gate = $('#gate-standalone');
-      if (gate) gate.style.display = 'none';
+      // Swap the gate-card for the success state — clear visual signal the report is on its way
+      const gateCard    = document.getElementById('gate-card');
+      const gateSuccess = document.getElementById('gate-success');
+      const successEmail = document.getElementById('gate-success-email');
+      if (successEmail) successEmail.textContent = email;
+      if (gateCard)    gateCard.classList.add('hidden');
+      if (gateSuccess) gateSuccess.classList.remove('hidden');
       revealNextMoves();
     } catch (err) {
       submitBtn.disabled = false;
