@@ -600,15 +600,14 @@
     letter-spacing: -0.005em;
   }
 
-  /* Old `.subscores` grid is kept (now empty most of the time) — used as the SVG container */
+  /* `.subscores` is now the SVG-only container (hexagon). Centers the SVG, full column width. */
   .subscores {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 18px;
-    margin-bottom: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
   }
-  @media (max-width: 1100px) { .subscores { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 600px)  { .subscores { grid-template-columns: repeat(2, 1fr); } }
 
   .subscore {
     background: rgba(252,252,252,0.04);
@@ -4148,17 +4147,15 @@
     const personalCard = $('#personal-card');
     const summary  = payload?.personalSummary || '';
     const teasers  = Array.isArray(payload?.reportTeasers) ? payload.reportTeasers : [];
-    const photo    = payload?.profile?.pictureUrl || '';
     if (personalCard && (summary || teasers.length)) {
       const summaryEl = $('#personal-summary');
       const avatarEl  = $('#personal-avatar');
       const teasersEl = $('#personal-teasers');
       const teasersWrap = $('#personal-teasers-wrap');
       if (summaryEl) summaryEl.textContent = summary;
-      if (avatarEl) {
-        if (photo) { avatarEl.src = photo; avatarEl.style.display = ''; }
-        else { avatarEl.style.display = 'none'; }
-      }
+      // Always hide the second avatar — LinkedIn CDN blocks third-party loads, and the
+      // user's initial already shows in the score-reveal block above. Don't show it twice.
+      if (avatarEl) avatarEl.style.display = 'none';
       if (teasersEl) {
         teasersEl.innerHTML = '';
         teasers.forEach(t => {
