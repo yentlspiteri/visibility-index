@@ -3419,6 +3419,392 @@
     body.transitioning .input-panel,
     body.transitioning .results-wrap { animation: none !important; }
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     OVERFLOW + LAYOUT GUARDS - global, not just mobile
+     ═══════════════════════════════════════════════════════════════════════════ */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* Mobile labels - hidden on desktop, shown on mobile (<=600px). The .prose-text
+     spans go the other way: shown on desktop, hidden on mobile. */
+  .mobile-label { display: none; }
+
+  /* Hamburger button + mobile slide-down panel - hidden on desktop */
+  .nav-burger        { display: none; }
+  .nav-mobile-panel  { display: none; }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     NAV - mobile hamburger + overflow safety (≤768px)
+     ═══════════════════════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    /* Force the nav bar to never wrap or push wider than the viewport */
+    nav.top .container {
+      flex-wrap: nowrap !important;
+      gap: 12px;
+      height: 56px !important;
+      padding: 0 16px !important;
+      overflow: visible;
+    }
+    .logo { height: 36px !important; flex-shrink: 0; }
+
+    /* Hide the inline desktop links - they live in the slide-down panel on mobile */
+    .nav-link-desktop { display: none !important; }
+
+    /* Keep the CTA visible but tight; never wrap, never grow */
+    nav.top .nav-cta {
+      padding: 8px 14px !important;
+      font-size: 13px !important;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Show the hamburger button */
+    .nav-burger {
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .nav-burger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--vp-cream, #fafafa);
+      border-radius: 1px;
+      transition: transform .25s ease, opacity .2s ease, background .25s ease;
+    }
+    nav.top.scrolled .nav-burger span { background: var(--vp-deep-black, #0c0b09); }
+
+    /* Burger morphs into a close X when the panel is open */
+    body.menu-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.menu-open .nav-burger span:nth-child(2) { opacity: 0; }
+    body.menu-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Slide-down panel - covers the rest of the viewport when open */
+    .nav-mobile-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: fixed;
+      top: 56px;
+      left: 0; right: 0;
+      bottom: 0;
+      padding: 32px 24px max(32px, env(safe-area-inset-bottom));
+      background: rgba(250, 250, 250, 0.98);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transform: translateY(-100%);
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+      z-index: 49;
+      overflow-y: auto;
+    }
+    body.menu-open .nav-mobile-panel {
+      transform: translateY(0);
+    }
+    body.menu-open .nav-mobile-panel { aria-hidden: false; }
+    .nav-mobile-link {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--vp-deep-black);
+      text-decoration: none;
+      padding: 18px 0;
+      border-bottom: 1px solid rgba(15,15,15,0.08);
+    }
+    .nav-mobile-cta {
+      margin-top: 24px;
+      padding: 16px 22px;
+      background: var(--vp-deep-black);
+      color: var(--vp-cream, #fafafa);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      text-decoration: none;
+      border-radius: 999px;
+      text-align: center;
+    }
+
+    /* Lock scroll while menu is open */
+    body.menu-open { overflow: hidden !important; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     MOBILE STACKED FORM (≤600px) - prose pattern collapses to a real form
+     ═══════════════════════════════════════════════════════════════════════════ */
+  @media (max-width: 600px) {
+    .mobile-label {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--vp-indigo, #3F36B2);
+      margin: 24px 0 8px;
+    }
+    .mobile-label:first-of-type { margin-top: 8px; }
+
+    /* Hide all the inline prose connector text on mobile */
+    .input-panel .prose-text { display: none !important; }
+
+    /* The .audit-prose containers become block stacks rather than prose lines */
+    .input-panel .audit-prose {
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 18px !important;
+      line-height: 1.4 !important;
+      text-align: left !important;
+    }
+
+    /* Each picker becomes a full-width segmented field with proper hit area */
+    .input-panel .picker {
+      display: block !important;
+      width: 100%;
+      margin: 0 !important;
+    }
+    .input-panel .picker-trigger--inline {
+      display: flex !important;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      min-height: 52px;
+      padding: 14px 18px !important;
+      background: var(--vp-cream, #fafafa) !important;
+      border: 1px solid rgba(15,15,15,0.12) !important;
+      border-radius: 12px !important;
+      font-size: 16px !important;
+      color: var(--vp-deep-black, #0c0b09) !important;
+      font-weight: 500 !important;
+    }
+    .input-panel .picker-trigger--inline::after {
+      content: "▾";
+      color: var(--vp-indigo);
+      font-size: 14px;
+      margin-left: 12px;
+    }
+    .input-panel .picker-trigger--inline .picker-label {
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      color: var(--vp-deep-black, #0c0b09) !important;
+      letter-spacing: 0 !important;
+      flex: 1;
+      text-align: left;
+    }
+
+    /* LinkedIn input: prefix + field as one bordered group */
+    .input-panel .audit-prose:has(.audit-input) {
+      display: flex !important;
+      align-items: stretch;
+      width: 100%;
+      min-height: 52px;
+      padding: 0 !important;
+      background: var(--vp-cream, #fafafa);
+      border: 1px solid rgba(15,15,15,0.12);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .input-panel .audit-prefix {
+      display: inline-flex !important;
+      align-items: center;
+      padding: 0 0 0 18px !important;
+      font-size: 16px !important;
+      color: rgba(15,15,15,0.55) !important;
+      font-weight: 400 !important;
+      white-space: nowrap;
+    }
+    .input-panel .audit-input {
+      flex: 1;
+      min-height: 52px;
+      padding: 14px 14px 14px 4px !important;
+      border: 0 !important;
+      background: transparent !important;
+      font-size: 16px !important;
+      color: var(--vp-deep-black, #0c0b09) !important;
+      font-weight: 500 !important;
+      width: 100% !important;
+    }
+
+    /* Trust line moves below submit, smaller */
+    .audit-trust {
+      font-size: 12px !important;
+      text-align: center;
+      margin-top: 16px !important;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     SMART STICKY CTA - only show when input is out of view + footer not in view
+     ═══════════════════════════════════════════════════════════════════════════ */
+  /* By default the sticky pin is OFF. JS observers add `body.cta-pin` when
+     conditions are met. Hide entirely on >=1024px (no need on desktop). */
+  @media (min-width: 1024px) {
+    body .audit-submit { position: static !important; }
+  }
+  @media (max-width: 1023px) {
+    /* Reset the universal sticky we shipped earlier - only show via cta-pin */
+    .audit-submit {
+      position: static !important;
+      width: auto !important;
+    }
+    body.cta-pin .audit-submit {
+      position: fixed !important;
+      left: 16px;
+      right: 16px;
+      bottom: max(16px, env(safe-area-inset-bottom, 16px));
+      width: auto !important;
+      margin: 0 !important;
+      padding: 16px 24px !important;
+      font-size: 16px !important;
+      border-radius: 14px !important;
+      box-shadow: 0 12px 32px rgba(11,3,89,0.35);
+      z-index: 50;
+      justify-content: center;
+    }
+    /* Add bottom padding to body so the sticky button never overlaps content */
+    body.cta-pin {
+      padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     METHODOLOGY HEXAGON - mobile-fluid + touch-aware
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .method-diagram {
+    padding: 24px 18px !important;   /* breathing room so labels don't touch the border */
+  }
+  .method-diagram svg {
+    width: 100%;
+    height: auto;
+    max-width: 420px;
+    margin: 0 auto;
+    display: block;
+    overflow: visible;
+  }
+  /* The hex-vertex group becomes a real button via role+tabindex (set in HTML);
+     ensure 44px hit target on touch */
+  .method-diagram .hex-vertex .hex-hit { r: 30; }
+  .method-diagram .hex-label { font-size: 13px; }
+  .method-diagram .hex-num   { font-size: 11px; }
+
+  /* Touch-aware instruction line */
+  .method-hint::before { content: attr(data-hover-text); }
+  @media (hover: none) {
+    .method-hint::before { content: attr(data-tap-text); }
+  }
+
+  @media (max-width: 600px) {
+    .method-diagram { padding: 18px 8px !important; }
+    .method-diagram svg { max-width: 100%; }
+    .method-diagram .hex-label { font-size: 12px !important; }
+    .method-diagram .hex-num   { font-size: 10px !important; }
+    .method-hint { font-size: 11px; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     GENERAL MOBILE POLISH (≤600px) — vertical compression + fit-and-finish
+     ═══════════════════════════════════════════════════════════════════════════ */
+  /* iOS zoom prevention - applies at every viewport */
+  input, textarea, select { font-size: 16px !important; }
+
+  /* Anchored sections need clearance from the sticky nav */
+  #methodology, #circle, #results, #how, #next-moves {
+    scroll-margin-top: 72px;
+  }
+
+  @media (max-width: 600px) {
+    /* Section padding cut by ~35% */
+    .hero          { padding: 40px 0 80px !important; min-height: auto !important; }
+    .pillars       { padding: 56px 0 !important; }
+    .results-wrap  { padding: 56px 0 !important; }
+    .next-moves-wrap { padding: 56px 0 !important; }
+    .method-wrap   { padding: 56px 0 !important; }
+    .circle        { padding: 56px 0 !important; }
+    footer         { padding-top: 48px !important; }
+
+    /* Display copy tighter */
+    .display { font-size: clamp(36px, 10vw, 48px) !important; line-height: 1.0 !important; }
+    .h2      { font-size: clamp(28px, 7vw, 36px) !important; line-height: 1.1 !important; }
+
+    /* Action card less padding */
+    .action-card { padding: 32px 18px !important; }
+
+    /* 44x44 tap targets via padding */
+    .nav-mobile-link  { min-height: 44px; padding: 16px 0; }
+    footer .footer-col a,
+    footer .footer-legal-row a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 12px 0;
+    }
+
+    /* Stats card units (×, d, m) - matched type, baseline aligned, no gap */
+    .stat-num {
+      font-feature-settings: "tnum" 1;     /* tabular numerals */
+      letter-spacing: -0.02em;
+    }
+    .stat-num .stat-unit {
+      font-size: 0.55em !important;
+      font-weight: 700;
+      vertical-align: 0.15em;             /* nudges baseline up like a sup, but same family */
+      margin-left: 0;
+      letter-spacing: 0;
+      color: inherit;
+      opacity: 0.75;
+    }
+
+    /* Loading title + subtitle should not push the panel taller than necessary */
+    .action-card.is-loading .loading-title    { font-size: 22px !important; }
+    .action-card.is-loading .loading-subtitle { font-size: 14px !important; }
+
+    /* Move cards: tighter */
+    .move-card    { padding: 20px 18px !important; }
+    .move-title   { font-size: 17px !important; }
+    .move-step    { font-size: 13px !important; }
+
+    /* Personal hex container */
+    .results-split { gap: 16px !important; margin: 12px 0 24px !important; }
+    .personal-hex  { max-width: 280px !important; }
+    .results-summary { padding: 0 !important; }
+    .results-summary-title { font-size: 22px !important; }
+    .results-summary-body  { font-size: 14px !important; line-height: 1.5 !important; }
+
+    /* Score reveal on small phones - shrink ring + number */
+    .score-reveal-ring { width: 200px !important; height: 200px !important; }
+    .score-reveal-num  { font-size: 64px !important; }
+    .score-reveal-suffix { font-size: 14px !important; }
+    .score-reveal-tier-name { font-size: clamp(26px, 7vw, 32px) !important; }
+  }
+
+  /* Footer legal row stacks on very small screens */
+  @media (max-width: 480px) {
+    footer .footer-legal-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+      padding-bottom: 32px;
+    }
+    footer .footer-legal-row > div:first-child {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    footer .footer-legal-row a { margin-right: 0 !important; }
+
+    /* Extra padding so footer never sits under the sticky CTA */
+    body.cta-pin footer { padding-bottom: 96px !important; }
+  }
 </style>
 </head>
 <body>
@@ -3440,10 +3826,21 @@
       </svg>
     </a>
     <div class="nav-right">
-      <a href="#methodology" class="nav-link">Methodology</a>
-      <a href="#circle" class="nav-link">The Circle</a>
+      <a href="#methodology" class="nav-link nav-link-desktop">Methodology</a>
+      <a href="#circle"      class="nav-link nav-link-desktop">The Circle</a>
       <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
+      <button type="button" class="nav-burger" id="nav-burger"
+              aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-panel">
+        <span></span><span></span><span></span>
+      </button>
     </div>
+  </div>
+  <!-- Mobile slide-down panel - hidden on desktop, toggled by .nav-burger at <=768px -->
+  <div class="nav-mobile-panel" id="nav-mobile-panel" aria-hidden="true">
+    <a href="#methodology" class="nav-mobile-link">Methodology</a>
+    <a href="#circle"      class="nav-mobile-link">The Circle</a>
+    <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="nav-mobile-cta">Book a call</a>
+  </div>
   </div>
 </nav>
 
@@ -3467,8 +3864,11 @@
     <div class="action-card" id="action-card">
 
       <div class="input-panel" id="input-panel">
+        <!-- Mobile labels (hidden on desktop), prose connectors (hidden on mobile).
+             Same form, two layouts via CSS. -->
+        <label class="mobile-label" for="ml-role">I am a</label>
         <div class="audit-prose">
-          I'm a&nbsp;<span class="picker" data-picker-name="role">
+          <span class="prose-text">I'm a&nbsp;</span><span class="picker" data-picker-name="role">
             <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your role">
               <span class="picker-label" data-picker-label>CEO</span>
             </button>
@@ -3498,7 +3898,7 @@
               <option value="speaker">Speaker / Author</option>
               <option value="senior">Senior leader</option>
             </select>
-          </span>&nbsp;who wants to&nbsp;<span class="picker" data-picker-name="goal">
+          </span><span class="prose-text">&nbsp;who wants to&nbsp;</span><label class="mobile-label" for="ml-goal">I want to</label><span class="picker" data-picker-name="goal">
             <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your goal">
               <span class="picker-label" data-picker-label>attract better clients &amp; investors</span>
             </button>
@@ -3514,11 +3914,12 @@
               <option value="credibility">build industry credibility</option>
               <option value="legacy">leave a lasting legacy</option>
             </select>
-          </span>.
+          </span><span class="prose-text">.</span>
         </div>
 
+        <label class="mobile-label" for="input-linkedin">LinkedIn</label>
         <div class="audit-prose">
-          You can find me at&nbsp;<span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" spellcheck="false" />
+          <span class="prose-text">You can find me at&nbsp;</span><span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" />
         </div>
 
         <button type="button" class="audit-submit" id="btn-calculate">Calculate my score</button>
@@ -3917,6 +4318,65 @@
 
 <!-- ─────────── JS ─────────── -->
 <script>
+  /* ────────── MOBILE NAV — hamburger toggle ────────── */
+  (function () {
+    const burger = document.getElementById('nav-burger');
+    const panel  = document.getElementById('nav-mobile-panel');
+    if (!burger || !panel) return;
+    function setOpen(isOpen) {
+      document.body.classList.toggle('menu-open', isOpen);
+      burger.setAttribute('aria-expanded', String(isOpen));
+      panel.setAttribute('aria-hidden', String(!isOpen));
+    }
+    burger.addEventListener('click', () => {
+      setOpen(!document.body.classList.contains('menu-open'));
+    });
+    // Close panel on link tap
+    panel.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => setOpen(false));
+    });
+    // Esc closes
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.body.classList.contains('menu-open')) setOpen(false);
+    });
+  })();
+
+  /* ────────── SMART STICKY CTA — IntersectionObserver-driven on mobile ────────── */
+  (function () {
+    if (window.matchMedia('(min-width: 1024px)').matches) return;     // desktop: no sticky needed
+    const inputPanel = document.getElementById('input-panel');
+    const footer     = document.querySelector('footer');
+    if (!inputPanel || !footer) return;
+
+    let inputVisible = true;
+    let footerVisible = false;
+
+    function update() {
+      // Show sticky only when input is OUT of view AND footer NOT yet in view
+      const shouldPin = !inputVisible && !footerVisible
+                        && !document.body.classList.contains('audit-complete')
+                        && !document.body.classList.contains('menu-open');
+      document.body.classList.toggle('cta-pin', shouldPin);
+    }
+    new IntersectionObserver(entries => {
+      inputVisible = entries[0].isIntersecting;
+      update();
+    }, { rootMargin: '-72px 0px 0px 0px' }).observe(inputPanel);
+    new IntersectionObserver(entries => {
+      footerVisible = entries[0].isIntersecting;
+      update();
+    }, { threshold: 0.05 }).observe(footer);
+  })();
+
+  /* ────────── METHODOLOGY HINT — touch-aware copy ────────── */
+  (function () {
+    const hint = document.getElementById('method-hint');
+    if (!hint) return;
+    hint.setAttribute('data-hover-text', 'Hover any point to see what we measure');
+    hint.setAttribute('data-tap-text',   'Tap any point to see what we measure');
+    // The actual copy swap is done via CSS @media (hover: none) on .method-hint::before
+  })();
+
   /* ────────── SCROLL EFFECTS — nav state + mobile progress bar ────────── */
   // Single rAF-throttled listener. Toggles `nav.scrolled` past 32px and updates
   // --scroll-pct on body for the mobile progress bar at the top.
