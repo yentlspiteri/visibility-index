@@ -4664,28 +4664,80 @@
     }
   }
 
-  /* Footer: stacked sections, centered, divider before copyright on small */
+  /* ── MOBILE FOOTER (≤640px) — compact, single column, centered, no oversized tap targets ──
+     The 44px min-height tap-target rule was making the footer ~2× too tall.
+     Footer links are tertiary navigation, not primary actions — they don't need it. */
   @media (max-width: 640px) {
+    footer { padding: 40px 0 0 !important; }
+    footer .container { padding-inline: 24px !important; }
     footer .footer-grid {
       display: flex !important;
       flex-direction: column !important;
-      gap: 24px !important;
-      text-align: center;
+      gap: 28px !important;
+      text-align: center !important;
+      margin-bottom: 28px !important;
     }
     footer .footer-col,
     footer .footer-col-center,
     footer .footer-col-right { text-align: center !important; }
-    footer .footer-col ul { gap: 8px !important; }
-    footer .footer-col a,
-    footer .footer-email {
-      display: inline-block;
-      padding: 8px 0;
-      word-break: break-word;
+
+    /* Eyebrow much tighter */
+    footer .footer-col-eyebrow {
+      font-size: 10px !important;
+      letter-spacing: 0.16em !important;
+      margin: 0 0 12px !important;
+      color: rgba(15,15,15,0.4) !important;
     }
+
+    /* Compact link list - no min-height enforcement on tertiary nav links */
+    footer .footer-col ul {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    footer .footer-col a,
+    footer .footer-col li,
+    footer .footer-email {
+      min-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: inline-block !important;
+      font-size: 14px !important;
+      letter-spacing: 0.04em !important;
+      line-height: 1.4 !important;
+      word-break: break-word !important;
+    }
+    footer .footer-email {
+      font-size: 16px !important;
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+    }
+
+    /* Legal row sits compact at bottom with a divider above */
     footer .footer-legal-row {
-      border-top: 1px solid rgba(15,15,15,0.10);
-      padding-top: 20px !important;
-      margin-top: 8px !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 10px !important;
+      border-top: 1px solid rgba(15,15,15,0.08) !important;
+      padding: 20px 0 24px !important;
+      margin-top: 4px !important;
+      font-size: 11px !important;
+    }
+    footer .footer-legal-row > div {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 16px !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      text-align: center !important;
+    }
+    footer .footer-legal-row a {
+      min-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      font-size: 11px !important;
     }
   }
 
