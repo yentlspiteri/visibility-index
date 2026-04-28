@@ -4371,98 +4371,80 @@
   .share-linkedin svg { color: #0A66C2; flex-shrink: 0; }   /* official LinkedIn blue */
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     RESULTS PAGE BALANCE — break the navy with cream "breathing rooms"
-     The scoreboard, hexagon, and personal-card move onto a cream surface so the
-     content reads more easily. Headline + tier still POP on navy at the top.
+     RESULTS PAGE BALANCE — keep .results-wrap navy (so score header is dramatic
+     by default), but turn the findings + hexagon + personal-card areas into
+     bright CREAM CARDS within the navy frame. Eye gets breathing room without
+     fighting the natural top-down structure.
      ═══════════════════════════════════════════════════════════════════════════ */
-  /* Split the results section: top navy band for score reveal, cream below for content */
-  .results-wrap { background: var(--vp-cream, #fafafa) !important; padding: 0 !important; }
-  .results-wrap::before { display: none !important; }
-  /* Score reveal sits in its own navy block at the top */
-  .results-wrap > .container { padding-top: clamp(48px, 6vw, 80px); padding-bottom: 0; }
-  .results-wrap .results-eyebrow-row,
-  .results-wrap .score-reveal {
-    background: var(--vp-navy);
-    color: var(--vp-white);
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    padding-left: clamp(24px, 5vw, 64px);
-    padding-right: clamp(24px, 5vw, 64px);
+  /* Findings strip — cream card on the navy section */
+  .results-wrap .findings {
+    background: var(--vp-cream, #fafafa);
+    border-radius: 24px;
+    padding: clamp(28px, 4vw, 48px) clamp(20px, 4vw, 40px) !important;
+    margin-top: clamp(24px, 4vw, 40px) !important;
+    margin-bottom: clamp(24px, 4vw, 40px) !important;
+    max-width: 1080px !important;
   }
-  .results-wrap .results-eyebrow-row {
-    padding-top: clamp(48px, 6vw, 80px);
-    padding-bottom: 24px;
-    margin-bottom: 0 !important;
-    justify-content: center;
-  }
-  .results-wrap .score-reveal {
-    padding-top: 0 !important;
-    padding-bottom: clamp(56px, 7vw, 96px);
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    max-width: none !important;
-  }
-  /* Findings + hexagon + personal-card now live on cream */
-  .results-wrap .findings,
-  .results-wrap .results-split,
-  .results-wrap .personal-card,
-  .results-wrap .gate-standalone {
-    background: transparent;
-    color: var(--vp-deep-black, #0c0b09);
-  }
-  .results-wrap .findings { padding-top: clamp(56px, 7vw, 96px) !important; }
   .results-wrap .findings-eyebrow { color: var(--vp-indigo) !important; }
   .results-wrap .finding-card {
-    background: var(--vp-white, #fff) !important;
+    background: rgba(63,54,178,0.04) !important;
     border: 1px solid rgba(63,54,178,0.14) !important;
-    box-shadow: 0 6px 20px rgba(11,3,89,0.06);
+    box-shadow: none;
   }
   .results-wrap .finding-card:hover {
     background: #fff !important;
     border-color: rgba(63,54,178,0.32) !important;
-    box-shadow: 0 12px 30px rgba(11,3,89,0.10);
+    box-shadow: 0 8px 24px rgba(11,3,89,0.06);
   }
   .results-wrap .finding-card.is-gap {
-    background: rgba(63,54,178,0.04) !important;
+    background: rgba(63,54,178,0.06) !important;
     border-color: rgba(63,54,178,0.10) !important;
   }
-  .results-wrap .finding-label { color: var(--vp-indigo) !important; opacity: 0.7; }
+  .results-wrap .finding-label { color: var(--vp-indigo) !important; opacity: 0.75; }
   .results-wrap .finding-value { color: var(--vp-deep-black, #0c0b09) !important; }
   .results-wrap .finding-value strong { color: var(--vp-indigo) !important; }
   .results-wrap .finding-value em { color: rgba(15,15,15,0.78) !important; font-weight: 500; }
   .results-wrap .finding-sub { color: rgba(15,15,15,0.55) !important; }
 
-  /* Personal hex on cream — invert the colors so the silhouette stays vivid on light bg */
-  .results-wrap .personal-hex .phex-ring {
-    stroke: rgba(63,54,178,0.18) !important;
+  /* Hexagon + summary — cream card */
+  .results-wrap .results-split {
+    background: var(--vp-cream, #fafafa);
+    border-radius: 24px;
+    padding: clamp(28px, 4vw, 48px) !important;
+    margin-top: clamp(24px, 4vw, 40px) !important;
+    margin-bottom: clamp(24px, 4vw, 40px) !important;
+    max-width: 1080px !important;
   }
-  .results-wrap .personal-hex .phex-axis {
-    stroke: rgba(63,54,178,0.14) !important;
-  }
-  .results-wrap .personal-hex .phex-outline {
-    stroke: rgba(11,3,89,0.85) !important;
-  }
+  /* Personal hex on cream — invert spoke/axis colors so the silhouette pops */
+  .results-wrap .personal-hex .phex-ring  { stroke: rgba(63,54,178,0.18) !important; }
+  .results-wrap .personal-hex .phex-axis  { stroke: rgba(63,54,178,0.14) !important; }
+  .results-wrap .personal-hex .phex-outline { stroke: rgba(11,3,89,0.85) !important; }
   .results-wrap .personal-hex .phex-node {
     fill: var(--vp-cream) !important;
     stroke: var(--vp-indigo) !important;
   }
-  .results-wrap .personal-hex .phex-num {
-    fill: var(--vp-indigo) !important;
-  }
-  .results-wrap .personal-hex .phex-label {
-    fill: var(--vp-deep-black, #0c0b09) !important;
-  }
+  .results-wrap .personal-hex .phex-num   { fill: var(--vp-indigo) !important; }
+  .results-wrap .personal-hex .phex-label { fill: var(--vp-deep-black, #0c0b09) !important; }
   /* Right-column summary copy on cream */
   .results-wrap .results-summary { color: var(--vp-deep-black, #0c0b09); }
   .results-wrap .results-summary-eyebrow { color: var(--vp-indigo) !important; }
   .results-wrap .results-summary-title { color: var(--vp-deep-black, #0c0b09) !important; }
   .results-wrap .results-summary-body { color: rgba(15,15,15,0.7) !important; }
 
-  /* Personal card stays on cream too (Claude exec summary + teasers) */
-  .results-wrap .personal-card { color: var(--vp-deep-black, #0c0b09); }
-
-  /* Trail off the section with cream-to-cream so it flows into the next-moves navy band naturally */
-  .results-wrap > .container { padding-bottom: clamp(56px, 7vw, 96px); }
+  /* Personal card — cream card */
+  .results-wrap .personal-card {
+    background: var(--vp-cream, #fafafa) !important;
+    color: var(--vp-deep-black, #0c0b09) !important;
+    border-radius: 24px;
+    padding: clamp(28px, 4vw, 48px) !important;
+    margin-top: clamp(24px, 4vw, 40px) !important;
+    margin-bottom: clamp(24px, 4vw, 40px) !important;
+    max-width: 1080px !important;
+  }
+  .results-wrap .personal-card * { color: inherit; }
+  .results-wrap .personal-summary { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .personal-teasers-label { color: var(--vp-indigo) !important; }
+  .results-wrap .personal-teasers li { color: rgba(15,15,15,0.78) !important; }
 
   /* ═══════════════════════════════════════════════════════════════════════════
      MOBILE FINAL POLISH — checklist sweep at 360 / 390 / 414 / 430px
