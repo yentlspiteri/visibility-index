@@ -3236,6 +3236,16 @@
     overscroll-behavior: none;
     touch-action: none;
   }
+  /* Hide the nav (and the floating helpers) while audit is running so the loading
+     state has the user's full attention. They reappear on results or error. */
+  body.audit-locked nav.top,
+  body.audit-locked .start-over,
+  body.audit-locked .bug-report,
+  body.audit-locked .floating-helpers {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
 
   /* ── "Here's what we found" findings strip ──
      Sits between the score reveal and the hexagon. Pulls real scraped data into
@@ -4334,6 +4344,126 @@
     body.cta-pin footer { padding-bottom: 96px !important; }
   }
 
+  /* Share-on-LinkedIn button — sits below tier tagline in the score reveal */
+  .share-linkedin {
+    margin-top: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    background: rgba(252, 252, 252, 0.10);
+    border: 1px solid rgba(252, 252, 252, 0.22);
+    color: var(--vp-cream);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .18s ease, transform .18s cubic-bezier(.34,1.56,.64,1), border-color .18s ease;
+  }
+  .share-linkedin:hover {
+    background: rgba(252, 252, 252, 0.18);
+    border-color: rgba(252, 252, 252, 0.36);
+    transform: translateY(-1px);
+  }
+  .share-linkedin:active { transform: scale(0.97); }
+  .share-linkedin svg { color: #0A66C2; flex-shrink: 0; }   /* official LinkedIn blue */
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     RESULTS PAGE BALANCE — break the navy with cream "breathing rooms"
+     The scoreboard, hexagon, and personal-card move onto a cream surface so the
+     content reads more easily. Headline + tier still POP on navy at the top.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  /* Split the results section: top navy band for score reveal, cream below for content */
+  .results-wrap { background: var(--vp-cream, #fafafa) !important; padding: 0 !important; }
+  .results-wrap::before { display: none !important; }
+  /* Score reveal sits in its own navy block at the top */
+  .results-wrap > .container { padding-top: clamp(48px, 6vw, 80px); padding-bottom: 0; }
+  .results-wrap .results-eyebrow-row,
+  .results-wrap .score-reveal {
+    background: var(--vp-navy);
+    color: var(--vp-white);
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-left: clamp(24px, 5vw, 64px);
+    padding-right: clamp(24px, 5vw, 64px);
+  }
+  .results-wrap .results-eyebrow-row {
+    padding-top: clamp(48px, 6vw, 80px);
+    padding-bottom: 24px;
+    margin-bottom: 0 !important;
+    justify-content: center;
+  }
+  .results-wrap .score-reveal {
+    padding-top: 0 !important;
+    padding-bottom: clamp(56px, 7vw, 96px);
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    max-width: none !important;
+  }
+  /* Findings + hexagon + personal-card now live on cream */
+  .results-wrap .findings,
+  .results-wrap .results-split,
+  .results-wrap .personal-card,
+  .results-wrap .gate-standalone {
+    background: transparent;
+    color: var(--vp-deep-black, #0c0b09);
+  }
+  .results-wrap .findings { padding-top: clamp(56px, 7vw, 96px) !important; }
+  .results-wrap .findings-eyebrow { color: var(--vp-indigo) !important; }
+  .results-wrap .finding-card {
+    background: var(--vp-white, #fff) !important;
+    border: 1px solid rgba(63,54,178,0.14) !important;
+    box-shadow: 0 6px 20px rgba(11,3,89,0.06);
+  }
+  .results-wrap .finding-card:hover {
+    background: #fff !important;
+    border-color: rgba(63,54,178,0.32) !important;
+    box-shadow: 0 12px 30px rgba(11,3,89,0.10);
+  }
+  .results-wrap .finding-card.is-gap {
+    background: rgba(63,54,178,0.04) !important;
+    border-color: rgba(63,54,178,0.10) !important;
+  }
+  .results-wrap .finding-label { color: var(--vp-indigo) !important; opacity: 0.7; }
+  .results-wrap .finding-value { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .finding-value strong { color: var(--vp-indigo) !important; }
+  .results-wrap .finding-value em { color: rgba(15,15,15,0.78) !important; font-weight: 500; }
+  .results-wrap .finding-sub { color: rgba(15,15,15,0.55) !important; }
+
+  /* Personal hex on cream — invert the colors so the silhouette stays vivid on light bg */
+  .results-wrap .personal-hex .phex-ring {
+    stroke: rgba(63,54,178,0.18) !important;
+  }
+  .results-wrap .personal-hex .phex-axis {
+    stroke: rgba(63,54,178,0.14) !important;
+  }
+  .results-wrap .personal-hex .phex-outline {
+    stroke: rgba(11,3,89,0.85) !important;
+  }
+  .results-wrap .personal-hex .phex-node {
+    fill: var(--vp-cream) !important;
+    stroke: var(--vp-indigo) !important;
+  }
+  .results-wrap .personal-hex .phex-num {
+    fill: var(--vp-indigo) !important;
+  }
+  .results-wrap .personal-hex .phex-label {
+    fill: var(--vp-deep-black, #0c0b09) !important;
+  }
+  /* Right-column summary copy on cream */
+  .results-wrap .results-summary { color: var(--vp-deep-black, #0c0b09); }
+  .results-wrap .results-summary-eyebrow { color: var(--vp-indigo) !important; }
+  .results-wrap .results-summary-title { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .results-summary-body { color: rgba(15,15,15,0.7) !important; }
+
+  /* Personal card stays on cream too (Claude exec summary + teasers) */
+  .results-wrap .personal-card { color: var(--vp-deep-black, #0c0b09); }
+
+  /* Trail off the section with cream-to-cream so it flows into the next-moves navy band naturally */
+  .results-wrap > .container { padding-bottom: clamp(56px, 7vw, 96px); }
+
   /* ═══════════════════════════════════════════════════════════════════════════
      MOBILE FINAL POLISH — checklist sweep at 360 / 390 / 414 / 430px
      One consolidated block. Wins specificity by being the last @media in the file.
@@ -4785,6 +4915,13 @@
       <div class="score-reveal-tier-name" id="tier-name">-</div>
       <div class="score-reveal-tier-tagline" id="tier-tagline">-</div>
       <span class="hidden" id="tier-cta"></span>
+      <!-- Share-on-LinkedIn button. Opens LinkedIn composer with prefilled text via JS. -->
+      <button type="button" class="share-linkedin" id="share-linkedin" aria-label="Share my score on LinkedIn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+        </svg>
+        Share on LinkedIn
+      </button>
     </div>
 
     <!-- "Here's what we found" - real scraped data surfaced as concrete cards.
@@ -5116,6 +5253,45 @@
 
 <!-- ─────────── JS ─────────── -->
 <script>
+  /* ────────── LINKEDIN SHARE BUTTON — opens composer prefilled with score + brand mention ──────────
+     LinkedIn supports two share URLs:
+       - sharing/share-offsite — needs a public URL; populates a card preview
+       - feed/?shareActive=true&text= — opens composer with prefilled text (better for free-form score post)
+     We use the latter so users can edit before posting. Falls back to share-offsite if needed. */
+  (function () {
+    const btn = document.getElementById('share-linkedin');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const score = (typeof lastScore === 'number') ? Math.round((lastScore / 18) * 100) : null;
+      const tier  = lastTier?.name || '';
+      const name  = (lastProfile?.firstName) || 'I';
+      // Prefilled text — punchy, on-brand, naming the audit so the link gets clicked
+      const lines = [
+        score !== null
+          ? `Just took the FutureMakers Visibility Index. I scored ${score}/100 - ${tier}.`
+          : `Just took the FutureMakers Visibility Index.`,
+        ``,
+        `It scans your LinkedIn, your Google footprint, and any press mentions, then tells you exactly what to fix.`,
+        ``,
+        `Took 60 seconds. The report was sharper than I expected.`,
+        ``,
+        `Try it: index.vonpeach.com`,
+        ``,
+        `#FutureMakers #PersonalBranding #VonPeach`
+      ];
+      const text = encodeURIComponent(lines.join('\n'));
+      const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${text}`;
+      // Open in new tab
+      window.open(shareUrl, '_blank', 'noopener,width=720,height=720');
+      // Track for analytics
+      if (window.track) window.track('share_linkedin', {
+        score: score,
+        tier: tier,
+        source: 'score-reveal'
+      });
+    });
+  })();
+
   /* ────────── STICKY GATE REVEAL — slide up the bottom email gate on first scroll after the score ──────────
      Better UX than always-visible: the user gets to enjoy their score first, then the gate
      "rises" once they show interest by scrolling. Triggers once per session, never re-hides. */
@@ -5777,6 +5953,7 @@
   let lastPress = { count: 0, outlets: [], hits: [] };
   let lastContentIdeas = [];
   let lastPressTargets = [];
+  let lastPersonalSite = null;     // { url, found } or null
 
   // Maps Claude's service token → human label shown on the move-card service tag
   const SERVICE_LABELS = {
@@ -5966,6 +6143,7 @@
     lastPress               = (payload && payload.press)               || { count: 0, outlets: [], hits: [] };
     lastContentIdeas        = (payload && payload.contentIdeas)        || [];
     lastPressTargets        = (payload && payload.pressTargets)        || [];
+    lastPersonalSite        = (payload && payload.personalSite)        || null;
 
     // Personalize the result with profile data + Claude analysis from /api/score response.
     // We DON'T try to load the LinkedIn CDN photo any more - LinkedIn's media.licdn.com blocks
@@ -6162,6 +6340,26 @@
         icon: '👥', label: 'Network',
         valueHTML: `<strong>${fmt(followers)}</strong> followers <span style="opacity:0.5">·</span> <strong>${fmt(connections)}</strong> connections`,
         sub: sub
+      });
+    }
+
+    // ── Personal domain (firstnamelastname.com) — strong "owns their narrative" signal ──
+    const site = (payload && payload.personalSite);
+    if (site && site.found) {
+      const display = site.url.replace(/^https?:\/\/(www\.)?/, '');
+      cards.push({
+        icon: '🌐', label: 'Personal site',
+        valueHTML: `<a href="${escapeHtmlPage(site.url)}" target="_blank" rel="noopener" style="color:var(--vp-indigo);text-decoration:underline;">${escapeHtmlPage(display)}</a>`,
+        sub: 'Owning your name online is a top-tier move. You already have it.'
+      });
+    } else if (profile.firstName && profile.lastName) {
+      const f = String(profile.firstName).toLowerCase().replace(/[^a-z]/g, '');
+      const l = String(profile.lastName).toLowerCase().replace(/[^a-z]/g, '');
+      cards.push({
+        gap: true,
+        icon: '🌐', label: 'Personal site',
+        valueHTML: `${f}${l}.com - not yours`,
+        sub: 'Owning your name online is a small move with outsized payoff.'
       });
     }
 

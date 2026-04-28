@@ -139,12 +139,15 @@ export default async function handler(req, res) {
       lastName:    getLastName(profile),
       companyName: getCompany(profile)
     };
-    const [serpAllRes, serpRecentRes] = await Promise.allSettled([
+    // Three parallel scans: all-time press, recent press, personal domain probe.
+    const [serpAllRes, serpRecentRes, personalSiteRes] = await Promise.allSettled([
       fetchSerpFootprint(normalised, queryArgs, false),
-      fetchSerpFootprint(normalised, queryArgs, true)
+      fetchSerpFootprint(normalised, queryArgs, true),
+      checkPersonalDomain(queryArgs.firstName, queryArgs.lastName)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
     const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
+    const personalSite = personalSiteRes.status === 'fulfilled' ? personalSiteRes.value : null;
     const serp = serpAll;     // alias for older usage in scoreFootprint
     const press = mergePressResults(serpAll, serpRecent);
 
@@ -203,6 +206,7 @@ export default async function handler(req, res) {
       tierRoadmap:         analysis.tierRoadmap,
       contentIdeas:        analysis.contentIdeas || [],
       pressTargets:        analysis.pressTargets || [],
+      personalSite:        personalSite,                // { url, found } or null
       // Tier-1 press hits - surfaced for both the landing page and the PDF
       press:               press,
       // Backward-compat: keep older field names mapped from the new payload
@@ -321,6 +325,40 @@ function outletNameFromDomain(domain) {
     'theinformation.com': 'The Information', 'axios.com': 'Axios'
   };
   return map[domain] || domain.replace(/\.com$|\.org$|\.co$/, '').replace(/^./, c => c.toUpperCase());
+}
+
+// Personal-domain detection — tries common firstname/lastname URL patterns with a fast HEAD request.
+// Returns { url, found } if any resolve, null on miss/timeout. Fire-and-forget; never blocks the audit.
+async function checkPersonalDomain(firstName, lastName) {
+  if (!firstName || !lastName) return null;
+  const f = String(firstName).toLowerCase().replace(/[^a-z]/g, '');
+  const l = String(lastName).toLowerCase().replace(/[^a-z]/g, '');
+  if (!f || !l || f.length < 2 || l.length < 2) return null;
+  // Patterns ordered by likelihood. firstnamelastname.com is the most common executive personal site.
+  const candidates = [
+    `https://${f}${l}.com`,
+    `https://${f}-${l}.com`,
+    `https://${f}.${l}.com`,
+    `https://www.${f}${l}.com`
+  ];
+  for (const url of candidates) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 2000);
+      // HEAD request, follow redirects. Some sites refuse HEAD - GET as fallback would be slower.
+      const r = await fetch(url, {
+        method: 'HEAD',
+        redirect: 'follow',
+        signal: ctrl.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityIndex/1.0)' }
+      }).catch(() => null);
+      clearTimeout(timer);
+      if (r && r.ok) {
+        return { url, found: true };
+      }
+    } catch (_) { /* ignore single-URL failures, try the next */ }
+  }
+  return null;
 }
 
 // Merge two SerpAPI responses (all-time + last-90-days) into one combined press object.
