@@ -12,6 +12,8 @@
  * was decommissioned after LinkedIn's January 2025 lawsuit (every call returns 410).
  */
 
+import { notifyOps } from '../lib/notify.js';
+
 const APIFY_API     = 'https://api.apify.com/v2/acts';
 const APIFY_ACTOR   = process.env.APIFY_LINKEDIN_ACTOR || 'dev_fusion~Linkedin-Profile-Scraper';
 const SERPAPI_API   = 'https://serpapi.com/search.json';
@@ -76,18 +78,46 @@ export default async function handler(req, res) {
       const errMsg = profileRes.reason?.message || String(profileRes.reason) || 'no value';
       console.error('Apify failed:', errMsg, 'actor=', APIFY_ACTOR);
 
-      // Pick a user-facing message based on what actually went wrong
-      let userError;
-      if (/rate.?limit|blocked|empty profile/i.test(errMsg)) {
-        userError = 'LinkedIn is rate-limiting the scraper right now. Please wait 60 seconds and try again.';
+      // Categorise the failure → user-facing message + ops alert category
+      let userError, alertCategory, alertSubject;
+      if (/hard limit|subscribe to a paid|free user|usage limit/i.test(errMsg)) {
+        userError     = 'Our profile scanner is at capacity for the day. Please try again in a few hours, or reach out at hello@vonpeach.com to get your audit by hand.';
+        alertCategory = 'apify-hard-limit';
+        alertSubject  = '🚨 Apify scraper hit hard limit — audit is OFFLINE for users';
+      } else if (/rate.?limit|blocked|empty profile/i.test(errMsg)) {
+        userError     = 'LinkedIn is rate-limiting the scraper right now. Please wait 60 seconds and try again.';
+        alertCategory = 'apify-rate-limit';
+        alertSubject  = '⚠️ Apify scraper rate-limited by LinkedIn';
       } else if (/401|403|unauthor/i.test(errMsg)) {
-        userError = 'Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.';
+        userError     = 'Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.';
+        alertCategory = 'apify-auth';
+        alertSubject  = '🚨 Apify auth failure — APIFY_API_TOKEN missing or invalid';
       } else if (/404|not.?found/i.test(errMsg)) {
-        userError = 'That LinkedIn profile doesn’t exist. Check the handle in the URL.';
+        userError     = 'That LinkedIn profile doesn’t exist. Check the handle in the URL.';
+        alertCategory = null; // Don't alert on user-input errors
       } else if (/private/i.test(errMsg)) {
-        userError = 'That profile is private — the audit needs a public LinkedIn URL.';
+        userError     = 'That profile is private — the audit needs a public LinkedIn URL.';
+        alertCategory = null;
       } else {
-        userError = 'We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.';
+        userError     = 'We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.';
+        alertCategory = 'apify-unknown';
+        alertSubject  = '⚠️ Apify scraper failed (unknown error)';
+      }
+
+      // Fire ops alert (throttled to 1/30min per category) — only for system-level failures
+      if (alertCategory) {
+        notifyOps({
+          category: alertCategory,
+          subject:  alertSubject,
+          body:     `The audit pipeline is failing for users.\n\nApify error:\n${errMsg.slice(0, 600)}\n\nUser will see: "${userError}"`,
+          context:  {
+            actor:     APIFY_ACTOR,
+            url:       normalised,
+            role:      body.role || '(none)',
+            goal:      body.goal || '(none)',
+            ip:        ip
+          }
+        }).catch(() => {}); // fire-and-forget
       }
 
       return res.status(502).json({
@@ -159,6 +189,12 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('score handler error:', err);
+    notifyOps({
+      category: 'score-handler-crash',
+      subject:  '🚨 Visibility Index: /api/score crashed unexpectedly',
+      body:     `Uncaught error in the score handler.\n\n${err?.stack || err?.message || String(err)}`,
+      context:  { url: normalised, ip, actor: APIFY_ACTOR }
+    }).catch(() => {});
     return res.status(500).json({ error: 'Audit failed. Please try again in a minute.' });
   }
 }
