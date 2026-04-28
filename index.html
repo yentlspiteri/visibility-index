@@ -3163,10 +3163,28 @@
   body.audit-complete .pillars {
     display: none !important;
   }
+  /* Force-hide the form area and surrounding hero copy ON RESULTS — fully removes them from
+     the layout so the result section becomes the first thing in the viewport. The extra
+     redundancy (display + visibility + dimensions) defeats any rogue inline style or
+     more-specific media-query rule that might re-show them. */
   body.audit-complete .action-card,
+  body.audit-complete #action-card,
   body.audit-complete .input-panel,
-  body.audit-complete .scroll-hint {
+  body.audit-complete #input-panel,
+  body.audit-complete .scroll-hint,
+  body.audit-complete .hero-eyebrow,
+  body.audit-complete .display,
+  body.audit-complete .hero-subhead,
+  body.audit-complete section.hero,
+  body.audit-complete .container-hero {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
   }
   /* The results section becomes the entry — no top padding fighting with the (now-hidden) hero */
   body.audit-complete .results-wrap {
@@ -3864,7 +3882,7 @@
     <h1 class="display">How visible<br/>are you, really?</h1>
 
     <!-- Goal-aware subhead - primes the value prop based on the role + goal selection -->
-    <p class="hero-subhead" id="hero-subhead">CEOs who attract better clients score 4.2 points higher on visibility than peers - see where you sit.</p>
+    <p class="hero-subhead" id="hero-subhead">The CEOs attracting the right clients are usually the ones easiest to find. See how findable you are.</p>
 
     <!-- 2-COLUMN GRID: mad-libs LEFT, preview RIGHT -->
     <!-- Single full-width action area: editorial prose form + loading panel.
@@ -4572,12 +4590,12 @@
   };
 
   // Goal-aware HERO subhead - primes the value prop based on the user's role + goal selection.
-  // Synthetic but believable stats; replace with real cohort numbers once v2 ships the peer DB.
+  // Concrete, brand-aligned, no synthetic "4.2 points higher" stats that mean nothing to the reader.
   const HERO_SUBHEADS = {
-    clients:     '{role} who attract better clients score 4.2 points higher on visibility than peers - see where you sit.',
-    speaking:    '{role} who land speaking gigs average 3× more inbound media inquiries - see where you sit.',
-    credibility: '{role} with industry credibility are 2.7× more likely to be quoted in tier-1 press - see where you sit.',
-    legacy:      '{role} building lasting legacies outscore peers by 4.5 points on visibility - see where you sit.'
+    clients:     'The {role} attracting the right clients are usually the ones easiest to find. See how findable you are.',
+    speaking:    'The speaking circuit favours visible voices. See how recognisable yours is.',
+    credibility: 'Tier-one press quotes the people they can already place. See how clearly the world sees you.',
+    legacy:      'Lasting recognition is built from six small signals. See where yours stand today.'
   };
   const ROLE_PLURALS = {
     ceo:        'CEOs and C-suite leaders',
