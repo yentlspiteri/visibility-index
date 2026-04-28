@@ -242,7 +242,7 @@ YOUR JOB — return JSON with EVERY field below. No markdown fences, no prose ar
     "network":    "<one sentence on their actual follower count / connection count and what it signals>"
   },
   "moves": [
-    {"title":"<imperative, 5-9 words>","why":"<2-3 sentences specific to THIS executive>","firstStep":"<one concrete action under 30 minutes>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
+    {"title":"<imperative, 4-7 words>","why":"<ONE sentence, max 18 words. Specific to THIS executive — quote actual profile content where possible.>","firstStep":"<ONE short sentence, max 14 words. Concrete.>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
     {"title":"...","why":"...","firstStep":"...","service":"..."},
     {"title":"...","why":"...","firstStep":"...","service":"..."}
   ],

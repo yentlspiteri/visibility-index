@@ -112,10 +112,14 @@
     border-bottom: 1px solid rgba(252,252,252,0.06);
   }
   nav.top .container {
-    display: flex; justify-content: space-between; align-items: center; height: 72px;
+    display: flex; justify-content: space-between; align-items: center; height: 180px;
   }
-  .logo { height: 36px; width: auto; }
+  .logo { height: 144px; width: auto; }
   .logo svg { height: 100%; width: auto; }
+  @media (max-width: 720px) {
+    nav.top .container { height: 110px; }
+    .logo { height: 80px; }
+  }
   nav .nav-right { display: flex; gap: 28px; align-items: center; }
   nav .nav-link {
     color: rgba(252,252,252,0.65);
@@ -1738,18 +1742,22 @@
     margin: 0 0 12px;
     text-align: left;
   }
-  /* Force every child (picker buttons, input, prefix) to inherit the SAME size.
-     Browser default UA stylesheet on <input>/<button> overrides `font: inherit` in some cases. */
+  /* Force every descendant (picker buttons, input, prefix, label spans) to inherit the SAME size.
+     `!important` overrides UA stylesheets on <input>/<button> AND any older `.madlib` cascade rules. */
   .audit-prose,
-  .audit-prose .picker-label,
-  .audit-prose .picker-trigger,
-  .audit-prose .picker-trigger--inline,
-  .audit-prose .audit-prefix,
-  .audit-prose .audit-input {
-    font-family: var(--font-display);
-    font-size: clamp(28px, 3.2vw, 40px);
-    line-height: 1.45;
-    letter-spacing: -0.018em;
+  .audit-prose * {
+    font-family: var(--font-display) !important;
+    font-size: clamp(28px, 3.2vw, 40px) !important;
+    line-height: 1.45 !important;
+    letter-spacing: -0.018em !important;
+  }
+  /* Keep the popover options at their original small body size — they're not part of the prose line */
+  .audit-prose .picker-popover,
+  .audit-prose .picker-popover * {
+    font-family: var(--font-body) !important;
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+    letter-spacing: normal !important;
   }
   /* Inline picker trigger — text in lavender with a subtle underline, no chip background */
   .picker-trigger--inline {
@@ -1891,6 +1899,81 @@
   .action-card .loading-panel .loading-row.done .loading-icon::before {
     background: var(--vp-indigo);
     border-color: var(--vp-indigo);
+  }
+
+  /* ─────────── Picker-open focus state — blur everything except the active picker ─────────── */
+  .action-card { position: relative; transition: filter .25s ease; }
+  /* When ANY picker is open, dim+blur the prose and CTA — keep the active picker (and its popover) sharp */
+  .action-card.picker-active .input-panel > .audit-prose,
+  .action-card.picker-active .input-panel > .audit-submit,
+  .action-card.picker-active .input-panel > .audit-trust {
+    filter: blur(2.5px);
+    opacity: 0.45;
+    transition: filter .25s ease, opacity .25s ease;
+    pointer-events: none;
+  }
+  .action-card.picker-active .audit-prose:has(.picker-popover.open),
+  .action-card.picker-active .audit-prose:has(.picker-popover.open) * {
+    filter: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* ─────────── Loading-state overlay: blur the form, show animated loading panel above it ─────────── */
+  .action-card.is-loading .input-panel {
+    filter: blur(8px);
+    opacity: 0.25;
+    pointer-events: none;
+    transition: filter .35s ease, opacity .35s ease;
+  }
+  .action-card.is-loading .loading-panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    padding: clamp(28px, 5vw, 56px);
+    background: rgba(250,250,250,0.55);
+    backdrop-filter: blur(2px);
+    border-radius: 20px;
+    animation: loading-fade-in .4s cubic-bezier(.2,.8,.25,1) both;
+  }
+  @keyframes loading-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* Pulsing indigo orb above the loading title — visual anchor while we wait */
+  .action-card.is-loading .loading-panel::before {
+    content: "";
+    display: block;
+    width: 56px; height: 56px;
+    margin: 0 auto 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--vp-lavender, #8683E5), var(--vp-indigo) 70%);
+    box-shadow:
+      0 0 0 0 rgba(63,54,178,0.4),
+      0 12px 36px rgba(63,54,178,0.35);
+    animation: loading-orb 1.6s cubic-bezier(.4,0,.6,1) infinite;
+  }
+  @keyframes loading-orb {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(63,54,178,0.45), 0 12px 36px rgba(63,54,178,0.3);
+    }
+    50% {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 18px rgba(63,54,178,0), 0 18px 48px rgba(63,54,178,0.45);
+    }
+  }
+  .action-card.is-loading .loading-panel .loading-title,
+  .action-card.is-loading .loading-panel .loading-subtitle {
+    text-align: center;
+  }
+  .action-card.is-loading .loading-panel .loading-list {
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
   }
 
   /* ─────────── Score reveal (moved into results-wrap, was preview-result) ─────────── */
@@ -2313,19 +2396,73 @@
     line-height: 1.4;
   }
 
-  /* — Methodology section: friendly grid + image — */
-  .method-image {
+  /* — Methodology section: hexagon diagram (replaces stock-style portrait) — */
+  .method-diagram {
     width: 100%;
-    max-width: 560px;
-    margin: 0 auto 64px;
-    border-radius: 16px;
-    overflow: hidden;
-    background: linear-gradient(135deg, rgba(63,54,178,0.08), rgba(134,131,229,0.04));
+    max-width: 720px;
+    margin: 8px auto 72px;
+    padding: 36px 24px;
+    border-radius: 20px;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(63,54,178,0.10), transparent 60%),
+      linear-gradient(180deg, rgba(63,54,178,0.04), rgba(134,131,229,0.02));
+    border: 1px solid rgba(63,54,178,0.12);
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-  .method-image img {
-    display: block;
+  .method-diagram svg {
     width: 100%;
     height: auto;
+    max-width: 540px;
+    display: block;
+  }
+  .method-diagram .hex-axis {
+    stroke: rgba(63,54,178,0.18);
+    stroke-width: 1;
+    fill: none;
+  }
+  .method-diagram .hex-ring {
+    stroke: rgba(63,54,178,0.14);
+    stroke-width: 1;
+    fill: none;
+  }
+  .method-diagram .hex-shape {
+    fill: rgba(63,54,178,0.18);
+    stroke: var(--vp-indigo);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 6px 24px rgba(63,54,178,0.25));
+    animation: hex-pulse 4.5s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .method-diagram .hex-node {
+    fill: var(--vp-cream, #fafafa);
+    stroke: var(--vp-indigo);
+    stroke-width: 2;
+  }
+  .method-diagram .hex-label {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    fill: var(--vp-deep-black, #0c0b09);
+    letter-spacing: -0.005em;
+  }
+  .method-diagram .hex-num {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 700;
+    fill: var(--vp-indigo);
+    letter-spacing: 0.08em;
+  }
+  @keyframes hex-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.95; }
+    50%      { transform: scale(1.02); opacity: 1; }
+  }
+  @media (max-width: 540px) {
+    .method-diagram { padding: 24px 8px; }
+    .method-diagram .hex-label { font-size: 11px; }
+    .method-diagram .hex-num   { font-size: 9px; }
   }
 
   .method-grid {
@@ -2466,7 +2603,7 @@
     <div class="action-card" id="action-card">
 
       <div class="input-panel" id="input-panel">
-        <p class="audit-prose">
+        <div class="audit-prose">
           I'm a&nbsp;<span class="picker" data-picker-name="role">
             <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your role">
               <span class="picker-label" data-picker-label>CEO</span>
@@ -2476,8 +2613,10 @@
               <button type="button" class="picker-option" role="option" data-value="founder">Founder</button>
               <button type="button" class="picker-option" role="option" data-value="cfo">CFO</button>
               <button type="button" class="picker-option" role="option" data-value="coo">COO</button>
-              <button type="button" class="picker-option" role="option" data-value="cmo">CMO / CRO</button>
-              <button type="button" class="picker-option" role="option" data-value="cto">CTO / CPO</button>
+              <button type="button" class="picker-option" role="option" data-value="cmo">CMO</button>
+              <button type="button" class="picker-option" role="option" data-value="cro">CRO</button>
+              <button type="button" class="picker-option" role="option" data-value="cto">CTO</button>
+              <button type="button" class="picker-option" role="option" data-value="cpo">CPO</button>
               <button type="button" class="picker-option" role="option" data-value="other-c">Other C-suite leader</button>
               <button type="button" class="picker-option" role="option" data-value="senior">Senior leader</button>
             </div>
@@ -2486,8 +2625,10 @@
               <option value="founder">Founder</option>
               <option value="cfo">CFO</option>
               <option value="coo">COO</option>
-              <option value="cmo">CMO / CRO</option>
-              <option value="cto">CTO / CPO</option>
+              <option value="cmo">CMO</option>
+              <option value="cro">CRO</option>
+              <option value="cto">CTO</option>
+              <option value="cpo">CPO</option>
               <option value="other-c">Other C-suite leader</option>
               <option value="senior">Senior leader</option>
             </select>
@@ -2508,11 +2649,11 @@
               <option value="legacy">leave a lasting legacy</option>
             </select>
           </span>.
-        </p>
+        </div>
 
-        <p class="audit-prose">
+        <div class="audit-prose">
           You can find me at&nbsp;<span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" placeholder="your-handle" autocomplete="off" spellcheck="false" />
-        </p>
+        </div>
 
         <button type="button" class="audit-submit" id="btn-calculate">Calculate my score</button>
 
@@ -2689,11 +2830,48 @@
       0&ndash;3 and summed to your 0&ndash;18 Visibility Index.
     </p>
 
-    <!-- Brand image — FutureMakers 01.png (1696×960) -->
-    <div class="method-image">
-      <img src="img/01.png" alt="FutureMakers personal branding visual"
-           loading="lazy"
-           onerror="this.parentElement.style.display='none'" />
+    <!-- Six-dimension hexagon diagram — previews what we measure, ties directly to cards below -->
+    <div class="method-diagram" aria-hidden="true">
+      <svg viewBox="0 40 540 480" xmlns="http://www.w3.org/2000/svg">
+        <!-- Concentric rings (0, 1, 2, 3 score levels) -->
+        <polygon class="hex-ring" points="270,90 426,180 426,360 270,450 114,360 114,180" opacity="0.6"/>
+        <polygon class="hex-ring" points="270,150 374,210 374,330 270,390 166,330 166,210" opacity="0.45"/>
+        <polygon class="hex-ring" points="270,210 322,240 322,300 270,330 218,300 218,240" opacity="0.3"/>
+        <!-- Spokes from center to each vertex -->
+        <line class="hex-axis" x1="270" y1="270" x2="270" y2="90"/>
+        <line class="hex-axis" x1="270" y1="270" x2="426" y2="180"/>
+        <line class="hex-axis" x1="270" y1="270" x2="426" y2="360"/>
+        <line class="hex-axis" x1="270" y1="270" x2="270" y2="450"/>
+        <line class="hex-axis" x1="270" y1="270" x2="114" y2="360"/>
+        <line class="hex-axis" x1="270" y1="270" x2="114" y2="180"/>
+        <!-- Sample score polygon — top-tier executive shape -->
+        <polygon class="hex-shape" points="270,120 400,194 400,344 270,420 140,346 140,196"/>
+        <!-- Vertex nodes -->
+        <circle class="hex-node" cx="270" cy="90"  r="6"/>
+        <circle class="hex-node" cx="426" cy="180" r="6"/>
+        <circle class="hex-node" cx="426" cy="360" r="6"/>
+        <circle class="hex-node" cx="270" cy="450" r="6"/>
+        <circle class="hex-node" cx="114" cy="360" r="6"/>
+        <circle class="hex-node" cx="114" cy="180" r="6"/>
+        <!-- Labels (number + name, anchored cleanly per quadrant) -->
+        <text class="hex-num"   x="270" y="60"  text-anchor="middle">01</text>
+        <text class="hex-label" x="270" y="78"  text-anchor="middle">Digital Footprint</text>
+
+        <text class="hex-num"   x="442" y="160" text-anchor="start">02</text>
+        <text class="hex-label" x="442" y="178" text-anchor="start">Brand Clarity</text>
+
+        <text class="hex-num"   x="442" y="358" text-anchor="start">03</text>
+        <text class="hex-label" x="442" y="376" text-anchor="start">Authority</text>
+
+        <text class="hex-num"   x="270" y="478" text-anchor="middle">04</text>
+        <text class="hex-label" x="270" y="496" text-anchor="middle">Content Cadence</text>
+
+        <text class="hex-num"   x="98"  y="358" text-anchor="end">05</text>
+        <text class="hex-label" x="98"  y="376" text-anchor="end">Visual Identity</text>
+
+        <text class="hex-num"   x="98"  y="160" text-anchor="end">06</text>
+        <text class="hex-label" x="98"  y="178" text-anchor="end">Network</text>
+      </svg>
     </div>
 
     <!-- 6 dimensions as visual cards (plain English) -->
@@ -3020,7 +3198,9 @@
     cfo:       'CFOs',
     coo:       'COOs',
     cmo:       'CMOs',
+    cro:       'CROs',
     cto:       'CTOs',
+    cpo:       'CPOs',
     'other-c': 'C-suite leaders',
     senior:    'Senior leaders'
   };
@@ -3082,12 +3262,19 @@
       });
       this.popover.classList.add('open');
       this.trigger.setAttribute('aria-expanded', 'true');
+      // Tell the action-card to dim everything except the active picker
+      const card = document.getElementById('action-card');
+      if (card) card.classList.add('picker-active');
       const sel = this.popover.querySelector('[aria-selected="true"]');
       if (sel) sel.focus();
     }
     close() {
       this.popover.classList.remove('open');
       this.trigger.setAttribute('aria-expanded', 'false');
+      // If no other picker is open, lift the dim
+      const stillOpen = document.querySelector('.picker-popover.open');
+      const card = document.getElementById('action-card');
+      if (card && !stillOpen) card.classList.remove('picker-active');
     }
     toggle() {
       if (this.popover.classList.contains('open')) this.close();
@@ -3217,8 +3404,9 @@
     const raw = linkInput.value.trim();
     const normalised = normaliseLinkedIn(raw) || 'demo-profile';
 
-    // Action-card transitions: hide the input prose, show the loading list inside the same card
-    inputPanel.classList.add('hidden');
+    // Action-card transitions: keep the input panel mounted (blurred) while the loading
+    // panel overlays it. `is-loading` triggers the blur + animated orb in CSS.
+    actionCard.classList.add('is-loading');
     loadingPanel.classList.remove('hidden');
 
     // Sample pills — mock data, no API call (so demo costs nothing). Wait for animation
@@ -3265,6 +3453,7 @@
   function showError(msg) {
     // Bring the form back so the user can retry
     loadingPanel.classList.add('hidden');
+    actionCard.classList.remove('is-loading');
     inputPanel.classList.remove('hidden');
     $$('.loading-row').forEach(r => { r.classList.remove('running'); r.classList.remove('done'); });
     let errEl = document.getElementById('hero-error');
@@ -3312,6 +3501,7 @@
 
     // Hide the loading panel; the score-reveal block lives in the results-wrap section now
     loadingPanel.classList.add('hidden');
+    actionCard.classList.remove('is-loading');
 
     const tier = tierFor(total);
     // Save for the lead capture call + the post-submit reveal
@@ -3701,10 +3891,17 @@
         })
       });
       const data = await res.json().catch(() => ({}));
+      // Diagnostic — surface delivery status so we can debug Resend issues without log-diving
+      console.log('[VI] /api/lead response:', {
+        ok: data.ok, emailDelivered: data.emailDelivered,
+        mailchimpOk: data.mailchimpOk, hasPdf: !!data.pdf
+      });
       if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed.');
 
       // PDF returned as base64 — auto-trigger download for instant gratification
       if (data.pdf) downloadPDF(data.pdf, `visibility-index-${(lastProfile?.firstName || 'report').toLowerCase()}.pdf`);
+      else console.warn('[VI] No PDF in response — pdf-lib likely threw on the server. Check Vercel logs.');
+      if (data.emailDelivered === false) console.warn('[VI] Email NOT delivered. Most likely cause: Resend free tier only sends to your registered email. Verify domain in Resend → Domains, or test with the email you used to sign up.');
 
       // Hide the gate card after successful submit; PDF auto-downloads (already triggered above)
       const gate = $('#gate-standalone');
