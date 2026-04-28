@@ -3917,6 +3917,25 @@
   .nav-burger        { display: none; }
   .nav-mobile-panel  { display: none; }
 
+  /* ════════════════════════════════════════════════════════════════════════════
+     BULLETPROOF DESKTOP-ONLY NAV LINKS
+     Flipped the logic: hidden by DEFAULT (mobile-first), shown only when the
+     viewport is genuinely desktop (≥769px). This kills the previous bug where
+     Android devices reporting >768px CSS width still saw the inline links.
+     The selector chain is intentionally heavy so no competing rule can win.
+     ════════════════════════════════════════════════════════════════════════════ */
+  html body nav.top .nav-right .nav-link-desktop,
+  html body nav.top .nav-right a.nav-link.nav-link-desktop {
+    display: none !important;
+  }
+  @media (min-width: 769px) {
+    html body nav.top .nav-right .nav-link-desktop,
+    html body nav.top .nav-right a.nav-link.nav-link-desktop {
+      display: inline-flex !important;
+      align-items: center;
+    }
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════════
      NAV - mobile hamburger + overflow safety (≤768px)
      ═══════════════════════════════════════════════════════════════════════════ */
