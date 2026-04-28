@@ -84,11 +84,12 @@ export default async function handler(req, res) {
     const profile = profileRes.value;
     const serp    = serpRes.status === 'fulfilled' ? serpRes.value : null;
 
-    // 2) Score brand clarity (LLM) — non-blocking-failure
-    const clarity = await scoreBrandClarity(profile).catch(err => {
-      console.error('Claude clarity scoring failed:', err);
-      return { score: 1, rationale: 'Fallback heuristic — LLM unavailable.' };
+    // 2) Run Claude analysis (LLM) — returns clarityScore + personalSummary + reportTeasers in one call
+    const analysis = await analyzeProfile(profile).catch(err => {
+      console.error('Claude analysis failed:', err);
+      return { clarityScore: 1, clarityRationale: 'Fallback heuristic — LLM unavailable.', personalSummary: '', reportTeasers: [] };
     });
+    const clarity = { score: analysis.clarityScore, rationale: analysis.clarityRationale };
 
     // 3) Compute the six dimensions
     const subs = {
@@ -106,22 +107,21 @@ export default async function handler(req, res) {
     return res.status(200).json({
       total, subs, tier,
       normalisedUrl: normalised,
-      _meta: {
-        clarityRationale: clarity.rationale,
-        // TEMP diagnostic:
-        profileKeys: Object.keys(profile || {}),
-        profileRawTrunc: JSON.stringify(profile || {}).slice(0, 800),
-        profileSample: {
-          headline: getHeadline(profile),
-          aboutLen: (getAbout(profile) || '').length,
-          followers: getFollowers(profile),
-          connections: getConnections(profile),
-          activities: getActivities(profile).length,
-          recommendations: getRecommendations(profile).length,
-          hasPhoto: !!getPhotoUrl(profile),
-          hasBanner: !!getBannerUrl(profile)
-        }
-      }
+      // Personalization payload — used by the frontend to greet by name + show photo + render the personal summary
+      profile: {
+        firstName:        profile.firstName || '',
+        lastName:         profile.lastName  || '',
+        pictureUrl:       getPhotoUrl(profile),
+        headline:         getHeadline(profile),
+        companyName:      profile.companyName || profile.currentCompany?.name || '',
+        followerCount:    getFollowers(profile),
+        connectionsCount: getConnections(profile),
+        isCreator:        !!profile.creator,
+        isVerified:       !!profile.isVerified
+      },
+      personalSummary: analysis.personalSummary,
+      reportTeasers:   analysis.reportTeasers,
+      _meta: { clarityRationale: clarity.rationale }
     });
   } catch (err) {
     console.error('score handler error:', err);
@@ -178,26 +178,42 @@ async function fetchSerpFootprint(normalisedUrl) {
   return r.json();
 }
 
-async function scoreBrandClarity(profile) {
-  const headline = (getHeadline(profile) || '').slice(0, 400);
-  const summary  = (getAbout(profile)    || '').slice(0, 2000);
+async function analyzeProfile(profile) {
+  const firstName    = profile.firstName || 'there';
+  const headline     = (getHeadline(profile) || '').slice(0, 400);
+  const about        = (getAbout(profile)    || '').slice(0, 2000);
+  const followers    = getFollowers(profile);
+  const connections  = getConnections(profile);
+  const companyName  = profile.companyName || profile.currentCompany?.name || '';
+  const isCreator    = !!profile.creator;
+  const isVerified   = !!profile.isVerified;
 
-  const prompt = `You are a brand strategist scoring an executive's personal brand clarity from their LinkedIn.
+  const prompt = `You are a brand strategist running a personalized visibility audit for an executive based on their LinkedIn profile. The audit scores six dimensions (footprint, clarity, authority, cadence, visual, network) on 0-3 each, summed to 0-18.
 
-Score the brand clarity from 0 to 3:
-- 0: No discernible message. Generic title or empty/vague About section.
-- 1: A rough idea is visible but the message is unclear or audience is undefined.
-- 2: Clear value proposition and audience, but phrasing is generic or slightly inconsistent.
-- 3: Crystal clear: who they help, how they help, what makes them different. Specific, ownable, confident.
+PROFILE DATA:
+- First name: ${firstName}
+- Headline: "${headline}"
+- About: "${about}"
+- Followers: ${followers.toLocaleString()}
+- Connections: ${connections.toLocaleString()}
+- Company: ${companyName}
+- LinkedIn Creator profile: ${isCreator ? 'yes' : 'no'}
+- LinkedIn verified: ${isVerified ? 'yes' : 'no'}
 
-LinkedIn headline:
-"""${headline}"""
+YOUR JOB — return THREE things:
 
-LinkedIn About:
-"""${summary}"""
+1. clarityScore (0-3) for the BRAND CLARITY dimension only:
+   • 0 = No discernible message. Generic title, empty/vague About.
+   • 1 = Rough idea visible, but the message is unclear or the audience is undefined.
+   • 2 = Clear value prop and audience, but generic phrasing.
+   • 3 = Crystal clear who they help, how, what makes them different.
 
-Respond with JSON only, no prose:
-{"score": <0|1|2|3>, "rationale": "<one short sentence>"}`;
+2. personalSummary — 2 sentences addressed to ${firstName} by name. Reference SPECIFIC things in their profile (their actual headline, their About, their follower-to-connection ratio, etc.). Sound like a confident strategist talking to a peer. No fluff, no chatbot tone, no "great work!" affirmations.
+
+3. reportTeasers — exactly THREE strings. Each one a specific gap or move visible from this profile. ~10-14 words each. Concrete + actionable, not generic.
+
+OUTPUT FORMAT — JSON only, no markdown fences, no prose around it:
+{"clarityScore": 0|1|2|3, "clarityRationale": "<one sentence>", "personalSummary": "<2 sentences>", "reportTeasers": ["...", "...", "..."]}`;
 
   const r = await fetch(ANTHROPIC_API, {
     method: 'POST',
@@ -208,7 +224,7 @@ Respond with JSON only, no prose:
     },
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
-      max_tokens: 200,
+      max_tokens: 600,
       messages: [{ role: 'user', content: prompt }]
     })
   });
@@ -216,13 +232,25 @@ Respond with JSON only, no prose:
   const data = await r.json();
   const text = data.content?.[0]?.text || '';
   const match = text.match(/\{[\s\S]*\}/);
-  if (!match) return { score: 1, rationale: 'Parse fallback.' };
+  const fallback = {
+    clarityScore: 1,
+    clarityRationale: 'Parse fallback.',
+    personalSummary: '',
+    reportTeasers: []
+  };
+  if (!match) return fallback;
   try {
     const parsed = JSON.parse(match[0]);
-    const s = Math.max(0, Math.min(3, Math.round(Number(parsed.score) || 0)));
-    return { score: s, rationale: String(parsed.rationale || '').slice(0, 200) };
+    return {
+      clarityScore:     Math.max(0, Math.min(3, Math.round(Number(parsed.clarityScore) || 0))),
+      clarityRationale: String(parsed.clarityRationale || '').slice(0, 200),
+      personalSummary:  String(parsed.personalSummary  || '').slice(0, 600),
+      reportTeasers:    Array.isArray(parsed.reportTeasers)
+        ? parsed.reportTeasers.slice(0, 3).map(t => String(t).slice(0, 140))
+        : []
+    };
   } catch {
-    return { score: 1, rationale: 'Parse fallback.' };
+    return fallback;
   }
 }
 

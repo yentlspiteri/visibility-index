@@ -1488,6 +1488,172 @@
     border-bottom-color: rgba(15,15,15,0.1);
   }
 
+  /* — Preview greeting (avatar + first name above the score ring) — */
+  .preview-greeting {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .preview-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(134,131,229,0.2);
+    border: 1.5px solid rgba(134,131,229,0.4);
+    flex-shrink: 0;
+  }
+  .preview-avatar[src=""],
+  .preview-avatar:not([src]) {
+    visibility: hidden;
+  }
+  .preview-greeting-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
+  .preview-greeting-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+    line-height: 1.4;
+  }
+  .preview-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--vp-white);
+    letter-spacing: -0.01em;
+  }
+
+  /* — Personalized analysis block (Claude-generated, sits above sub-scores) — */
+  .personal-card {
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(134,131,229,0.25);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 56px;
+    box-shadow: 0 12px 40px rgba(11,3,89,0.18);
+  }
+  .personal-card.hidden { display: none; }
+
+  .personal-summary-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+  .personal-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(134,131,229,0.2);
+    border: 2px solid rgba(134,131,229,0.4);
+    flex-shrink: 0;
+  }
+  .personal-summary {
+    font-family: var(--font-display);
+    font-size: clamp(17px, 1.6vw, 20px);
+    line-height: 1.5;
+    font-weight: 500;
+    color: rgba(252,252,252,0.92);
+    letter-spacing: -0.005em;
+    margin: 0;
+  }
+
+  .personal-teasers {
+    border-top: 1px solid rgba(252,252,252,0.08);
+    padding-top: 20px;
+  }
+  .personal-teasers-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--vp-lavender);
+    margin-bottom: 12px;
+  }
+  .personal-teasers ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .personal-teasers li {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 10px;
+    align-items: start;
+    color: rgba(252,252,252,0.78);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .personal-teasers li::before {
+    content: "→";
+    color: var(--vp-lavender);
+    font-weight: 600;
+    line-height: 1.55;
+  }
+
+  /* — Methodology section: friendly grid + image — */
+  .method-image {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto 64px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(63,54,178,0.08), rgba(134,131,229,0.04));
+  }
+  .method-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 56px;
+  }
+  @media (max-width: 880px) { .method-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .method-grid { grid-template-columns: 1fr; } }
+
+  .method-card {
+    background: rgba(15,15,15,0.02);
+    border: 1px solid rgba(15,15,15,0.08);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .method-card-num {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vp-indigo);
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .method-card-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--vp-deep-black);
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .method-card-body {
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(15,15,15,0.7);
+    margin: 0;
+  }
+
   /* — Goal-aware hero subhead — */
   .hero-subhead {
     font-family: var(--font-body);
@@ -1677,6 +1843,13 @@
 
         <!-- State C: result -->
         <div class="preview-result" id="preview-result">
+          <div class="preview-greeting" id="preview-greeting">
+            <img class="preview-avatar" id="preview-avatar" src="" alt="" />
+            <div class="preview-greeting-text">
+              <span class="preview-greeting-eyebrow">Your Visibility Index</span>
+              <span class="preview-name" id="preview-name">—</span>
+            </div>
+          </div>
           <div class="preview-ring">
             <svg viewBox="0 0 220 220">
               <defs>
@@ -1745,6 +1918,18 @@
     <div class="results-eyebrow-row">
       <span class="dot"></span>
       <span class="eyebrow">Your result</span>
+    </div>
+
+    <!-- Personalized analysis (Claude-generated from real LinkedIn profile data) -->
+    <div class="personal-card hidden" id="personal-card">
+      <div class="personal-summary-row">
+        <img class="personal-avatar" id="personal-avatar" src="" alt="" />
+        <p class="personal-summary" id="personal-summary"></p>
+      </div>
+      <div class="personal-teasers" id="personal-teasers-wrap">
+        <div class="personal-teasers-label">Your full report digs into:</div>
+        <ul id="personal-teasers"></ul>
+      </div>
     </div>
 
     <div class="subscores" id="subscores"><!-- populated by JS --></div>
@@ -1837,60 +2022,80 @@
 <!-- ─────────── METHODOLOGY ─────────── -->
 <section class="method-wrap" id="methodology">
   <div class="container-narrow">
-    <span class="eyebrow">Methodology</span>
-    <h2 class="h2" style="margin: 18px 0 28px;">How the Visibility Index is calculated.</h2>
+    <div class="eyebrow-row" style="justify-content: center; margin-bottom: 18px;">
+      <span class="dot"></span>
+      <span class="eyebrow">Methodology</span>
+    </div>
+    <h2 class="h2" style="text-align: center; margin-bottom: 18px;">What we actually measure.</h2>
+    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65);">
+      Six signals, all from your public LinkedIn. No surveys, no self-report. Each one scored
+      0&ndash;3 and summed to your 0&ndash;18 Visibility Index.
+    </p>
 
-    <details class="method" open>
-      <summary>The six dimensions</summary>
+    <!-- Brand image — drop one of the FutureMakers PNGs (01/02/04) at /img/methodology.png -->
+    <div class="method-image">
+      <img src="img/methodology.png" alt=""
+           onerror="this.parentElement.style.display='none'" />
+    </div>
+
+    <!-- 6 dimensions as visual cards (plain English) -->
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-card-num">01</div>
+        <h3 class="method-card-title">Digital Footprint</h3>
+        <p class="method-card-body">What shows up when someone Googles your name. We check your LinkedIn presence and your top-10 search results.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-num">02</div>
+        <h3 class="method-card-title">Brand Clarity</h3>
+        <p class="method-card-body">How sharp your headline and About are. An LLM scores whether a stranger could explain what you do in one line.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-num">03</div>
+        <h3 class="method-card-title">Authority Signals</h3>
+        <p class="method-card-body">Press mentions, speaking, recommendations, awards. The proof that other people already vouch for you.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-num">04</div>
+        <h3 class="method-card-title">Content Cadence</h3>
+        <p class="method-card-body">How often and how consistently you publish. Top-decile executives don&rsquo;t post more &mdash; they post on a rhythm.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-num">05</div>
+        <h3 class="method-card-title">Visual Identity</h3>
+        <p class="method-card-body">Profile photo, banner, the small craft details. Your face is the most-clicked thing on your profile.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-num">06</div>
+        <h3 class="method-card-title">Network Recognition</h3>
+        <p class="method-card-body">Followers, connections, engagement on recent posts. Whether your network actually knows what you stand for.</p>
+      </div>
+    </div>
+
+    <!-- Technical detail tucked into one accordion for skeptics -->
+    <details class="method">
+      <summary>The technical detail (for the curious)</summary>
       <div class="method-body">
-        Each profile is scored across six dimensions, rated 0–3 each, summed to a 0–18 composite. Every dimension
-        is derived from public signals — no quiz, no self-report.
+        Each dimension scores 0&ndash;3 against a transparent rubric and sums to a 0&ndash;18 composite that places you in one of four tiers (Hidden Gem 0&ndash;5, Rising Voice 6&ndash;10, Emerging Authority 11&ndash;15, Recognised Leader 16&ndash;18). The data sources behind each dimension:
         <table>
           <thead><tr><th>Dimension</th><th>Source</th></tr></thead>
           <tbody>
-            <tr><td>Digital Footprint</td><td>LinkedIn presence + Google search of name + company</td></tr>
-            <tr><td>Brand Clarity</td><td>LLM analysis of LinkedIn headline + About section</td></tr>
-            <tr><td>Authority Signals</td><td>Featured items, press &amp; speaking mentions, recommendations</td></tr>
-            <tr><td>Content Cadence</td><td>Posts &amp; articles published in the last 90 days</td></tr>
+            <tr><td>Digital Footprint</td><td>LinkedIn profile completeness + Google search of name + company</td></tr>
+            <tr><td>Brand Clarity</td><td>Claude Haiku scores LinkedIn headline + About section</td></tr>
+            <tr><td>Authority Signals</td><td>Featured items, articles, recommendations, honors, press keywords in headline/About</td></tr>
+            <tr><td>Content Cadence</td><td>Posts &amp; articles published in the last 90 days (post-scraper actor)</td></tr>
             <tr><td>Visual Identity</td><td>Profile photo, banner image, About-section quality</td></tr>
-            <tr><td>Network Recognition</td><td>Engagement on recent posts, recommendation count, endorsements</td></tr>
+            <tr><td>Network Recognition</td><td>Followers, connections, recommendation count</td></tr>
           </tbody>
         </table>
-      </div>
-    </details>
-
-    <details class="method">
-      <summary>The four tiers</summary>
-      <div class="method-body">
-        Your composite places you in one of four tiers, each with its own roadmap to the next:
-        <table>
-          <thead><tr><th>Score</th><th>Tier</th><th>Headline</th></tr></thead>
-          <tbody>
-            <tr><td>0–5</td><td>The Hidden Gem</td><td>Real expertise. The world just doesn't know it yet.</td></tr>
-            <tr><td>6–10</td><td>The Rising Voice</td><td>Building momentum, but gaps are holding you back.</td></tr>
-            <tr><td>11–15</td><td>The Emerging Authority</td><td>Solid foundations. Time to scale your reach.</td></tr>
-            <tr><td>16–18</td><td>The Recognised Leader</td><td>Strong brand. Let's make it legacy-level.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </details>
-
-    <details class="method">
-      <summary>Where the peer cohort comes from</summary>
-      <div class="method-body">
-        The peer leaderboard is built from publicly available LinkedIn profile data of executives at comparable levels,
-        in your industry and region. In v1 your ranking is calibrated against synthetic baselines from published
-        research — Edelman Trust Barometer, BrandZ Top 100 leadership data, and the Weber Shandwick "CEO Reputation
-        Premium" study. From v2 onward, it ranks against our own Visibility Index cohort built from opted-in profiles.
+        Peer benchmarks in v1 are calibrated against synthetic baselines from published research (Edelman Trust Barometer, BrandZ Top 100 leadership data, Weber Shandwick &ldquo;CEO Reputation Premium&rdquo;). From v2 onward, ranking is against the live Visibility Index cohort built from opted-in profiles.
       </div>
     </details>
 
     <details class="method">
       <summary>Privacy &amp; data use</summary>
       <div class="method-body">
-        Your LinkedIn URL is used to compute your score. We only store it against your email if you choose to unlock
-        your full report. We never sell or share your data. Hosting and processing are GDPR-compliant. You can request
-        deletion at any time.
+        Your LinkedIn URL is used to compute your score. We only store it against your email if you choose to unlock your full report. We never sell or share your data. Hosting and processing are GDPR-compliant. Email <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a> for deletion at any time.
       </div>
     </details>
   </div>
@@ -2176,7 +2381,7 @@
     // Sample pills — mock data, no API call (so demo costs nothing)
     if (opts.override) {
       runLoadingSequence(() => {
-        revealResults(opts.override.score, opts.override.subs, opts.override.url);
+        revealResults(opts.override.score, opts.override.subs, opts.override.url, null);
       });
       return;
     }
@@ -2196,7 +2401,7 @@
       showError((data && data.error) || 'Audit failed. Please try again.');
       return;
     }
-    revealResults(data.total, data.subs, data.normalisedUrl || normalised);
+    revealResults(data.total, data.subs, data.normalisedUrl || normalised, data);
   }
 
   function showError(msg) {
@@ -2230,7 +2435,7 @@
   }
 
   /* ────────── Reveal results ────────── */
-  function revealResults(total, subs, url) {
+  function revealResults(total, subs, url, payload) {
     const results = $('#results');
     results.classList.remove('hidden');
 
@@ -2241,6 +2446,49 @@
     const tier = tierFor(total);
     // Save for the lead capture call
     lastScore = total; lastSubs = subs; lastTier = tier; lastUrl = url;
+
+    // Personalize the result with profile data + Claude analysis from /api/score response
+    if (payload && payload.profile) {
+      const p = payload.profile;
+      const firstName = p.firstName || 'You';
+      const photo     = p.pictureUrl || '';
+      // Greeting in the preview card
+      const previewName = $('#preview-name');
+      const previewAvatar = $('#preview-avatar');
+      if (previewName)   previewName.textContent = firstName;
+      if (previewAvatar) {
+        if (photo) { previewAvatar.src = photo; previewAvatar.style.visibility = 'visible'; }
+        else { previewAvatar.removeAttribute('src'); }
+      }
+    }
+    // Personal summary card in the results section
+    const personalCard = $('#personal-card');
+    const summary  = payload?.personalSummary || '';
+    const teasers  = Array.isArray(payload?.reportTeasers) ? payload.reportTeasers : [];
+    const photo    = payload?.profile?.pictureUrl || '';
+    if (personalCard && (summary || teasers.length)) {
+      const summaryEl = $('#personal-summary');
+      const avatarEl  = $('#personal-avatar');
+      const teasersEl = $('#personal-teasers');
+      const teasersWrap = $('#personal-teasers-wrap');
+      if (summaryEl) summaryEl.textContent = summary;
+      if (avatarEl) {
+        if (photo) { avatarEl.src = photo; avatarEl.style.display = ''; }
+        else { avatarEl.style.display = 'none'; }
+      }
+      if (teasersEl) {
+        teasersEl.innerHTML = '';
+        teasers.forEach(t => {
+          const li = document.createElement('li');
+          const span = document.createElement('span');
+          span.textContent = t;
+          li.appendChild(span);
+          teasersEl.appendChild(li);
+        });
+      }
+      if (teasersWrap) teasersWrap.style.display = teasers.length ? '' : 'none';
+      personalCard.classList.remove('hidden');
+    }
 
     $('#tier-name').textContent     = tier.name;
     $('#tier-tagline').textContent  = tier.tagline;
