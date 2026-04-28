@@ -1804,6 +1804,9 @@
 
   /* - Nav: transparent at top, solid cream-with-blur on scroll (mirrors vonpeach.com behaviour) - */
   nav.top {
+    position: sticky;
+    top: 0;
+    z-index: 50;
     backdrop-filter: none;
     background: transparent;
     border-bottom: 1px solid transparent;
@@ -3422,8 +3425,13 @@
 
   /* ═══════════════════════════════════════════════════════════════════════════
      OVERFLOW + LAYOUT GUARDS - global, not just mobile
+     `overflow-x: clip` (not `hidden`!) — `hidden` on body breaks position:sticky
+     because it forces an implicit scroll container. `clip` keeps the visual cap
+     without creating a scroller. Supported in all modern browsers (Safari 15+,
+     Chrome 90+, Firefox 81+).
      ═══════════════════════════════════════════════════════════════════════════ */
-  html, body { overflow-x: hidden; max-width: 100vw; }
+  html { overflow-x: clip; }
+  body { overflow-x: clip; max-width: 100vw; }
 
   /* Mobile labels - hidden on desktop, shown on mobile (<=600px). The .prose-text
      spans go the other way: shown on desktop, hidden on mobile. */
