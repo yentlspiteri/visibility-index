@@ -1802,15 +1802,38 @@
  --vp-text-grey:  #666666;  /* secondary text, legal line */
   }
 
-  /* - Nav: light variant matching vonpeach.com - */
+  /* - Nav: transparent at top, solid cream-with-blur on scroll (mirrors vonpeach.com behaviour) - */
   nav.top {
     backdrop-filter: none;
-    background: var(--vp-cream);
-    border-bottom: 1px solid rgba(15,15,15,0.08);
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background .25s ease, backdrop-filter .25s ease, border-bottom-color .25s ease, box-shadow .25s ease;
   }
+  /* `.scrolled` is toggled by JS when window.scrollY > 32 */
+  nav.top.scrolled {
+    background: rgba(250, 250, 250, 0.85);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    border-bottom-color: rgba(15,15,15,0.08);
+    box-shadow: 0 1px 0 rgba(15,15,15,0.03), 0 8px 32px rgba(11,3,89,0.06);
+  }
+  /* Logo + nav links: cream while nav is transparent over the navy hero, dark once scrolled
+     onto the cream content sections. Smooth crossfade matches the nav background transition. */
   nav.top .logo svg g,
   nav.top .logo svg path {
+    fill: var(--vp-cream, #fafafa);
+    transition: fill .25s ease;
+  }
+  nav.top.scrolled .logo svg g,
+  nav.top.scrolled .logo svg path {
     fill: var(--vp-deep-black);
+  }
+  nav.top .nav-link {
+    color: var(--vp-cream, #fafafa) !important;
+    transition: color .25s ease;
+  }
+  nav.top.scrolled .nav-link {
+    color: var(--vp-deep-black) !important;
   }
   nav.top .container {
     height: 72px;
@@ -3128,11 +3151,32 @@
 
   .hidden { display: none !important; }
 
-  /* After the audit completes, the score reveal IS the page - hide everything above it.
-     User can still find the methodology + footer below the results without distraction. */
+  /* After the audit completes, the score reveal IS the page.
+     Hide nav, hero, AND the entire action-card section so the user lands straight on:
+       Score → Hexagon → Moves → Email gate (the only CTA that matters now).
+     The methodology section + footer remain accessible if they scroll past results. */
   body.audit-complete nav.top,
-  body.audit-complete .hero {
+  body.audit-complete .hero,
+  body.audit-complete .pillars {
     display: none !important;
+  }
+  body.audit-complete .action-card,
+  body.audit-complete .input-panel,
+  body.audit-complete .scroll-hint {
+    display: none !important;
+  }
+  /* The results section becomes the entry — no top padding fighting with the (now-hidden) hero */
+  body.audit-complete .results-wrap {
+    padding-top: clamp(32px, 5vw, 64px) !important;
+  }
+  /* Make the email gate visually the dominant next step — gentle pulse on the section so
+     after the user sees their score, the gate practically asks for the email itself. */
+  body.audit-complete .gate-standalone {
+    animation: gate-attract 2.4s cubic-bezier(.4,0,.2,1) 1.6s 2;
+  }
+  @keyframes gate-attract {
+    0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(63,54,178,0); }
+    50%      { transform: scale(1.01); box-shadow: 0 0 0 12px rgba(63,54,178,0); }
   }
 
   /* Scroll lock while the audit is running - keeps the loading state in view, no accidental scroll-away */
@@ -3873,6 +3917,26 @@
 
 <!-- ─────────── JS ─────────── -->
 <script>
+  /* ────────── SCROLL EFFECTS — nav state + mobile progress bar ────────── */
+  // Single rAF-throttled listener. Toggles `nav.scrolled` past 32px and updates
+  // --scroll-pct on body for the mobile progress bar at the top.
+  (function () {
+    const nav = document.querySelector('nav.top');
+    let ticking = false;
+    function update() {
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      if (nav) nav.classList.toggle('scrolled', y > 32);
+      const max = (document.documentElement.scrollHeight - window.innerHeight) || 1;
+      const pct = Math.min(100, Math.max(0, (y / max) * 100));
+      document.body.style.setProperty('--scroll-pct', pct.toFixed(1) + '%');
+      ticking = false;
+    }
+    window.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    update();
+  })();
+
   /* ────────── UTM CAPTURE (paid attribution) ────────── */
   // Capture utm_* and gclid from URL on page load and persist for the session.
   // Attached to lead submission so you can attribute conversions per ad / campaign.
