@@ -91,16 +91,31 @@ export default async function handler(req, res) {
     skipReason:      null
   };
   let emailDelivered = false;
-  if (!pdfBase64) {
-    emailDebug.skipReason = 'pdf-build-failed';
-  } else if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY) {
     emailDebug.skipReason = 'resend-api-key-missing';
   } else {
+    // Send the email regardless of PDF outcome.
+    //   - If PDF was built → attach it (normal path)
+    //   - If PDF failed   → send a degraded email saying "we'll follow up with the PDF" so
+    //                       the lead at least gets a confirmation and isn't left hanging.
     try {
       const fromAddress = emailDebug.fromUsed;
       const firstName   = profile?.firstName || '';
       const tierName    = tier?.name || 'your tier';
       const subject     = `${firstName ? firstName + ', y' : 'Y'}our Visibility Index report`;
+
+      const payload = {
+        from:    fromAddress,
+        to:      [email],
+        subject: subject,
+        html:    buildEmailHTML({ firstName, total: score, tierName, hasPdf: !!pdfBase64 })
+      };
+      if (pdfBase64) {
+        payload.attachments = [{
+          filename: `visibility-index-report${firstName ? '-' + slug(firstName) : ''}.pdf`,
+          content:  pdfBase64
+        }];
+      }
 
       const resendRes = await fetch(RESEND_API, {
         method: 'POST',
@@ -108,16 +123,7 @@ export default async function handler(req, res) {
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          from:    fromAddress,
-          to:      [email],
-          subject: subject,
-          html:    buildEmailHTML({ firstName, total: score, tierName }),
-          attachments: [{
-            filename: `visibility-index-report${firstName ? '-' + slug(firstName) : ''}.pdf`,
-            content:  pdfBase64
-          }]
-        })
+        body: JSON.stringify(payload)
       });
       emailDebug.resendStatus = resendRes.status;
       emailDelivered = resendRes.ok;
@@ -210,10 +216,18 @@ export default async function handler(req, res) {
 
 /* ───────────── helpers ───────────── */
 
-function buildEmailHTML({ firstName, total, tierName }) {
+function buildEmailHTML({ firstName, total, tierName, hasPdf }) {
   const greeting = firstName ? `Hi ${escapeHtml(firstName)},` : 'Hi,';
-  const score    = typeof total === 'number' ? `${total} / 18` : '';
+  const display  = typeof total === 'number' ? Math.round((total / 18) * 100) : null;
+  const score    = display !== null ? `${display} / 100` : '';
   const tier     = escapeHtml(tierName || 'your tier');
+  // If the PDF failed to build server-side, send a softer message that promises a follow-up.
+  const lede     = hasPdf
+    ? 'Your Visibility Index report is attached.'
+    : "We hit a hiccup generating your PDF. We'll email it to you within the hour.";
+  const body     = hasPdf
+    ? "Inside: a 4-page strategic memo on what's between your current visibility and the next level. Three specific moves to make this quarter, plus how the Von Peach team can help you action them."
+    : "In the meantime, here's the headline: your score and tier are above. The full breakdown lands in your inbox shortly.";
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Your Visibility Index Report</title></head>
@@ -221,9 +235,9 @@ function buildEmailHTML({ firstName, total, tierName }) {
   <div style="max-width:560px;margin:0 auto;background:#ffffff;padding:36px;border-radius:12px;border:1px solid rgba(15,15,15,0.08);">
     <p style="color:#3F36B2;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 14px;">VON PEACH · FUTUREMAKERS · VISIBILITY INDEX</p>
     <p style="font-size:18px;margin:0 0 18px;">${greeting}</p>
-    <p style="font-size:16px;margin:0 0 14px;">Your Visibility Index report is attached.</p>
-    ${score ? `<p style="font-size:16px;margin:0 0 14px;">You scored <strong>${score}</strong> — that's <strong>${tier}</strong>.</p>` : ''}
-    <p style="font-size:15px;color:#444;margin:0 0 22px;">Inside the PDF: a 4-page strategic memo on what's between your current visibility and the next tier. The three specific moves to make this quarter, the path forward, and which FutureMakers services we'd run with you to action them.</p>
+    <p style="font-size:16px;margin:0 0 14px;">${lede}</p>
+    ${score ? `<p style="font-size:16px;margin:0 0 14px;">You scored <strong>${score}</strong>. That's <strong>${tier}</strong>.</p>` : ''}
+    <p style="font-size:15px;color:#444;margin:0 0 22px;">${body}</p>
     <p style="margin:28px 0;">
       <a href="https://calendly.com/yentl-spiteri/30min"
          style="display:inline-block;background:#0c0b09;color:#fafafa;padding:14px 22px;border-radius:9px;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:0.01em;">
