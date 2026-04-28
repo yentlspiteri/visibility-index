@@ -564,6 +564,14 @@
     animation: phex-settle 0.6s cubic-bezier(.34,1.56,.64,1) 0.9s both;
     transform-origin: 270px 270px;
     transform-box: view-box;
+    /* Smooth shift when --shift-x/y change on hover — gravitational pull toward active vertex */
+    transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+    transform: translate(var(--shift-x, 0px), var(--shift-y, 0px));
+  }
+  /* Outline tracks the shift too so the highlight outline stays aligned */
+  .personal-hex .phex-outline {
+    transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+    transform: translate(var(--shift-x, 0px), var(--shift-y, 0px));
   }
   .personal-hex .phex-wedge {
     /* No stroke between wedges — keeps the shape feeling like one cohesive object */
@@ -3058,6 +3066,13 @@
 
   .hidden { display: none !important; }
 
+  /* After the audit completes, the score reveal IS the page — hide everything above it.
+     User can still find the methodology + footer below the results without distraction. */
+  body.audit-complete nav.top,
+  body.audit-complete .hero {
+    display: none !important;
+  }
+
   /* Scroll lock while the audit is running — keeps the loading state in view, no accidental scroll-away */
   body.audit-locked,
   html.audit-locked {
@@ -4232,32 +4247,17 @@
       $('#gate-standalone').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    // Scroll to the score reveal — scorched-earth approach.
-    //   1. Force-remove any leftover scroll-lock styles on body/html so scroll isn't blocked
-    //   2. Hard-jump past the hero (window.innerHeight) using legacy scrollTo(x, y) so it works
-    //      on every browser including Safari ≤ 16 (which doesn't support `behavior: 'instant'`)
-    //   3. Then smooth-scroll to the actual #score-reveal at multiple intervals to absorb layout shifts
+    // Smartest scroll-to-results: hide everything ABOVE the score reveal entirely.
+    // The result section becomes the first thing in the viewport — no scrolling needed,
+    // no race conditions, no smooth-scroll failure modes. Foolproof.
     document.body.classList.remove('audit-locked');
     document.documentElement.classList.remove('audit-locked');
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
+    document.body.classList.add('audit-complete');
 
-    // Step 1: hard jump past hero (works in every browser)
-    window.scrollTo(0, window.innerHeight);
-
-    // Step 2: smooth scroll to score reveal at staggered intervals
-    function scrollToScore(behavior) {
-      const target = document.getElementById('score-reveal') || results;
-      if (!target) return;
-      const rect = target.getBoundingClientRect();
-      const y = Math.max(0, rect.top + window.scrollY - 24);
-      try {
-        window.scrollTo({ top: y, behavior: behavior || 'smooth' });
-      } catch {
-        window.scrollTo(0, y);
-      }
-    }
-    [50, 200, 500, 900].forEach(t => setTimeout(() => scrollToScore('smooth'), t));
+    // Reset scroll to top so the now-first-visible #results sits at the top of the viewport
+    window.scrollTo(0, 0);
   }
 
   function animateNumber(sel, from, to, ms) {
@@ -4423,6 +4423,9 @@
     const defaultTitle   = titleEl   ? titleEl.textContent   : '';
     const defaultBody    = bodyEl    ? bodyEl.textContent    : '';
 
+    // Magnitude of the gravitational pull when a vertex is hovered (SVG units)
+    const SHIFT = 14;
+
     function showVertex(key) {
       const v = VERTICES.find(x => x.key === key); if (!v) return;
       const score = subs[key] ?? 0;
@@ -4430,25 +4433,39 @@
       const fallbackText = dim ? dim.ctxByLevel[score] : '';
       const claudeText   = (commentary && commentary[key]) || '';
       const text = claudeText || fallbackText;
-      // Score-aware framing — strengths celebrated, gaps named clearly
+      // Score-aware framing
       let framing;
       if (score === 3)      framing = 'Strength';
       else if (score === 0) framing = 'Biggest gap';
       else                  framing = 'Room to grow';
       if (eyebrowEl) eyebrowEl.textContent = framing;
-      if (titleEl)   titleEl.textContent   = `${v.label} · ${score}/3`;
+      if (titleEl)   titleEl.textContent   = `${v.label} ${score}/3`;
       if (bodyEl)    bodyEl.textContent    = text;
       // Mark active vertex for highlight CSS
       svg.querySelectorAll('.phex-vertex').forEach(g => {
         g.classList.toggle('is-active', g.dataset.dim === key);
       });
+      // Shape gravitates toward the active vertex — compute unit vector from center to vertex
+      const dx = v.cx - 270, dy = v.cy - 270;
+      const len = Math.hypot(dx, dy) || 1;
+      const sx = (dx / len) * SHIFT;
+      const sy = (dy / len) * SHIFT;
+      svg.style.setProperty('--shift-x', sx.toFixed(2) + 'px');
+      svg.style.setProperty('--shift-y', sy.toFixed(2) + 'px');
     }
     function resetSummary() {
       if (eyebrowEl) eyebrowEl.textContent = defaultEyebrow;
       if (titleEl)   titleEl.textContent   = defaultTitle;
       if (bodyEl)    bodyEl.textContent    = defaultBody;
       svg.querySelectorAll('.phex-vertex').forEach(g => g.classList.remove('is-active'));
+      svg.style.setProperty('--shift-x', '0px');
+      svg.style.setProperty('--shift-y', '0px');
     }
+    // Reset shift when the cursor leaves the whole hex area
+    svg.addEventListener('mouseleave', () => {
+      svg.style.setProperty('--shift-x', '0px');
+      svg.style.setProperty('--shift-y', '0px');
+    });
     svg.querySelectorAll('.phex-vertex').forEach(g => {
       const key = g.dataset.dim;
       g.addEventListener('mouseenter', () => showVertex(key));
