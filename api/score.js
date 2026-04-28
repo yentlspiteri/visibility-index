@@ -232,18 +232,29 @@ Respond with JSON only, no prose:
 // `followers` or `followersCount`, etc. If the chosen actor uses something else,
 // add aliases here — no need to touch the scoring functions.
 
-function getHeadline(p)    { return p.headline || p.headlineText || p.title || ''; }
-function getAbout(p)       { return p.about || p.summary || p.description || ''; }
-function getPhotoUrl(p)    { return p.profilePic || p.profilePicture || p.profilePicUrl ||
-                                    p.profilePicHighQuality || p.profile_pic_url || null; }
-function getBannerUrl(p)   { return p.coverPic || p.coverPicture || p.bannerImage ||
-                                    p.backgroundCoverImage || p.background_cover_image_url || null; }
-function getFollowers(p)   {
-  const v = p.followers ?? p.followersCount ?? p.follower_count ?? 0;
+function getHeadline(p) {
+  return p.headline || p.headlineText || p.title || '';
+}
+function getAbout(p) {
+  return p.about || p.summary || p.description || p.aboutMe || p.bio || '';
+}
+function getPhotoUrl(p) {
+  // supreme_coder: pictureUrl. dev_fusion: profilePic / profilePicUrl. Generic: profilePicture.
+  return p.pictureUrl || p.profilePic || p.profilePicture || p.profilePicUrl ||
+         p.profilePicHighQuality || p.profile_pic_url || null;
+}
+function getBannerUrl(p) {
+  // supreme_coder: coverImageUrl. dev_fusion: bannerImage / backgroundCoverImage.
+  return p.coverImageUrl || p.coverPic || p.coverPicture || p.bannerImage ||
+         p.backgroundCoverImage || p.background_cover_image_url || null;
+}
+function getFollowers(p) {
+  // supreme_coder uses singular `followerCount`. Others use `followersCount` / `followers`.
+  const v = p.followerCount ?? p.followers ?? p.followersCount ?? p.follower_count ?? 0;
   return Number(v) || 0;
 }
 function getConnections(p) {
-  const c = p.connections ?? p.connectionsCount ?? p.connection_count ?? 0;
+  const c = p.connectionsCount ?? p.connections ?? p.connection_count ?? 0;
   if (typeof c === 'string') {
     const m = c.match(/\d+/);
     return m ? parseInt(m[0], 10) : 0;
@@ -251,16 +262,19 @@ function getConnections(p) {
   return Number(c) || 0;
 }
 function getRecommendations(p) {
-  return p.recommendations || p.recommendationsList || p.received_recommendations || [];
+  return p.recommendations || p.recommendationsList ||
+         p.received_recommendations || p.recommendationsReceived || [];
 }
 function getActivities(p) {
-  return p.activities || p.posts || p.recentActivities || p.recent_posts || [];
+  // supreme_coder doesn't include posts in the basic profile — would need a separate posts-scraper actor.
+  return p.activities || p.posts || p.recentActivities ||
+         p.recent_posts || p.updates || [];
 }
 function getArticles(p) {
   return p.articles || p.publications || [];
 }
 function getHonors(p) {
-  return p.honorsAndAwards || p.honors || p.awards ||
+  return p.honors || p.honorsAndAwards || p.awards ||
          p.accomplishment_honors_awards || [];
 }
 
