@@ -2,12 +2,22 @@
  * /api/feedback - bug-report submissions from the floating 🐛 button.
  *
  * POST body: { message, email?, url, viewport, ua, time }
- * Sends an email via Resend to FEEDBACK_EMAIL (defaults to yentl@vonpeach.com).
  *
- * Why a dedicated endpoint instead of mailto:
- *   - Mailto requires a configured email client. Mobile + corporate users often don't have one.
- *   - We want the report to land regardless, with full page context attached.
- *   - Server-side delivery via the same Resend domain we already verified for /api/lead.
+ * Two-channel delivery:
+ *   1. Email via Resend → FEEDBACK_EMAIL (defaults to yentl@vonpeach.com).
+ *      Reply-To is set to the reporter's email so you can reply directly.
+ *   2. Notion DB row → "Visibility Index — Bug Reports" database
+ *      ID 096a466fad174d8eb779f2e2a36a9e9e under the project's Build Plan page.
+ *      Persistent triage list; status starts as "New".
+ *
+ * Notion env-var setup (one-time):
+ *   1. Create an integration at https://www.notion.so/my-integrations (Internal type, no extra scopes needed)
+ *   2. Copy the Internal Integration Token (starts with `secret_` or `ntn_`)
+ *   3. In Notion → open the bug-reports database → ⋯ menu → Connections → Add connections → select your integration
+ *   4. On Vercel: set NOTION_TOKEN = <that token>
+ *      (NOTION_BUGS_DATABASE_ID is optional - defaults to the DB ID we created)
+ *
+ * If NOTION_TOKEN is not set, email still goes through; Notion sync silently skipped.
  */
 
 const RESEND_API = 'https://api.resend.com/emails';
@@ -63,6 +73,25 @@ export default async function handler(req, res) {
   };
   if (replyTo) payload.reply_to = replyTo;
 
+  // Fire email + Notion in parallel. Both are independent; if either fails, we still succeed
+  // as long as ONE landed. Email is the must-have (instant alert), Notion is the nice-to-have
+  // (persistent triage tracking).
+  const [emailRes, notionRes] = await Promise.allSettled([
+    sendResend(apiKey, payload),
+    sendNotion({ message, replyTo, body, ip })
+  ]);
+
+  const emailOk  = emailRes.status === 'fulfilled' && emailRes.value;
+  const notionOk = notionRes.status === 'fulfilled' && notionRes.value;
+
+  if (!emailOk && !notionOk) {
+    console.error('feedback both channels failed', { email: emailRes, notion: notionRes });
+    return res.status(502).json({ error: 'Could not send right now.' });
+  }
+  return res.status(200).json({ ok: true, emailOk, notionOk });
+}
+
+async function sendResend(apiKey, payload) {
   try {
     const r = await fetch(RESEND_API, {
       method: 'POST',
@@ -75,12 +104,62 @@ export default async function handler(req, res) {
     if (!r.ok) {
       const errText = await r.text().catch(() => '');
       console.error('feedback Resend failed:', r.status, errText);
-      return res.status(502).json({ error: 'Could not send right now.' });
+      return false;
     }
-    return res.status(200).json({ ok: true });
+    return true;
   } catch (err) {
-    console.error('feedback error:', err);
-    return res.status(500).json({ error: 'Could not send.' });
+    console.error('feedback Resend error:', err);
+    return false;
+  }
+}
+
+// POSTs a new row to the Notion bug-reports database.
+// Requires:
+//   - NOTION_TOKEN              (from a Notion integration at notion.so/my-integrations)
+//   - NOTION_BUGS_DATABASE_ID   (defaults to the DB we created at 096a466fad174d8eb779f2e2a36a9e9e)
+// Schema is fixed (see api/feedback.js header comment).
+async function sendNotion({ message, replyTo, body, ip }) {
+  const token = process.env.NOTION_TOKEN;
+  const dbId  = process.env.NOTION_BUGS_DATABASE_ID || '096a466fad174d8eb779f2e2a36a9e9e';
+  if (!token) {
+    console.warn('[feedback] NOTION_TOKEN not set - skipping Notion sync.');
+    return false;
+  }
+  // Truncate the title to 60 chars (Notion title prop limit is 2000 but we want a tidy list view)
+  const titleText = message.slice(0, 60) + (message.length > 60 ? '…' : '');
+  const properties = {
+    'Title':    { title:     [{ text: { content: titleText } }] },
+    'Status':   { select:    { name: 'New' } },
+    'Message':  { rich_text: [{ text: { content: message.slice(0, 2000) } }] },
+    'URL':      body.url      ? { url: String(body.url).slice(0, 500) } : { url: null },
+    'Viewport': { rich_text: [{ text: { content: String(body.viewport || '') } }] },
+    'Browser':  { rich_text: [{ text: { content: String(body.ua || '').slice(0, 500) } }] },
+    'IP':       { rich_text: [{ text: { content: ip } }] }
+  };
+  if (replyTo) properties['Reporter'] = { email: replyTo };
+
+  try {
+    const r = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Authorization':  `Bearer ${token}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type':   'application/json'
+      },
+      body: JSON.stringify({
+        parent: { database_id: dbId },
+        properties
+      })
+    });
+    if (!r.ok) {
+      const errText = await r.text().catch(() => '');
+      console.error('[feedback] Notion failed:', r.status, errText.slice(0, 300));
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[feedback] Notion error:', err);
+    return false;
   }
 }
 
