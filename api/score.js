@@ -123,11 +123,11 @@ export default async function handler(req, res) {
       normalisedUrl: normalised,
       // Personalization payload — feeds the on-page reveal and the PDF report
       profile: {
-        firstName:        profile.firstName || '',
-        lastName:         profile.lastName  || '',
+        firstName:        getFirstName(profile),
+        lastName:         getLastName(profile),
         pictureUrl:       getPhotoUrl(profile),
         headline:         getHeadline(profile),
-        companyName:      profile.companyName || profile.currentCompany?.name || '',
+        companyName:      getCompany(profile),
         followerCount:    getFollowers(profile),
         connectionsCount: getConnections(profile),
         isCreator:        !!profile.creator,
@@ -152,7 +152,6 @@ export default async function handler(req, res) {
 
 async function fetchApify(linkedinUrl) {
   // Apify "run-sync-get-dataset-items" runs the actor and returns the dataset rows directly.
-  // For dev_fusion/Linkedin-Profile-Scraper, input shape is { profileUrls: [...] }.
   const url = `${APIFY_API}/${APIFY_ACTOR}/run-sync-get-dataset-items`;
   const r = await fetch(url, {
     method: 'POST',
@@ -162,13 +161,22 @@ async function fetchApify(linkedinUrl) {
     },
     // Different LinkedIn actors use different input shapes:
     //   • dev_fusion/*   → profileUrls: ["https://..."]                 (string array)
-    //   • supreme_coder* → urls:        [{ url: "https://..." }]        (object array, Apify standard)
+    //   • supreme_coder* → urls:        ["https://..."]                 (string array)
     //   • generic Apify  → startUrls:   [{ url: "https://..." }]        (very common pattern)
     // Sending all shapes is safe — each actor validates only its expected field.
+    // Send EVERY known input shape for LinkedIn-profile actors so we don't need to
+    // hardcode per-actor branching. Each actor validates only its expected field;
+    // ignored fields are harmless.
+    //   • dev_fusion/Linkedin-Profile-Scraper → profileUrls: ["url"]
+    //   • supreme_coder/linkedin-profile-scraper → urls: [{ url: "url" }] (object form)
+    //   • generic Apify scrapers → startUrls: [{ url: "url" }]
+    //   • some actors → linkedInProfileUrls: ["url"]
     body: JSON.stringify({
-      profileUrls: [linkedinUrl],
-      urls:        [{ url: linkedinUrl }],
-      startUrls:   [{ url: linkedinUrl }]
+      profileUrls:         [linkedinUrl],
+      urls:                [{ url: linkedinUrl }],
+      startUrls:           [{ url: linkedinUrl }],
+      linkedInProfileUrls: [linkedinUrl],
+      linkedinProfileUrl:  linkedinUrl
     })
   });
   if (!r.ok) {
@@ -179,8 +187,31 @@ async function fetchApify(linkedinUrl) {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error('Apify returned no items');
   }
-  // Some actors wrap their output. Unwrap defensively.
-  return items[0].data || items[0];
+  // Some actors wrap their output (`{ data: {...} }`). Unwrap defensively.
+  const raw = items[0].data || items[0];
+
+  // Diagnostic: log the top-level keys + a sample of values so we can see actor shape in Vercel logs
+  console.log('[Apify] actor:', APIFY_ACTOR, 'item keys:', Object.keys(raw || {}).slice(0, 30));
+
+  // If the actor returned an error item (common when rate-limited or LinkedIn blocked), surface it
+  if (raw && (raw.error || raw.errorMessage || raw.errorType)) {
+    throw new Error(`Apify actor error: ${raw.error || raw.errorMessage || raw.errorType}`);
+  }
+
+  // Detect a truly empty payload — no identity fields at all = something went wrong upstream.
+  // The user reported a real profile (yentlspiteri) coming back with 0 followers/connections/headline,
+  // which is what happens when LinkedIn rate-limits the actor and it returns a stub instead of throwing.
+  const hasIdentity =
+    raw && (
+      raw.firstName || raw.first_name || raw.firstname ||
+      raw.fullName  || raw.full_name  || raw.name      ||
+      raw.headline  || raw.headlineText || raw.title
+    );
+  if (!hasIdentity) {
+    throw new Error('Apify returned an empty profile — actor likely rate-limited or LinkedIn blocked the request. Try again in 60 seconds.');
+  }
+
+  return raw;
 }
 
 async function fetchSerpFootprint(normalisedUrl) {
@@ -198,7 +229,7 @@ async function fetchSerpFootprint(normalisedUrl) {
 }
 
 async function analyzeProfile(profile, heuristic) {
-  const firstName    = profile.firstName || 'there';
+  const firstName    = getFirstName(profile) || 'there';
   const headline     = (getHeadline(profile) || '').slice(0, 400);
   const about        = (getAbout(profile)    || '').slice(0, 2000);
   const followers    = getFollowers(profile);
@@ -328,6 +359,34 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 // `followers` or `followersCount`, etc. If the chosen actor uses something else,
 // add aliases here — no need to touch the scoring functions.
 
+function getFirstName(p) {
+  // supreme_coder: firstName. Others: first_name / firstname / split fullName.
+  if (p.firstName)  return String(p.firstName).trim();
+  if (p.first_name) return String(p.first_name).trim();
+  if (p.firstname)  return String(p.firstname).trim();
+  const full = p.fullName || p.name || p.full_name || '';
+  if (full) return String(full).trim().split(/\s+/)[0] || '';
+  return '';
+}
+function getLastName(p) {
+  if (p.lastName)  return String(p.lastName).trim();
+  if (p.last_name) return String(p.last_name).trim();
+  if (p.lastname)  return String(p.lastname).trim();
+  const full = p.fullName || p.name || p.full_name || '';
+  if (full) {
+    const parts = String(full).trim().split(/\s+/);
+    return parts.length > 1 ? parts.slice(1).join(' ') : '';
+  }
+  return '';
+}
+function getCompany(p) {
+  return p.companyName ||
+         p.currentCompany?.name ||
+         p.current_company?.name ||
+         p.experience?.[0]?.companyName ||
+         p.experiences?.[0]?.company ||
+         '';
+}
 function getHeadline(p) {
   return p.headline || p.headlineText || p.title || '';
 }

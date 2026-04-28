@@ -1849,56 +1849,121 @@
     letter-spacing: 0.02em;
   }
 
-  /* Loading panel — inside the cream action-card (was preview-card). Text is DARK on cream. */
+  /* Loading panel — playful chip layout, compact spacing, dark text on cream */
   .action-card .loading-panel {
-    padding: 8px 0;
+    padding: 4px 0;
   }
   .action-card .loading-panel.hidden { display: none; }
   .action-card .loading-panel .loading-title {
     font-family: var(--font-display);
-    font-size: clamp(24px, 2.6vw, 32px);
+    font-size: clamp(22px, 2.4vw, 28px);
     font-weight: 600;
     color: var(--vp-deep-black, #0c0b09);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     letter-spacing: -0.015em;
   }
   .action-card .loading-panel .loading-subtitle {
     color: rgba(15,15,15,0.55);
-    font-size: 15px;
-    margin-bottom: 28px;
+    font-size: 14px;
+    margin-bottom: 18px;
+    min-height: 1.5em;
+    transition: color .2s ease;
   }
+  /* Chip layout — wraps naturally, much tighter, feels like a live checklist */
   .action-card .loading-panel .loading-list {
-    display: grid;
-    gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     list-style: none;
     padding: 0;
     margin: 0;
   }
   .action-card .loading-panel .loading-row {
-    background: rgba(15,15,15,0.03);
-    border: 1px solid rgba(15,15,15,0.06);
-    color: rgba(15,15,15,0.5);
-    border-radius: 10px;
-    padding: 14px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px 7px 10px;
+    border-radius: 999px;
+    background: rgba(15,15,15,0.04);
+    border: 1px solid rgba(15,15,15,0.07);
+    color: rgba(15,15,15,0.55);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    transition:
+      background .25s cubic-bezier(.2,.8,.25,1),
+      border-color .25s cubic-bezier(.2,.8,.25,1),
+      color .25s cubic-bezier(.2,.8,.25,1),
+      transform .25s cubic-bezier(.34,1.56,.64,1);
   }
   .action-card .loading-panel .loading-row.running {
-    background: rgba(63,54,178,0.06);
-    border-color: rgba(63,54,178,0.18);
-    color: var(--vp-deep-black, #0c0b09);
-  }
-  .action-card .loading-panel .loading-row.done {
-    color: rgba(15,15,15,0.5);
-  }
-  .action-card .loading-panel .loading-row .loading-icon::before {
-    border-color: rgba(15,15,15,0.22);
-  }
-  .action-card .loading-panel .loading-row.running .loading-icon::before {
-    border-color: var(--vp-indigo);
-    border-top-color: transparent;
-  }
-  .action-card .loading-panel .loading-row.done .loading-icon::before {
     background: var(--vp-indigo);
     border-color: var(--vp-indigo);
+    color: var(--vp-cream, #fafafa);
+    transform: scale(1.06);
+    box-shadow: 0 8px 24px rgba(63,54,178,0.28);
+    animation: row-pop .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .action-card .loading-panel .loading-row.done {
+    background: rgba(63,54,178,0.10);
+    border-color: rgba(63,54,178,0.20);
+    color: var(--vp-indigo);
+    font-weight: 500;
+  }
+  @keyframes row-pop {
+    0%   { transform: scale(0.94); }
+    60%  { transform: scale(1.10); }
+    100% { transform: scale(1.06); }
+  }
+
+  /* Tiny circular indicator in each chip — empty → spinner → check */
+  .action-card .loading-panel .loading-row .loading-icon {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .action-card .loading-panel .loading-row .loading-icon::before {
+    content: "";
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(15,15,15,0.25);
+    background: transparent;
+    box-sizing: border-box;
+    transition: all .25s ease;
+  }
+  .action-card .loading-panel .loading-row.running .loading-icon::before {
+    width: 12px; height: 12px;
+    border: 1.5px solid rgba(252,252,252,0.35);
+    border-top-color: var(--vp-cream, #fafafa);
+    border-radius: 50%;
+    background: transparent;
+    animation: chip-spin .8s linear infinite;
+  }
+  .action-card .loading-panel .loading-row.done .loading-icon::before {
+    width: 12px; height: 12px;
+    background: var(--vp-indigo);
+    border-color: var(--vp-indigo);
+  }
+  /* Checkmark stroke inside completed dot — appears via clip-path animation */
+  .action-card .loading-panel .loading-row.done .loading-icon::after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 4px;
+    border-left: 1.6px solid var(--vp-cream, #fafafa);
+    border-bottom: 1.6px solid var(--vp-cream, #fafafa);
+    transform: rotate(-45deg) translate(0px, -1px);
+    animation: chip-check .35s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes chip-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes chip-check {
+    from { opacity: 0; transform: rotate(-45deg) scale(0.4) translate(0px, -1px); }
+    to   { opacity: 1; transform: rotate(-45deg) scale(1)   translate(0px, -1px); }
   }
 
   /* ─────────── Picker-open focus state — blur everything except the active picker ─────────── */
@@ -2396,26 +2461,26 @@
     line-height: 1.4;
   }
 
-  /* — Methodology section: hexagon diagram (replaces stock-style portrait) — */
+  /* — Methodology section: interactive hexagon (replaces stock-style portrait + 6 cards) — */
   .method-diagram {
+    position: relative;
     width: 100%;
-    max-width: 720px;
-    margin: 8px auto 72px;
-    padding: 36px 24px;
+    max-width: 760px;
+    margin: 8px auto 32px;
+    padding: 48px 24px 36px;
     border-radius: 20px;
     background:
       radial-gradient(ellipse at 50% 0%, rgba(63,54,178,0.10), transparent 60%),
       linear-gradient(180deg, rgba(63,54,178,0.04), rgba(134,131,229,0.02));
     border: 1px solid rgba(63,54,178,0.12);
-    display: flex;
-    justify-content: center;
-    align-items: center;
   }
   .method-diagram svg {
     width: 100%;
     height: auto;
-    max-width: 540px;
+    max-width: 600px;
+    margin: 0 auto;
     display: block;
+    overflow: visible;
   }
   .method-diagram .hex-axis {
     stroke: rgba(63,54,178,0.18);
@@ -2427,42 +2492,137 @@
     stroke-width: 1;
     fill: none;
   }
+  /* Animated polygon — slow morph between three executive shapes (rising, emerging, recognized).
+     Uses values + dur on <animate> directly in markup; this rule only handles fill/stroke. */
   .method-diagram .hex-shape {
-    fill: rgba(63,54,178,0.18);
+    fill: rgba(63,54,178,0.16);
     stroke: var(--vp-indigo);
-    stroke-width: 2;
+    stroke-width: 2.5;
     stroke-linejoin: round;
-    filter: drop-shadow(0 6px 24px rgba(63,54,178,0.25));
-    animation: hex-pulse 4.5s ease-in-out infinite;
-    transform-origin: center;
+    stroke-linecap: round;
+    filter: drop-shadow(0 8px 28px rgba(63,54,178,0.28));
+  }
+  /* Interactive vertex group — large invisible hit-target makes hover easy on all devices. */
+  .method-diagram .hex-vertex {
+    cursor: pointer;
+  }
+  .method-diagram .hex-hit {
+    fill: transparent;
+    pointer-events: all;
   }
   .method-diagram .hex-node {
     fill: var(--vp-cream, #fafafa);
     stroke: var(--vp-indigo);
     stroke-width: 2;
+    transition: r .18s cubic-bezier(.2,.8,.25,1), fill .18s ease, stroke-width .18s ease;
+  }
+  .method-diagram .hex-vertex:hover .hex-node,
+  .method-diagram .hex-vertex.is-active .hex-node,
+  .method-diagram .hex-vertex:focus-visible .hex-node {
+    r: 11;
+    fill: var(--vp-indigo);
+    stroke-width: 3;
   }
   .method-diagram .hex-label {
     font-family: var(--font-display);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     fill: var(--vp-deep-black, #0c0b09);
     letter-spacing: -0.005em;
+    transition: fill .18s ease;
+  }
+  .method-diagram .hex-vertex:hover .hex-label,
+  .method-diagram .hex-vertex.is-active .hex-label {
+    fill: var(--vp-indigo);
   }
   .method-diagram .hex-num {
     font-family: var(--font-body);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     fill: var(--vp-indigo);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+    transition: opacity .18s ease;
   }
-  @keyframes hex-pulse {
-    0%, 100% { transform: scale(1); opacity: 0.95; }
-    50%      { transform: scale(1.02); opacity: 1; }
+  .method-diagram .hex-vertex:hover .hex-num,
+  .method-diagram .hex-vertex.is-active .hex-num { opacity: 1; }
+
+  /* Soft pulsing ring on each node — draws the eye and signals "interactive" */
+  .method-diagram .hex-pulse-ring {
+    fill: none;
+    stroke: var(--vp-indigo);
+    stroke-width: 1.5;
+    opacity: 0;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  .method-diagram .hex-vertex:hover .hex-pulse-ring,
+  .method-diagram .hex-vertex.is-active .hex-pulse-ring {
+    animation: hex-node-pulse 1.6s ease-out infinite;
+  }
+  @keyframes hex-node-pulse {
+    0%   { r: 6;  opacity: 0.6; }
+    100% { r: 22; opacity: 0;   }
+  }
+
+  /* Detail panel that appears below the hexagon on hover/click — the dimension's copy. */
+  .method-detail {
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 96px;
+    padding: 22px 24px;
+    background: rgba(255,255,255,0.65);
+    border-radius: 14px;
+    border: 1px solid rgba(63,54,178,0.12);
+    text-align: center;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .method-detail.is-empty {
+    opacity: 0.65;
+  }
+  .method-detail-num {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--vp-indigo);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .method-detail-title {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.2vw, 26px);
+    font-weight: 600;
+    color: var(--vp-deep-black, #0c0b09);
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .method-detail-body {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(15,15,15,0.7);
+    margin: 0;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .method-hint {
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(63,54,178,0.6);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 18px 0 0;
   }
   @media (max-width: 540px) {
-    .method-diagram { padding: 24px 8px; }
-    .method-diagram .hex-label { font-size: 11px; }
-    .method-diagram .hex-num   { font-size: 9px; }
+    .method-diagram { padding: 32px 8px 24px; }
+    .method-diagram .hex-label { font-size: 12px; }
+    .method-diagram .hex-num   { font-size: 10px; }
+    .method-detail-body { font-size: 14px; }
   }
 
   .method-grid {
@@ -2611,25 +2771,29 @@
             <div class="picker-popover" role="listbox" aria-label="Choose your role">
               <button type="button" class="picker-option" role="option" data-value="ceo" aria-selected="true">CEO</button>
               <button type="button" class="picker-option" role="option" data-value="founder">Founder</button>
-              <button type="button" class="picker-option" role="option" data-value="cfo">CFO</button>
-              <button type="button" class="picker-option" role="option" data-value="coo">COO</button>
-              <button type="button" class="picker-option" role="option" data-value="cmo">CMO</button>
-              <button type="button" class="picker-option" role="option" data-value="cro">CRO</button>
-              <button type="button" class="picker-option" role="option" data-value="cto">CTO</button>
-              <button type="button" class="picker-option" role="option" data-value="cpo">CPO</button>
-              <button type="button" class="picker-option" role="option" data-value="other-c">Other C-suite leader</button>
+              <button type="button" class="picker-option" role="option" data-value="csuite">C-suite executive</button>
+              <button type="button" class="picker-option" role="option" data-value="investor">Investor</button>
+              <button type="button" class="picker-option" role="option" data-value="board">Board member / NED</button>
+              <button type="button" class="picker-option" role="option" data-value="consultant">Consultant / Advisor</button>
+              <button type="button" class="picker-option" role="option" data-value="marketer">Marketer</button>
+              <button type="button" class="picker-option" role="option" data-value="creative">Creative director</button>
+              <button type="button" class="picker-option" role="option" data-value="artist">Artist</button>
+              <button type="button" class="picker-option" role="option" data-value="creator">Creator / Influencer</button>
+              <button type="button" class="picker-option" role="option" data-value="speaker">Speaker / Author</button>
               <button type="button" class="picker-option" role="option" data-value="senior">Senior leader</button>
             </div>
             <select class="picker-native" id="ml-role" aria-hidden="true" tabindex="-1">
               <option value="ceo">CEO</option>
               <option value="founder">Founder</option>
-              <option value="cfo">CFO</option>
-              <option value="coo">COO</option>
-              <option value="cmo">CMO</option>
-              <option value="cro">CRO</option>
-              <option value="cto">CTO</option>
-              <option value="cpo">CPO</option>
-              <option value="other-c">Other C-suite leader</option>
+              <option value="csuite">C-suite executive</option>
+              <option value="investor">Investor</option>
+              <option value="board">Board member / NED</option>
+              <option value="consultant">Consultant / Advisor</option>
+              <option value="marketer">Marketer</option>
+              <option value="creative">Creative director</option>
+              <option value="artist">Artist</option>
+              <option value="creator">Creator / Influencer</option>
+              <option value="speaker">Speaker / Author</option>
               <option value="senior">Senior leader</option>
             </select>
           </span>&nbsp;who wants to&nbsp;<span class="picker" data-picker-name="goal">
@@ -2661,17 +2825,17 @@
       </div>
 
       <div class="loading-panel hidden" id="loading-panel">
-        <div class="loading-title">Running the audit…</div>
-        <div class="loading-subtitle">Six dimensions, public signals only.</div>
+        <div class="loading-title">Running your audit</div>
+        <div class="loading-subtitle" id="loading-subtitle">Pulling public LinkedIn signals — this takes ~15s.</div>
         <ul class="loading-list" id="loading-list">
-          <li class="loading-row" data-step="0"><span class="loading-icon"></span><span>Verifying LinkedIn profile</span></li>
-          <li class="loading-row" data-step="1"><span class="loading-icon"></span><span>Mapping digital footprint</span></li>
-          <li class="loading-row" data-step="2"><span class="loading-icon"></span><span>Scoring brand clarity</span></li>
-          <li class="loading-row" data-step="3"><span class="loading-icon"></span><span>Reading authority signals</span></li>
-          <li class="loading-row" data-step="4"><span class="loading-icon"></span><span>Measuring content cadence</span></li>
-          <li class="loading-row" data-step="5"><span class="loading-icon"></span><span>Auditing visual identity</span></li>
-          <li class="loading-row" data-step="6"><span class="loading-icon"></span><span>Calculating network recognition</span></li>
-          <li class="loading-row" data-step="7"><span class="loading-icon"></span><span>Computing your Visibility Index</span></li>
+          <li class="loading-row" data-step="0" data-msg="Verifying your LinkedIn profile…"><span class="loading-icon"></span><span>Profile</span></li>
+          <li class="loading-row" data-step="1" data-msg="Googling you to see what shows up…"><span class="loading-icon"></span><span>Footprint</span></li>
+          <li class="loading-row" data-step="2" data-msg="Scoring how sharp your headline reads…"><span class="loading-icon"></span><span>Clarity</span></li>
+          <li class="loading-row" data-step="3" data-msg="Looking for press, awards, and proof…"><span class="loading-icon"></span><span>Authority</span></li>
+          <li class="loading-row" data-step="4" data-msg="Counting recent posts &amp; the rhythm…"><span class="loading-icon"></span><span>Cadence</span></li>
+          <li class="loading-row" data-step="5" data-msg="Checking photo, banner, and craft…"><span class="loading-icon"></span><span>Visual</span></li>
+          <li class="loading-row" data-step="6" data-msg="Weighing engagement vs raw reach…"><span class="loading-icon"></span><span>Network</span></li>
+          <li class="loading-row" data-step="7" data-msg="Composing your Visibility Index…"><span class="loading-icon"></span><span>Index</span></li>
         </ul>
       </div>
 
@@ -2830,9 +2994,10 @@
       0&ndash;3 and summed to your 0&ndash;18 Visibility Index.
     </p>
 
-    <!-- Six-dimension hexagon diagram — previews what we measure, ties directly to cards below -->
-    <div class="method-diagram" aria-hidden="true">
-      <svg viewBox="0 40 540 480" xmlns="http://www.w3.org/2000/svg">
+    <!-- Interactive 6-dimension hexagon — hover/tap any vertex to see what we measure.
+         The polygon morphs slowly between three real executive shapes (rising → emerging → recognised). -->
+    <div class="method-diagram" id="method-diagram">
+      <svg viewBox="0 40 540 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Six visibility dimensions — hover or tap each point to read its definition">
         <!-- Concentric rings (0, 1, 2, 3 score levels) -->
         <polygon class="hex-ring" points="270,90 426,180 426,360 270,450 114,360 114,180" opacity="0.6"/>
         <polygon class="hex-ring" points="270,150 374,210 374,330 270,390 166,330 166,210" opacity="0.45"/>
@@ -2844,68 +3009,74 @@
         <line class="hex-axis" x1="270" y1="270" x2="270" y2="450"/>
         <line class="hex-axis" x1="270" y1="270" x2="114" y2="360"/>
         <line class="hex-axis" x1="270" y1="270" x2="114" y2="180"/>
-        <!-- Sample score polygon — top-tier executive shape -->
-        <polygon class="hex-shape" points="270,120 400,194 400,344 270,420 140,346 140,196"/>
-        <!-- Vertex nodes -->
-        <circle class="hex-node" cx="270" cy="90"  r="6"/>
-        <circle class="hex-node" cx="426" cy="180" r="6"/>
-        <circle class="hex-node" cx="426" cy="360" r="6"/>
-        <circle class="hex-node" cx="270" cy="450" r="6"/>
-        <circle class="hex-node" cx="114" cy="360" r="6"/>
-        <circle class="hex-node" cx="114" cy="180" r="6"/>
-        <!-- Labels (number + name, anchored cleanly per quadrant) -->
-        <text class="hex-num"   x="270" y="60"  text-anchor="middle">01</text>
-        <text class="hex-label" x="270" y="78"  text-anchor="middle">Digital Footprint</text>
+        <!-- Animated polygon: morphs between three executive shapes via SMIL <animate>.
+             Each frame uses the same 6 vertex slots (top, upper-right, lower-right, bottom, lower-left, upper-left).
+             values are 3 keyframes that loop. -->
+        <polygon class="hex-shape">
+          <animate attributeName="points" dur="8s" repeatCount="indefinite"
+            values="
+              270,150 374,210 374,330 270,390 166,330 166,210;
+              270,120 400,194 400,344 270,420 140,346 140,196;
+              270,180 348,224 348,316 270,360 192,316 192,224;
+              270,150 374,210 374,330 270,390 166,330 166,210
+            "
+            calcMode="spline"
+            keyTimes="0;0.33;0.66;1"
+            keySplines="0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1"/>
+        </polygon>
 
-        <text class="hex-num"   x="442" y="160" text-anchor="start">02</text>
-        <text class="hex-label" x="442" y="178" text-anchor="start">Brand Clarity</text>
-
-        <text class="hex-num"   x="442" y="358" text-anchor="start">03</text>
-        <text class="hex-label" x="442" y="376" text-anchor="start">Authority</text>
-
-        <text class="hex-num"   x="270" y="478" text-anchor="middle">04</text>
-        <text class="hex-label" x="270" y="496" text-anchor="middle">Content Cadence</text>
-
-        <text class="hex-num"   x="98"  y="358" text-anchor="end">05</text>
-        <text class="hex-label" x="98"  y="376" text-anchor="end">Visual Identity</text>
-
-        <text class="hex-num"   x="98"  y="160" text-anchor="end">06</text>
-        <text class="hex-label" x="98"  y="178" text-anchor="end">Network</text>
+        <!-- Interactive vertex groups: pulse-ring (decoration) + hit-target + node + labels -->
+        <g class="hex-vertex" data-dim="footprint" tabindex="0">
+          <circle class="hex-pulse-ring" cx="270" cy="90"  r="6"/>
+          <circle class="hex-hit"        cx="270" cy="90"  r="34"/>
+          <circle class="hex-node"       cx="270" cy="90"  r="7"/>
+          <text class="hex-num"   x="270" y="60"  text-anchor="middle">01</text>
+          <text class="hex-label" x="270" y="78"  text-anchor="middle">Digital Footprint</text>
+        </g>
+        <g class="hex-vertex" data-dim="clarity" tabindex="0">
+          <circle class="hex-pulse-ring" cx="426" cy="180" r="6"/>
+          <circle class="hex-hit"        cx="426" cy="180" r="34"/>
+          <circle class="hex-node"       cx="426" cy="180" r="7"/>
+          <text class="hex-num"   x="442" y="160" text-anchor="start">02</text>
+          <text class="hex-label" x="442" y="178" text-anchor="start">Brand Clarity</text>
+        </g>
+        <g class="hex-vertex" data-dim="authority" tabindex="0">
+          <circle class="hex-pulse-ring" cx="426" cy="360" r="6"/>
+          <circle class="hex-hit"        cx="426" cy="360" r="34"/>
+          <circle class="hex-node"       cx="426" cy="360" r="7"/>
+          <text class="hex-num"   x="442" y="358" text-anchor="start">03</text>
+          <text class="hex-label" x="442" y="376" text-anchor="start">Authority</text>
+        </g>
+        <g class="hex-vertex" data-dim="cadence" tabindex="0">
+          <circle class="hex-pulse-ring" cx="270" cy="450" r="6"/>
+          <circle class="hex-hit"        cx="270" cy="450" r="34"/>
+          <circle class="hex-node"       cx="270" cy="450" r="7"/>
+          <text class="hex-num"   x="270" y="478" text-anchor="middle">04</text>
+          <text class="hex-label" x="270" y="496" text-anchor="middle">Content Cadence</text>
+        </g>
+        <g class="hex-vertex" data-dim="visual" tabindex="0">
+          <circle class="hex-pulse-ring" cx="114" cy="360" r="6"/>
+          <circle class="hex-hit"        cx="114" cy="360" r="34"/>
+          <circle class="hex-node"       cx="114" cy="360" r="7"/>
+          <text class="hex-num"   x="98"  y="358" text-anchor="end">05</text>
+          <text class="hex-label" x="98"  y="376" text-anchor="end">Visual Identity</text>
+        </g>
+        <g class="hex-vertex" data-dim="network" tabindex="0">
+          <circle class="hex-pulse-ring" cx="114" cy="180" r="6"/>
+          <circle class="hex-hit"        cx="114" cy="180" r="34"/>
+          <circle class="hex-node"       cx="114" cy="180" r="7"/>
+          <text class="hex-num"   x="98"  y="160" text-anchor="end">06</text>
+          <text class="hex-label" x="98"  y="178" text-anchor="end">Network</text>
+        </g>
       </svg>
+      <p class="method-hint" id="method-hint">Hover any point to see what we measure</p>
     </div>
 
-    <!-- 6 dimensions as visual cards (plain English) -->
-    <div class="method-grid">
-      <div class="method-card">
-        <div class="method-card-num">01</div>
-        <h3 class="method-card-title">Digital Footprint</h3>
-        <p class="method-card-body">What shows up when someone Googles your name. We check your LinkedIn presence and your top-10 search results.</p>
-      </div>
-      <div class="method-card">
-        <div class="method-card-num">02</div>
-        <h3 class="method-card-title">Brand Clarity</h3>
-        <p class="method-card-body">How sharp your headline and About are. An LLM scores whether a stranger could explain what you do in one line.</p>
-      </div>
-      <div class="method-card">
-        <div class="method-card-num">03</div>
-        <h3 class="method-card-title">Authority Signals</h3>
-        <p class="method-card-body">Press mentions, speaking, recommendations, awards. The proof that other people already vouch for you.</p>
-      </div>
-      <div class="method-card">
-        <div class="method-card-num">04</div>
-        <h3 class="method-card-title">Content Cadence</h3>
-        <p class="method-card-body">How often and how consistently you publish. Top-decile executives don&rsquo;t post more &mdash; they post on a rhythm.</p>
-      </div>
-      <div class="method-card">
-        <div class="method-card-num">05</div>
-        <h3 class="method-card-title">Visual Identity</h3>
-        <p class="method-card-body">Profile photo, banner, the small craft details. Your face is the most-clicked thing on your profile.</p>
-      </div>
-      <div class="method-card">
-        <div class="method-card-num">06</div>
-        <h3 class="method-card-title">Network Recognition</h3>
-        <p class="method-card-body">Followers, connections, engagement on recent posts. Whether your network actually knows what you stand for.</p>
-      </div>
+    <!-- Detail panel — populated from the hovered/active vertex -->
+    <div class="method-detail is-empty" id="method-detail" aria-live="polite">
+      <span class="method-detail-num"   id="method-detail-num">01 — Digital Footprint</span>
+      <h3 class="method-detail-title"   id="method-detail-title">Pick a point to read more</h3>
+      <p class="method-detail-body"     id="method-detail-body">Each of the six points scores 0–3 from your public LinkedIn signals. Together they sum to your 0–18 Visibility Index.</p>
     </div>
 
     <!-- Technical detail tucked into one accordion for skeptics -->
@@ -3193,16 +3364,18 @@
     legacy:      '{role} building lasting legacies outscore peers by 4.5 points on visibility — see where you sit.'
   };
   const ROLE_PLURALS = {
-    ceo:       'CEOs',
-    founder:   'Founders',
-    cfo:       'CFOs',
-    coo:       'COOs',
-    cmo:       'CMOs',
-    cro:       'CROs',
-    cto:       'CTOs',
-    cpo:       'CPOs',
-    'other-c': 'C-suite leaders',
-    senior:    'Senior leaders'
+    ceo:        'CEOs',
+    founder:    'Founders',
+    csuite:     'C-suite executives',
+    investor:   'Investors',
+    board:      'Board members',
+    consultant: 'Consultants',
+    marketer:   'Marketers',
+    creative:   'Creative directors',
+    artist:     'Artists',
+    creator:    'Creators',
+    speaker:    'Speakers & authors',
+    senior:     'Senior leaders'
   };
 
   // Auto-focus on load (for desktop; mobile won't summon keyboard automatically)
@@ -3315,6 +3488,80 @@
   document.querySelectorAll('.picker').forEach(p => {
     try { new Picker(p); } catch (err) { console.error('[VI] Picker init error:', err, p); }
   });
+
+  /* ─────────── Methodology hexagon — hover/tap reveals dimension copy ─────────── */
+  const HEX_COPY = {
+    footprint: {
+      num:   '01 — Digital Footprint',
+      title: 'What shows up when someone Googles you.',
+      body:  'Your LinkedIn presence and your top-10 search results. Are you on page one for your own name, with the story you want — or is someone else?'
+    },
+    clarity: {
+      num:   '02 — Brand Clarity',
+      title: 'Could a stranger explain what you do in one line?',
+      body:  'An LLM scores your headline and About against a sharpness rubric. Vague titles like "transforming the future of work" score zero.'
+    },
+    authority: {
+      num:   '03 — Authority Signals',
+      title: 'The proof that other people already vouch for you.',
+      body:  'Press mentions, speaking gigs, recommendations, awards, featured items. Borrowed credibility you can point to.'
+    },
+    cadence: {
+      num:   '04 — Content Cadence',
+      title: 'How often and how consistently you publish.',
+      body:  'Top-decile executives don’t post more — they post on a rhythm. We measure posts and articles in the last 90 days against a target band.'
+    },
+    visual: {
+      num:   '05 — Visual Identity',
+      title: 'Profile photo, banner, the small craft details.',
+      body:  'Your face is the most-clicked thing on your profile. We score photo quality, banner presence, and whether the visual matches your stated brand.'
+    },
+    network: {
+      num:   '06 — Network Recognition',
+      title: 'Whether your network actually knows what you stand for.',
+      body:  'Followers, connections, engagement on recent posts. Reach without recognition is just noise — we weight engagement over raw follower count.'
+    }
+  };
+
+  (function initHex() {
+    const detailNum   = document.getElementById('method-detail-num');
+    const detailTitle = document.getElementById('method-detail-title');
+    const detailBody  = document.getElementById('method-detail-body');
+    const detailWrap  = document.getElementById('method-detail');
+    const hint        = document.getElementById('method-hint');
+    const vertices    = document.querySelectorAll('.hex-vertex');
+    if (!detailWrap || !vertices.length) return;
+
+    function showDim(key) {
+      const c = HEX_COPY[key]; if (!c) return;
+      vertices.forEach(v => v.classList.toggle('is-active', v.dataset.dim === key));
+      detailNum.textContent   = c.num;
+      detailTitle.textContent = c.title;
+      detailBody.textContent  = c.body;
+      detailWrap.classList.remove('is-empty');
+      if (hint) hint.style.opacity = '0.5';
+    }
+    function clearDim() {
+      vertices.forEach(v => v.classList.remove('is-active'));
+      // Keep last shown copy on mouseleave — don't snap back to "Pick a point"
+      // (avoids flicker when moving between vertices)
+    }
+
+    vertices.forEach(v => {
+      const key = v.dataset.dim;
+      v.addEventListener('mouseenter', () => showDim(key));
+      v.addEventListener('focus',      () => showDim(key));
+      v.addEventListener('click',      () => showDim(key));
+      // Keyboard support
+      v.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDim(key); }
+      });
+    });
+    // On larger screens, show the first dimension by default so the panel never feels empty
+    if (window.matchMedia('(min-width: 720px)').matches) {
+      showDim('footprint');
+    }
+  })();
 
   /* Sequential focus hints — pulse the next field after the previous one is filled */
   function pulseNext(el) {
@@ -3434,8 +3681,8 @@
     let extendedTimer = null;
     animPromise.then(() => {
       extendedTimer = setTimeout(() => {
-        const subtitle = document.querySelector('.loading-subtitle');
-        if (subtitle) subtitle.textContent = 'Pulling deeper LinkedIn data — this can take 10–20 seconds.';
+        const subtitle = document.getElementById('loading-subtitle');
+        if (subtitle) subtitle.textContent = 'LinkedIn is being slow — hold tight, almost there…';
       }, 4000);
     });
 
@@ -3473,18 +3720,22 @@
      the animation never finishes before the API does. */
   function runLoadingSequence(done) {
     const rows = $$('.loading-row');
+    const subtitle = document.getElementById('loading-subtitle');
     let i = 0;
     function advance() {
       if (i > 0) rows[i-1].classList.replace('running', 'done');
       if (!rows[i]) { done(); return; }
       rows[i].classList.add('running');
+      // Update the dynamic subtitle from the running chip's data-msg attr
+      const msg = rows[i].dataset.msg;
+      if (subtitle && msg) subtitle.textContent = msg;
       if (i === rows.length - 1) {
         // Last step is spinning. Resolve and stop scheduling. Caller will mark it done.
         done();
         return;
       }
       i++;
-      setTimeout(advance, 600 + Math.random() * 250);
+      setTimeout(advance, 450 + Math.random() * 200);
     }
     advance();
   }
@@ -3581,7 +3832,12 @@
       $('#gate-standalone').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+    // Scroll directly to the score reveal block the moment results render — not the section start.
+    // requestAnimationFrame ensures the reveal element has its final height before we measure scroll.
+    requestAnimationFrame(() => {
+      const target = $('#score-reveal') || results;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function animateNumber(sel, from, to, ms) {
