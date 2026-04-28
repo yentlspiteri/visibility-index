@@ -4376,15 +4376,21 @@
      bright CREAM CARDS within the navy frame. Eye gets breathing room without
      fighting the natural top-down structure.
      ═══════════════════════════════════════════════════════════════════════════ */
-  /* Findings strip — cream card on the navy section */
-  .results-wrap .findings {
-    background: var(--vp-cream, #fafafa);
+  /* All three cream cards share IDENTICAL outer dimensions for visual consistency.
+     Single source of truth: .results-wrap .findings, .results-wrap .results-split,
+     .results-wrap .personal-card all inherit the same width, padding, radius, and centering. */
+  .results-wrap .findings,
+  .results-wrap .results-split,
+  .results-wrap .personal-card {
+    background: var(--vp-cream, #fafafa) !important;
     border-radius: 24px;
-    padding: clamp(28px, 4vw, 48px) clamp(20px, 4vw, 40px) !important;
-    margin-top: clamp(24px, 4vw, 40px) !important;
-    margin-bottom: clamp(24px, 4vw, 40px) !important;
-    max-width: 1080px !important;
+    padding: clamp(32px, 5vw, 56px) !important;
+    margin: clamp(20px, 3vw, 32px) auto !important;
+    max-width: 880px !important;
+    box-sizing: border-box;
+    width: 100%;
   }
+  /* Findings strip — eyebrow + card-within-card styling */
   .results-wrap .findings-eyebrow { color: var(--vp-indigo) !important; }
   .results-wrap .finding-card {
     background: rgba(63,54,178,0.04) !important;
@@ -4431,20 +4437,23 @@
   .results-wrap .results-summary-title { color: var(--vp-deep-black, #0c0b09) !important; }
   .results-wrap .results-summary-body { color: rgba(15,15,15,0.7) !important; }
 
-  /* Personal card — cream card */
-  .results-wrap .personal-card {
-    background: var(--vp-cream, #fafafa) !important;
-    color: var(--vp-deep-black, #0c0b09) !important;
-    border-radius: 24px;
-    padding: clamp(28px, 4vw, 48px) !important;
-    margin-top: clamp(24px, 4vw, 40px) !important;
-    margin-bottom: clamp(24px, 4vw, 40px) !important;
-    max-width: 1080px !important;
-  }
+  /* Personal-card text + CTA inversion for cream background */
   .results-wrap .personal-card * { color: inherit; }
-  .results-wrap .personal-summary { color: var(--vp-deep-black, #0c0b09) !important; }
-  .results-wrap .personal-teasers-label { color: var(--vp-indigo) !important; }
+  .results-wrap .personal-summary { color: var(--vp-deep-black, #0c0b09) !important; font-size: clamp(18px, 2vw, 22px); line-height: 1.4; font-weight: 500; }
+  .results-wrap .personal-teasers-label { color: var(--vp-indigo) !important; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-size: 12px; }
   .results-wrap .personal-teasers li { color: rgba(15,15,15,0.78) !important; }
+  /* "Get my full report" button — make it dark pill with cream text on cream card (proper contrast) */
+  .results-wrap .personal-cta {
+    background: var(--vp-deep-black, #0c0b09) !important;
+    color: var(--vp-cream, #fafafa) !important;
+    border: 0 !important;
+  }
+  .results-wrap .personal-cta:hover {
+    background: var(--vp-indigo, #3F36B2) !important;
+  }
+  .results-wrap .personal-cta-hint {
+    color: rgba(15,15,15,0.55) !important;
+  }
 
   /* ═══════════════════════════════════════════════════════════════════════════
      MOBILE FINAL POLISH — checklist sweep at 360 / 390 / 414 / 430px
