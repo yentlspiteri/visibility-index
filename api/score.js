@@ -62,7 +62,9 @@ export default async function handler(req, res) {
   trackRequest(ip);
 
   try {
-    const fullUrl = 'https://www.' + normalised.replace(/^linkedin\.com\//, 'linkedin.com/');
+    // Build a fully-qualified LinkedIn URL with trailing slash — some Apify actors
+    // (e.g. supreme_coder) reject URLs without it as "not valid".
+    const fullUrl = `https://www.${normalised}/`;
 
     // 1) Fan out — profile + serp in parallel
     const [profileRes, serpRes] = await Promise.allSettled([
