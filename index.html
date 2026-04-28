@@ -3781,7 +3781,11 @@
       transform: scale(0.97);
     }
 
-    /* 2.3 - Loading state full-bleed on mobile: single big orb + cycling text underneath */
+    /* 2.3 - Loading state full-bleed on mobile: single big orb + cycling text underneath.
+       NOTE: on desktop the loading-panel is position:absolute over the blurred form. On
+       mobile we set position:static so it can scroll, which means the blurred input-panel
+       would otherwise sit beside it as a flex sibling and push the orb off-centre. We
+       hard-hide the input-panel here so the loading-panel is the only flex child. */
     .action-card.is-loading {
       min-height: 100vh;
       position: fixed;
@@ -3791,16 +3795,25 @@
       display: flex !important;
       align-items: center;
       justify-content: center;
+      padding: 24px !important;
+    }
+    .action-card.is-loading .input-panel {
+      display: none !important;
     }
     .action-card.is-loading .loading-panel {
       position: static !important;
       inset: auto !important;
-      padding: 0 24px !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
       background: transparent !important;
       backdrop-filter: none !important;
       width: 100%;
       max-width: 480px;
       text-align: center;
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     .action-card.is-loading .loading-panel::before {
       width: 96px !important;
@@ -3916,6 +3929,82 @@
   /* Hamburger button + mobile slide-down panel - hidden on desktop */
   .nav-burger        { display: none; }
   .nav-mobile-panel  { display: none; }
+
+  /* ════════════════════════════════════════════════════════════════════════════
+     ERROR CARD - shown when audit fails (LinkedIn private, scraper down, etc.)
+     Replaces the previous tiny peach text. Big, obvious, with retry CTA.
+     ════════════════════════════════════════════════════════════════════════════ */
+  .vi-error {
+    margin: 20px auto 0;
+    max-width: 640px;
+    background: linear-gradient(135deg, #FFF1EC 0%, #FFE4D6 100%);
+    border: 1px solid #FFB088;
+    border-left: 4px solid #E5582C;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    box-shadow: 0 8px 24px rgba(229,88,44,0.12), 0 2px 6px rgba(229,88,44,0.08);
+    animation: vi-error-in .35s cubic-bezier(.2,.8,.25,1) both;
+    text-align: left;
+  }
+  @keyframes vi-error-in {
+    from { opacity: 0; transform: translateY(-6px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .vi-error-icon {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #E5582C;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display, Helvetica);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .vi-error-body { flex: 1; min-width: 0; }
+  .vi-error-title {
+    font-family: var(--font-display, Helvetica);
+    font-size: 16px;
+    font-weight: 700;
+    color: #8A2A0F;
+    margin: 0 0 4px;
+    line-height: 1.25;
+  }
+  .vi-error-msg {
+    font-family: var(--font-body, Helvetica);
+    font-size: 14px;
+    line-height: 1.5;
+    color: #6B2811;
+    margin: 0;
+  }
+  .vi-error-close {
+    flex-shrink: 0;
+    background: transparent;
+    border: 0;
+    color: #8A2A0F;
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px 8px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity .15s ease;
+  }
+  .vi-error-close:hover { opacity: 1; }
+  @media (max-width: 600px) {
+    .vi-error {
+      margin: 16px 0 0;
+      padding: 16px;
+      border-radius: 12px;
+      gap: 12px;
+    }
+    .vi-error-icon { width: 32px; height: 32px; font-size: 20px; }
+    .vi-error-title { font-size: 15px; }
+    .vi-error-msg { font-size: 13.5px; }
+  }
 
   /* ════════════════════════════════════════════════════════════════════════════
      BULLETPROOF DESKTOP-ONLY NAV LINKS
@@ -4560,18 +4649,35 @@
       font-size: 16px !important;
     }
 
-    /* LinkedIn prefix collision - true input group with prefix as left adornment */
+    /* LinkedIn prefix collision - true input group with prefix as left adornment.
+       Prefix and input are visually one field: same font-size, same weight, same baseline,
+       no gap between them so it reads as a continuous URL. */
     .input-panel .audit-prose:has(.audit-input) {
       position: relative;
       padding-left: 0 !important;
+      align-items: center !important;
     }
     .input-panel .audit-prefix {
       padding: 0 0 0 14px !important;
-      font-size: 14px !important;
+      font-size: 16px !important;
+      line-height: 1 !important;
+      font-weight: 500 !important;
+      letter-spacing: 0 !important;
       color: rgba(15,15,15,0.55) !important;
+      margin: 0 !important;
     }
     .input-panel .audit-input {
-      padding-left: 6px !important;
+      font-size: 16px !important;
+      line-height: 1 !important;
+      font-weight: 500 !important;
+      letter-spacing: 0 !important;
+      padding-left: 2px !important;
+      margin: 0 !important;
+    }
+    .input-panel .audit-input::placeholder {
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      letter-spacing: 0 !important;
     }
     /* On very narrow phones drop the prefix to a helper line above */
     @media (max-width: 360px) {
@@ -5331,21 +5437,61 @@
     btn.addEventListener('click', () => {
       const score = (typeof lastScore === 'number') ? Math.round((lastScore / 18) * 100) : null;
       const tier  = lastTier?.name || '';
-      const name  = (lastProfile?.firstName) || 'I';
-      // Prefilled text — punchy, on-brand, naming the audit so the link gets clicked
-      const lines = [
-        score !== null
-          ? `Just took the FutureMakers Visibility Index. I scored ${score}/100 - ${tier}.`
-          : `Just took the FutureMakers Visibility Index.`,
-        ``,
-        `It scans your LinkedIn, your Google footprint, and any press mentions, then tells you exactly what to fix.`,
-        ``,
-        `Took 60 seconds. The report was sharper than I expected.`,
-        ``,
-        `Try it: index.vonpeach.com`,
-        ``,
-        `#FutureMakers #PersonalBranding #VonPeach`
-      ];
+
+      // The post should make the user look thoughtful, not promote the app.
+      // Style: a self-reflective LinkedIn post — they share an insight about their own
+      // personal brand. The score is supporting evidence, not the headline. The tool
+      // gets ONE quiet attribution line at the bottom, no hashtag soup, no "try it!".
+      // Variants by tier so the tone matches reality (don't humble-brag at 32/100).
+      let lines;
+      if (score !== null && score >= 75) {
+        lines = [
+          `Spent some time auditing my own visibility this week.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Honest takeaway: the parts I thought were strongest (the work) are clear. The parts I'd been ignoring (a real point of view, showing up consistently) are exactly where the gap is.`,
+          ``,
+          `Reputation compounds. So does silence.`,
+          ``,
+          `— Audit by Von Peach (index.vonpeach.com)`
+        ];
+      } else if (score !== null && score >= 50) {
+        lines = [
+          `Did a hard look at my own personal brand today.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `What surprised me: the work is there. The track record is there. But if a stranger Googled me cold, they'd struggle to figure out what I actually stand for.`,
+          ``,
+          `That's on me to fix. Picking one thing this quarter and going deep.`,
+          ``,
+          `— Audit by Von Peach (index.vonpeach.com)`
+        ];
+      } else if (score !== null) {
+        lines = [
+          `Took an honest audit of my online presence.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Lower than I'd like. Higher than the version of me from two years ago.`,
+          ``,
+          `Building in public is uncomfortable. Pretending you have it figured out is worse. Going to be more deliberate about what I share and why.`,
+          ``,
+          `— Audit by Von Peach (index.vonpeach.com)`
+        ];
+      } else {
+        // Score not available — generic reflective version
+        lines = [
+          `Audited my own visibility today.`,
+          ``,
+          `Reminder: your work doesn't speak for itself unless you give it a voice. People can't refer, hire, or invest in someone they can't find a clear story for.`,
+          ``,
+          `Going to be more deliberate about what I put out — and why.`,
+          ``,
+          `— Audit by Von Peach (index.vonpeach.com)`
+        ];
+      }
       const text = encodeURIComponent(lines.join('\n'));
       const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${text}`;
       // Open in new tab
@@ -6115,15 +6261,55 @@
     document.body.classList.remove('audit-locked');
     document.documentElement.classList.remove('audit-locked');
     $$('.loading-row').forEach(r => { r.classList.remove('running'); r.classList.remove('done'); });
+
+    // Map raw API errors to friendly, actionable copy. Most common cases:
+    //   - LinkedIn fetch fail (private profile, bad URL, scraper down)
+    //   - Network drop
+    //   - Rate limit
+    //   - Generic catch-all
+    const raw = String(msg || '').toLowerCase();
+    let title = 'Something went sideways';
+    let body  = msg || 'Audit failed. Please try again.';
+
+    if (raw.includes('linkedin') || raw.includes('profile') || raw.includes('scrape') || raw.includes('apify')) {
+      title = "We couldn't fetch that LinkedIn profile";
+      body  = "The URL may be wrong, the profile may be private, or our scraper is temporarily down. Double-check your handle and try again.";
+    } else if (raw.includes('network') || raw.includes('fetch')) {
+      title = "Couldn't reach the server";
+      body  = "Looks like a network hiccup. Check your connection and try once more.";
+    } else if (raw.includes('rate') || raw.includes('limit') || raw.includes('429')) {
+      title = "We're being rate-limited";
+      body  = "Too many audits running right now. Give it 30 seconds and try again.";
+    } else if (raw.includes('timeout')) {
+      title = "That took too long";
+      body  = "LinkedIn is being slow today. Try again in a moment.";
+    }
+
+    // Build/reuse the error card and slot it directly under the action-card so it's
+    // unmissable. No auto-dismiss — user dismisses with the × button when they retry.
     let errEl = document.getElementById('hero-error');
     if (!errEl) {
       errEl = document.createElement('div');
       errEl.id = 'hero-error';
-      errEl.style.cssText = 'margin-top:14px;color:#FFD6BB;font-size:13px;text-align:center;';
+      errEl.className = 'vi-error';
+      errEl.setAttribute('role', 'alert');
+      errEl.setAttribute('aria-live', 'assertive');
       actionCard.parentNode.insertBefore(errEl, actionCard.nextSibling);
     }
-    errEl.textContent = msg;
-    setTimeout(() => { if (errEl) errEl.textContent = ''; }, 8000);
+    errEl.innerHTML = `
+      <div class="vi-error-icon" aria-hidden="true">!</div>
+      <div class="vi-error-body">
+        <p class="vi-error-title"></p>
+        <p class="vi-error-msg"></p>
+      </div>
+      <button type="button" class="vi-error-close" aria-label="Dismiss">×</button>
+    `;
+    errEl.querySelector('.vi-error-title').textContent = title;
+    errEl.querySelector('.vi-error-msg').textContent   = body;
+    errEl.querySelector('.vi-error-close').addEventListener('click', () => errEl.remove());
+
+    // Scroll it into view on mobile so the user actually sees it
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   /* Loading sequence: marches through the 8 steps, then PAUSES on the last one
