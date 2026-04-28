@@ -1841,50 +1841,56 @@
     letter-spacing: 0.02em;
   }
 
-  /* Loading panel — now inside action-card (preview-card was removed) */
+  /* Loading panel — inside the cream action-card (was preview-card). Text is DARK on cream. */
   .action-card .loading-panel {
     padding: 8px 0;
   }
   .action-card .loading-panel.hidden { display: none; }
   .action-card .loading-panel .loading-title {
     font-family: var(--font-display);
-    font-size: 22px;
+    font-size: clamp(24px, 2.6vw, 32px);
     font-weight: 600;
-    color: var(--vp-white);
-    margin-bottom: 6px;
+    color: var(--vp-deep-black, #0c0b09);
+    margin-bottom: 8px;
+    letter-spacing: -0.015em;
   }
   .action-card .loading-panel .loading-subtitle {
-    color: rgba(252,252,252,0.65);
-    font-size: 14px;
-    margin-bottom: 22px;
+    color: rgba(15,15,15,0.55);
+    font-size: 15px;
+    margin-bottom: 28px;
   }
   .action-card .loading-panel .loading-list {
     display: grid;
-    gap: 8px;
+    gap: 10px;
     list-style: none;
     padding: 0;
     margin: 0;
   }
   .action-card .loading-panel .loading-row {
-    background: rgba(252,252,252,0.04);
-    border-color: rgba(252,252,252,0.06);
-    color: rgba(252,252,252,0.6);
+    background: rgba(15,15,15,0.03);
+    border: 1px solid rgba(15,15,15,0.06);
+    color: rgba(15,15,15,0.5);
+    border-radius: 10px;
+    padding: 14px 16px;
   }
   .action-card .loading-panel .loading-row.running {
-    background: rgba(134,131,229,0.12);
-    border-color: rgba(134,131,229,0.3);
-    color: var(--vp-white);
+    background: rgba(63,54,178,0.06);
+    border-color: rgba(63,54,178,0.18);
+    color: var(--vp-deep-black, #0c0b09);
+  }
+  .action-card .loading-panel .loading-row.done {
+    color: rgba(15,15,15,0.5);
   }
   .action-card .loading-panel .loading-row .loading-icon::before {
-    border-color: rgba(252,252,252,0.25);
+    border-color: rgba(15,15,15,0.22);
   }
   .action-card .loading-panel .loading-row.running .loading-icon::before {
-    border-color: var(--vp-lavender);
+    border-color: var(--vp-indigo);
     border-top-color: transparent;
   }
   .action-card .loading-panel .loading-row.done .loading-icon::before {
-    background: var(--vp-lavender);
-    border-color: var(--vp-lavender);
+    background: var(--vp-indigo);
+    border-color: var(--vp-indigo);
   }
 
   /* ─────────── Score reveal (moved into results-wrap, was preview-result) ─────────── */
@@ -2683,9 +2689,10 @@
       0&ndash;3 and summed to your 0&ndash;18 Visibility Index.
     </p>
 
-    <!-- Brand image — drop one of the FutureMakers PNGs (01/02/04) at /img/methodology.png -->
+    <!-- Brand image — FutureMakers 01.png (1696×960) -->
     <div class="method-image">
-      <img src="img/methodology.png" alt=""
+      <img src="img/01.png" alt="FutureMakers personal branding visual"
+           loading="lazy"
            onerror="this.parentElement.style.display='none'" />
     </div>
 
