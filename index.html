@@ -262,7 +262,18 @@
 <!-- Purple circle favicon - inline SVG, FutureMakers indigo gradient. No extra file required. -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
-<meta name="theme-color" content="#3F36B2" />
+
+<!-- PWA + Add-to-Home-Screen support. The manifest lets iOS/Android save the audit
+     to the home screen as a standalone app (no browser chrome), making the experience
+     feel native. theme-color drives the status-bar tint on Android Chrome and PWA shell. -->
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0c0b09" media="(prefers-color-scheme: dark)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Visibility Index" />
+<meta name="format-detection" content="telephone=no" />
 
 <!-- ─────────── GOOGLE ANALYTICS 4 ───────────
      Measurement ID: G-2MKY8VPQBF (vonpeach.com property, web stream for index.vonpeach.com).
@@ -4569,6 +4580,107 @@ fbq('track', 'PageView');
   }
 
   /* ════════════════════════════════════════════════════════════════════════════
+     MOBILE SECTION TRIM — focus the small-screen experience on the audit.
+     - Methodology hex diagram is too dense to be useful on a 380px viewport;
+       we hide it on mobile and link out to /methodology for users who want depth.
+     - Circle section's huge CTA pad is replaced by tighter spacing.
+     - Belt-and-braces with !important so cached deploys don't undo this on mobile.
+     ════════════════════════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .method-diagram { display: none !important; }
+    .method-split { grid-template-columns: 1fr !important; gap: 24px !important; }
+    /* Reduce vertical padding everywhere — mobile users scroll less, want fewer
+       big-empty zones between sections. */
+    section.method-wrap, section.circle-wrap, .case-wrap, .faq-wrap {
+      padding-top: 56px !important;
+      padding-bottom: 56px !important;
+    }
+    /* Hide the "Learn more about each dimension →" desktop hover panel area on mobile.
+       Replaced by a single "See methodology" link below the lede. */
+    .method-detail { padding: 0 !important; }
+  }
+
+  /* ════════════════════════════════════════════════════════════════════════════
+     TACTILE FEEDBACK — every interactive element responds to touch.
+     Mobile users expect a press-down springiness on every button & link target.
+     We scope to the audit page only via :where() so blog/article CSS isn't affected.
+     ════════════════════════════════════════════════════════════════════════════ */
+  @media (hover: none) {
+    button,
+    .nav-cta,
+    .nav-mobile-cta,
+    .picker-trigger,
+    .picker-option,
+    a.nav-link,
+    a.nav-mobile-link,
+    a[role="button"],
+    .submit-btn,
+    .cta-primary,
+    .cta-secondary,
+    [data-tactile] {
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .14s cubic-bezier(.4,0,.2,1), box-shadow .14s ease, opacity .14s ease;
+    }
+    button:active,
+    .nav-cta:active,
+    .nav-mobile-cta:active,
+    .picker-trigger:active,
+    .picker-option:active,
+    a[role="button"]:active,
+    .submit-btn:active,
+    .cta-primary:active,
+    .cta-secondary:active,
+    [data-tactile]:active {
+      transform: scale(0.96);
+      opacity: 0.92;
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════════════════════
+     PERSISTENT MOBILE BOTTOM ACTION BAR — thumb-zone CTA that adapts to state.
+     Hidden on desktop; visible on mobile only when not already showing a sticky
+     gate (the email-capture sticky already lives in the post-result flow).
+     Adapts: pre-result → "Run audit", post-result → "Book a call".
+     ════════════════════════════════════════════════════════════════════════════ */
+  .bottom-bar {
+    display: none;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 48;
+    padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+    background: rgba(250, 250, 250, 0.94);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-top: 1px solid rgba(15,15,15,0.08);
+  }
+  .bottom-bar a,
+  .bottom-bar button {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%;
+    background: var(--vp-deep-black);
+    color: #fcfcfc;
+    border: 0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(11,3,89,0.18);
+  }
+  .bottom-bar.is-cta a { background: var(--vp-indigo); }
+  /* Show only on mobile — and only when no other sticky gate is in the thumb zone */
+  @media (max-width: 768px) {
+    body.show-bottom-bar .bottom-bar { display: block; }
+    /* Add room at the bottom of the page so the bar never sits over real content */
+    body.show-bottom-bar { padding-bottom: 84px; }
+  }
+  /* Hide once an audit is in flight or a result success card is showing */
+  body.audit-loading .bottom-bar,
+  body.walkthrough-mode .bottom-bar,
+  body.menu-open .bottom-bar { display: none !important; }
+
+  /* ════════════════════════════════════════════════════════════════════════════
      BULLETPROOF DESKTOP-ONLY NAV LINKS
      Flipped the logic: hidden by DEFAULT (mobile-first), shown only when the
      viewport is genuinely desktop (≥769px). This kills the previous bug where
@@ -5485,8 +5597,14 @@ fbq('track', 'PageView');
       </svg>
     </a>
     <div class="nav-right">
-      <a href="#methodology" class="nav-link nav-link-desktop">Methodology</a>
-      <a href="#circle"      class="nav-link nav-link-desktop">The Circle</a>
+      <!-- DESKTOP-ONLY links live inside this template and are cloned into the nav
+           by JS only when the viewport is genuinely desktop. Inert on mobile because
+           browsers don't render <template> contents — bulletproofs the "Methodology
+           still visible on mobile" bug regardless of CSS race conditions. -->
+      <template id="nav-desktop-links">
+        <a href="#methodology" class="nav-link nav-link-desktop">Methodology</a>
+        <a href="#circle"      class="nav-link nav-link-desktop">The Circle</a>
+      </template>
       <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
       <button type="button" class="nav-burger" id="nav-burger"
               aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-panel">
@@ -5503,22 +5621,31 @@ fbq('track', 'PageView');
   </div>
 </nav>
 
-<!-- BULLETPROOF NAV GUARD - inline JS that runs before paint to physically remove
-     the .nav-link-desktop links from the DOM on mobile, regardless of any cached
-     CSS that might be lingering. CSS hides them; this is the belt to that braces. -->
+<!-- BULLETPROOF NAV GUARD - desktop-only links live in a <template> and are
+     cloned into the nav ONLY when window.matchMedia matches >=769px.
+     On mobile the DOM literally has no Methodology/Circle nodes inside nav.top,
+     so no CSS or cached deploy can ever show them. -->
 <script>
 (function() {
-  function syncMobileNav() {
-    var isMobile = window.matchMedia('(max-width: 768px)').matches;
-    document.querySelectorAll('nav.top .nav-link-desktop').forEach(function(el) {
-      // Inline display:none beats any !important rule we missed (and survives cached CSS)
-      el.style.setProperty('display', isMobile ? 'none' : '', 'important');
-      el.setAttribute('aria-hidden', isMobile ? 'true' : 'false');
-    });
+  var mq  = window.matchMedia('(min-width: 769px)');
+  var tpl = document.getElementById('nav-desktop-links');
+  var cta = document.querySelector('nav.top .nav-cta');
+  if (!tpl || !cta) return;
+
+  function syncDesktopLinks() {
+    // Always clear any previously cloned links before deciding whether to re-inject.
+    document.querySelectorAll('nav.top .nav-right .nav-link-desktop').forEach(function(el){ el.remove(); });
+    if (mq.matches) {
+      var frag = tpl.content.cloneNode(true);
+      cta.parentNode.insertBefore(frag, cta);
+    }
   }
-  syncMobileNav();
-  window.addEventListener('resize', syncMobileNav);
-  window.addEventListener('orientationchange', syncMobileNav);
+  syncDesktopLinks();
+  // matchMedia change is the right hook here — fires once when crossing the breakpoint
+  // and avoids the resize-spam pattern.
+  if (mq.addEventListener) mq.addEventListener('change', syncDesktopLinks);
+  else if (mq.addListener) mq.addListener(syncDesktopLinks);
+  window.addEventListener('orientationchange', syncDesktopLinks);
 })();
 </script>
 
@@ -7881,6 +8008,57 @@ fbq('track', 'PageView');
 
     const url = CALENDLY_URL + '?' + params.toString();
 
+    // ── MOBILE-APP UX: on small viewports the inline 700px iframe feels cramped
+    // and the calendar grid is hard to tap. Render a native-feeling "Open scheduler"
+    // card that launches the Calendly popup widget (full-screen overlay on mobile).
+    // This is the same Calendly link, just presented in a thumb-friendly way.
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      mount.innerHTML = '';
+      const card = document.createElement('div');
+      card.style.cssText = [
+        'display:flex','flex-direction:column','align-items:center','justify-content:center',
+        'text-align:center','padding:42px 22px','min-height:340px',
+        'background:linear-gradient(160deg,#ffffff 0%,rgba(134,131,229,0.10) 100%)',
+        'border-radius:16px','border:1px solid rgba(63,54,178,0.18)'
+      ].join(';');
+      card.innerHTML =
+        '<div style="font-size:36px;line-height:1;margin-bottom:14px;">📅</div>' +
+        '<div style="font-size:18px;font-weight:600;color:#0c0b09;margin-bottom:8px;letter-spacing:-0.012em;">Pick your slot</div>' +
+        '<div style="font-size:14px;color:#56556B;line-height:1.5;max-width:32ch;margin-bottom:20px;">15-minute call with Yentl. We walk through your report together.</div>' +
+        '<button type="button" id="cal-popup-launch" style="background:#0c0b09;color:#fcfcfc;border:0;border-radius:12px;padding:14px 22px;font-size:15px;font-weight:600;letter-spacing:-0.005em;width:100%;max-width:320px;box-shadow:0 8px 22px rgba(11,3,89,0.18);">Open scheduler →</button>';
+      mount.appendChild(card);
+      const launch = document.getElementById('cal-popup-launch');
+      function openPopup(){
+        if (window.Calendly && Calendly.initPopupWidget) {
+          Calendly.initPopupWidget({ url });
+        } else {
+          // widget.js not loaded yet — fall back to opening the link directly
+          window.open(url, '_blank', 'noopener');
+        }
+        if (window.track) window.track('calendly_opened', {
+          source: 'gate-walkthrough-mobile-popup',
+          tier:   lastTier?.name || '',
+          score:  typeof lastScore === 'number' ? Math.round((lastScore / 18) * 100) : null
+        });
+      }
+      launch?.addEventListener('click', openPopup);
+      // Make sure widget.js + its CSS are loaded so initPopupWidget works.
+      if (!document.querySelector('link[href*="calendly.com/assets/external/widget.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://assets.calendly.com/assets/external/widget.css';
+        document.head.appendChild(link);
+      }
+      if (!document.querySelector('script[src*="calendly.com/assets/external/widget.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://assets.calendly.com/assets/external/widget.js';
+        script.async = true;
+        document.body.appendChild(script);
+      }
+      console.log('[Calendly] mobile popup card rendered', { url });
+      return;
+    }
+
     // Clear the mount and inject Calendly's exact documented inline widget div.
     // We build the element with DOM APIs (not innerHTML) so attribute escaping
     // is bulletproof - Calendly's widget.js then picks it up on next scan.
@@ -8160,6 +8338,75 @@ fbq('track', 'PageView');
       }
     }
   });
+</script>
+
+<!-- ─────────── MOBILE BOTTOM ACTION BAR ───────────
+     Adaptive thumb-zone CTA. Pre-result → focuses the audit form (smooth scroll
+     to the picker UI). Post-result → swaps to a Calendly link. We toggle visibility
+     by adding/removing body.show-bottom-bar from the audit-state JS. -->
+<div class="bottom-bar" id="bottom-bar" aria-hidden="true">
+  <a href="#input-panel" id="bottom-bar-cta" data-action="run-audit">Run the 60-second audit →</a>
+</div>
+<script>
+(function(){
+  // Show on mobile only after the user has scrolled a bit (avoids covering hero).
+  // Once visible, it stays. Adapts content based on body classes that other JS
+  // sets (audit-complete → "Book a call").
+  var bar = document.getElementById('bottom-bar');
+  var cta = document.getElementById('bottom-bar-cta');
+  if (!bar || !cta) return;
+
+  var mq = window.matchMedia('(max-width: 768px)');
+
+  function adaptCta() {
+    var done = document.body.classList.contains('audit-complete') || document.body.classList.contains('audit-locked');
+    if (done) {
+      cta.setAttribute('href', 'https://calendly.com/yentl-spiteri/15-min-intro');
+      cta.setAttribute('target', '_blank');
+      cta.setAttribute('rel', 'noopener');
+      cta.setAttribute('data-action', 'book-call');
+      cta.textContent = 'Book a 15-min walkthrough →';
+      bar.classList.add('is-cta');
+    } else {
+      cta.setAttribute('href', '#input-panel');
+      cta.removeAttribute('target');
+      cta.removeAttribute('rel');
+      cta.setAttribute('data-action', 'run-audit');
+      cta.textContent = 'Run the 60-second audit →';
+      bar.classList.remove('is-cta');
+    }
+  }
+
+  function maybeShow(){
+    if (!mq.matches) {
+      document.body.classList.remove('show-bottom-bar');
+      bar.setAttribute('aria-hidden', 'true');
+      return;
+    }
+    if (window.scrollY > 240) {
+      document.body.classList.add('show-bottom-bar');
+      bar.setAttribute('aria-hidden', 'false');
+      adaptCta();
+    }
+  }
+  window.addEventListener('scroll', maybeShow, { passive: true });
+  if (mq.addEventListener) mq.addEventListener('change', maybeShow);
+  // Re-adapt when result/loaded state changes (cheap: poll body class on a MutationObserver)
+  if (window.MutationObserver) {
+    new MutationObserver(adaptCta).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+  // Smooth-scroll the run-audit link into view of the picker
+  cta.addEventListener('click', function(e){
+    if (cta.getAttribute('data-action') !== 'run-audit') return;
+    e.preventDefault();
+    var t = document.getElementById('input-panel') || document.querySelector('.action-card');
+    if (!t) return;
+    var top = t.getBoundingClientRect().top + window.scrollY - 70;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+  });
+  // Run once on load (in case the page is reloaded mid-scroll)
+  maybeShow();
+})();
 </script>
 </body>
 </html>

@@ -1,0 +1,27 @@
+{
+  "name": "Von Peach · Visibility Index",
+  "short_name": "Visibility Index",
+  "description": "A free 60-second audit of your personal-brand visibility — by Von Peach.",
+  "start_url": "/?utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fafafa",
+  "theme_color": "#3F36B2",
+  "lang": "en",
+  "categories": ["business", "productivity", "marketing"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
