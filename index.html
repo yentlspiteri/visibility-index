@@ -3762,6 +3762,59 @@ fbq('track', 'PageView');
   .finding-card.is-gap .finding-label { color: rgba(252,252,252,0.45); }
   .finding-card.is-gap .finding-value { color: rgba(252,252,252,0.7); }
 
+  /* ── Google-ranking dot strip (10 dots, filled = page-one results owned by user) ── */
+  .finding-headline {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.018em;
+    line-height: 1.15;
+    color: var(--vp-cream, #fafafa);
+    margin-bottom: 10px;
+  }
+  .finding-dots {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    margin: 4px 0 2px;
+  }
+  .finding-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(252,252,252,0.08);
+    border: 1px solid rgba(252,252,252,0.18);
+    box-sizing: border-box;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1), background .25s ease, box-shadow .25s ease;
+  }
+  .finding-dot.is-on {
+    background: var(--vp-lavender, #8683E5);
+    border-color: var(--vp-lavender, #8683E5);
+    box-shadow: 0 0 12px rgba(134,131,229,0.45);
+  }
+  /* Stagger the dot reveal so they pop in sequence on first paint — feels alive */
+  .finding-card .finding-dot { animation: dot-pop .35s cubic-bezier(.34,1.56,.64,1) backwards; }
+  .finding-card .finding-dot:nth-child(1)  { animation-delay: 0.05s; }
+  .finding-card .finding-dot:nth-child(2)  { animation-delay: 0.10s; }
+  .finding-card .finding-dot:nth-child(3)  { animation-delay: 0.15s; }
+  .finding-card .finding-dot:nth-child(4)  { animation-delay: 0.20s; }
+  .finding-card .finding-dot:nth-child(5)  { animation-delay: 0.25s; }
+  .finding-card .finding-dot:nth-child(6)  { animation-delay: 0.30s; }
+  .finding-card .finding-dot:nth-child(7)  { animation-delay: 0.35s; }
+  .finding-card .finding-dot:nth-child(8)  { animation-delay: 0.40s; }
+  .finding-card .finding-dot:nth-child(9)  { animation-delay: 0.45s; }
+  .finding-card .finding-dot:nth-child(10) { animation-delay: 0.50s; }
+  @keyframes dot-pop {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @media (max-width: 600px) {
+    .finding-headline { font-size: 18px; margin-bottom: 8px; }
+    .finding-dot { width: 10px; height: 10px; }
+    .finding-dots { gap: 5px; }
+  }
+
   /* ── Start-over link, top-left, only on the results page ──
      Replaces the missing nav with a single "go back to the start" affordance.
      Reloads to a clean URL (strips utm + cache state) so the audit re-runs from scratch. */
@@ -4833,20 +4886,13 @@ fbq('track', 'PageView');
   template, template * { display: none !important; }
 
   /* ════════════════════════════════════════════════════════════════════════════
-     BULLETPROOF DESKTOP-ONLY NAV LINKS
-     Flipped the logic: hidden by DEFAULT (mobile-first), shown only when the
-     viewport is genuinely desktop (≥769px). This kills the previous bug where
-     Android devices reporting >768px CSS width still saw the inline links.
-     The selector chain is intentionally heavy so no competing rule can win.
+     DESKTOP NAV LINKS — three-layer defense.
+     Inline style="display:none" on each <a> wins by default. The script after
+     <nav> strips that inline style only on viewports ≥769px; on mobile the
+     inline rule stays untouched and these CSS overrides cannot lift it.
      ════════════════════════════════════════════════════════════════════════════ */
-  html body nav.top .nav-right .nav-link-desktop,
-  html body nav.top .nav-right a.nav-link.nav-link-desktop {
-    display: none !important;
-  }
   @media (min-width: 769px) {
-    html body nav.top .nav-right .nav-link-desktop,
-    html body nav.top .nav-right a.nav-link.nav-link-desktop {
-      display: inline-flex !important;
+    nav.top .nav-right .nav-link-desktop {
       align-items: center;
     }
   }
@@ -5791,11 +5837,12 @@ fbq('track', 'PageView');
       </svg>
     </a>
     <div class="nav-right">
-      <!-- Nav links removed entirely — they live in the burger panel on every viewport.
-           This kills the persistent "Methodology shows in white bar above hero" bug
-           that survived CSS hiding, JS removal, and template-cloning approaches.
-           Desktop users get logo + Book a call + burger; tapping burger reveals
-           Methodology, The Circle, and the Calendly CTA in a slide-down panel. -->
+      <!-- Desktop nav links — three layers of defense so they NEVER paint on mobile:
+           (1) inline style="display:none" wins before any CSS even loads
+           (2) the @media (min-width: 769px) rule promotes them to inline-flex on desktop
+           (3) the post-nav <script> removes any stragglers if JS detects a mobile viewport. -->
+      <a href="#methodology" class="nav-link nav-link-desktop" style="display:none">Methodology</a>
+      <a href="#circle"      class="nav-link nav-link-desktop" style="display:none">The Circle</a>
       <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
       <button type="button" class="nav-burger" id="nav-burger"
               aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-panel">
@@ -5812,13 +5859,29 @@ fbq('track', 'PageView');
   </div>
 </nav>
 
-<!-- POST-NAV CLEANUP - removes any stray .nav-link-desktop nodes left over from
-     cached deploys. Belt for the new HTML's braces. -->
+<!-- DESKTOP-ONLY NAV REVEAL - on desktop viewports we strip the inline display:none
+     from .nav-link-desktop elements. On mobile the inline style stays, so the
+     links are never painted. Three-layer defense (inline style, CSS media query,
+     this JS) so the persistent "Methodology" white-banner ghost can't return. -->
 <script>
 (function() {
-  document.querySelectorAll('nav.top .nav-link-desktop, nav.top .nav-right .nav-link').forEach(function(el){
-    el.remove();
-  });
+  function syncNavLinks(){
+    var isDesktop = window.matchMedia('(min-width: 769px)').matches;
+    document.querySelectorAll('nav.top .nav-link-desktop').forEach(function(el){
+      if (isDesktop) {
+        // Reveal as inline-flex so flex alignment works on the nav link.
+        el.style.setProperty('display', 'inline-flex', 'important');
+      } else {
+        // Hide bulletproofly — inline style beats every CSS path.
+        el.style.setProperty('display', 'none', 'important');
+      }
+    });
+  }
+  syncNavLinks();
+  var mq = window.matchMedia('(min-width: 769px)');
+  if (mq.addEventListener) mq.addEventListener('change', syncNavLinks);
+  else if (mq.addListener) mq.addListener(syncNavLinks);
+  window.addEventListener('orientationchange', syncNavLinks);
 })();
 </script>
 
@@ -7728,22 +7791,50 @@ fbq('track', 'PageView');
       });
     }
 
-    // ── Google ranking — where do you sit when someone Googles your name? ──
+    // ── Google ranking — dot-strip visualisation + stakes-named subline.
+    // Each dot represents one of the top-10 results. Filled dots = "yours",
+    // hollow dots = someone else's. The headline + subline are tier-aware so
+    // a 10/10 user reads a confident claim, a 3/10 user gets a confronting
+    // one — both name the stakes (journalists, partners, prospects).
     const ranking = (payload && payload.googleRanking);
-    if (ranking?.topPosition && ranking.topPosition <= 3) {
+    if (ranking && ranking.topPosition) {
+      const owned = Math.max(0, Math.min(10, ranking.ownedTop10 || 0));
+      // Build a 10-dot row. ●=owned (indigo), ○=not owned (faded).
+      const dotsHtml = Array.from({ length: 10 }, (_, i) =>
+        `<span class="finding-dot${i < owned ? ' is-on' : ''}"></span>`
+      ).join('');
+
+      // Headline + subline tiers
+      let headline, sub, isGap;
+      if (owned >= 8) {
+        headline = 'You own page one.';
+        sub      = 'Every journalist, partner, and prospect who searches your name sees only what you control. That\'s rare.';
+        isGap    = false;
+      } else if (owned >= 5) {
+        headline = 'Mostly yours.';
+        sub      = `${owned} of the top 10 results are about you. The other ${10 - owned} are working for someone else with your name.`;
+        isGap    = false;
+      } else if (owned >= 2) {
+        headline = 'Mostly someone else.';
+        sub      = `Only ${owned} of the top 10 results belong to you. Journalists and prospects see a mixed story when they search your name.`;
+        isGap    = true;
+      } else if (owned === 1) {
+        headline = 'Outranked.';
+        sub      = 'Just one result on page one is yours. Anyone Googling you mostly meets a stranger with your name.';
+        isGap    = true;
+      } else {
+        headline = 'Invisible on page one.';
+        sub      = 'None of the top 10 results are about you. Footprint work is the fastest way to flip this.';
+        isGap    = true;
+      }
+
       cards.push({
-        icon: '🥇', label: 'Google ranking for your name',
-        valueHTML: `Position <strong>#${ranking.topPosition}</strong>`,
-        sub: ranking.ownedTop10 >= 3
-          ? `${ranking.ownedTop10} of the top 10 results are about you. Strong signal.`
-          : 'You own the top of search for your name.'
-      });
-    } else if (ranking && ranking.topPosition) {
-      cards.push({
-        gap: true,
-        icon: '🥈', label: 'Google ranking for your name',
-        valueHTML: `Position <strong>#${ranking.topPosition}</strong>`,
-        sub: 'You should be in the top 3. Improving Footprint is how.'
+        wide: true,
+        gap:  isGap,
+        icon: owned >= 8 ? '🥇' : (owned >= 5 ? '🥈' : '🥉'),
+        label: 'When someone Googles you',
+        valueHTML: `<span class="finding-headline">${headline}</span><div class="finding-dots" aria-label="${owned} of 10 page-one results are yours">${dotsHtml}</div>`,
+        sub: sub
       });
     }
 
