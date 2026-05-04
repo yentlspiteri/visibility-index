@@ -372,7 +372,10 @@ Return JSON ONLY. No prose, no markdown fences. Be direct - skip "great photo!" 
   });
 
   try {
-    const r = await fetch(ANTHROPIC_API, {
+    // Vision occasionally takes longer than text - cap at 15s. Anthropic has
+    // to fetch the image URL (LinkedIn CDN) then run the model. If that hangs
+    // we'd rather skip than fail the audit.
+    const r = await fetchWithTimeout(ANTHROPIC_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -384,7 +387,7 @@ Return JSON ONLY. No prose, no markdown fences. Be direct - skip "great photo!" 
         max_tokens: 600,
         messages: [{ role: 'user', content }]
       })
-    });
+    }, 15000);
     if (!r.ok) {
       const errText = await r.text().catch(() => '');
       console.warn('[vision] non-OK', r.status, errText.slice(0, 200));
@@ -406,7 +409,7 @@ Return JSON ONLY. No prose, no markdown fences. Be direct - skip "great photo!" 
       } : null
     };
   } catch (err) {
-    console.warn('[vision] error', err?.message || err);
+    console.warn('[vision] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
     return null;
   }
 }
@@ -430,11 +433,25 @@ function extractHandle(url, domain) {
    handle from the URL and call a dedicated platform scraper for real metrics:
    follower count, post count, recent posts, bio. Far richer than "we detected
    an Instagram exists." Both are conditional - if no handle found, skip. */
+// Wraps a fetch call with an AbortController-based timeout. Critical for the
+// per-platform Apify enrichment calls below: those scrapers can take 20-40
+// seconds when the platform is slow, which would push the audit past Vercel's
+// 60s function budget. We cap each at 10s and bail to null on timeout.
+async function fetchWithTimeout(url, options, timeoutMs = 10000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchInstagramData(handle) {
   if (!process.env.APIFY_API_TOKEN || !handle) return null;
   const url = `${APIFY_API}/${APIFY_INSTAGRAM_ACTOR}/run-sync-get-dataset-items`;
   try {
-    const r = await fetch(url, {
+    const r = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -447,7 +464,7 @@ async function fetchInstagramData(handle) {
         resultsLimit: 6,
         resultsType:  'details'
       })
-    });
+    }, 10000);
     if (!r.ok) return null;
     const items = await r.json();
     if (!Array.isArray(items) || !items.length) return null;
@@ -462,7 +479,8 @@ async function fetchInstagramData(handle) {
       profileUrl:     d.url || `https://www.instagram.com/${handle}/`
     };
   } catch (err) {
-    console.warn('[instagram] error', err?.message || err);
+    // AbortError when timeout hits; otherwise some other failure - either way, null
+    console.warn('[instagram] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
     return null;
   }
 }
@@ -471,7 +489,7 @@ async function fetchXData(handle) {
   if (!process.env.APIFY_API_TOKEN || !handle) return null;
   const url = `${APIFY_API}/${APIFY_TWITTER_ACTOR}/run-sync-get-dataset-items`;
   try {
-    const r = await fetch(url, {
+    const r = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -483,7 +501,7 @@ async function fetchXData(handle) {
         startUrls:      [{ url: `https://x.com/${handle}` }],
         maxItems:       5
       })
-    });
+    }, 10000);
     if (!r.ok) return null;
     const items = await r.json();
     if (!Array.isArray(items) || !items.length) return null;
@@ -498,7 +516,7 @@ async function fetchXData(handle) {
       profileUrl: d.url || `https://x.com/${handle}`
     };
   } catch (err) {
-    console.warn('[x] error', err?.message || err);
+    console.warn('[x] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
     return null;
   }
 }
@@ -510,25 +528,24 @@ async function fetchApifyPosts(linkedinUrl) {
   if (!process.env.APIFY_API_TOKEN || !APIFY_POSTS_ACTOR) return [];
   const url = `${APIFY_API}/${APIFY_POSTS_ACTOR}/run-sync-get-dataset-items`;
   try {
-    const r = await fetch(url, {
+    // 12s cap - posts scraper occasionally takes its time. Beyond this we'd
+    // rather skip posts data than fail the audit.
+    const r = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.APIFY_API_TOKEN}`
       },
-      // Same multi-shape input pattern as the profile actor - covers the common
-      // post-scraper actors without per-actor branching.
       body: JSON.stringify({
         profileUrls:        [linkedinUrl],
         urls:               [{ url: linkedinUrl }],
         startUrls:          [{ url: linkedinUrl }],
         username:           linkedinUrl.split('/in/')[1]?.split('/')[0] || '',
-        // Most post scrapers respect a result-count cap to keep cost bounded
         maxItems:           20,
         maxResults:         20,
         limitPerSource:     20
       })
-    });
+    }, 12000);
     if (!r.ok) {
       const text = await r.text().catch(() => '');
       console.warn('[Apify posts] non-OK', r.status, text.slice(0, 200));
@@ -536,10 +553,9 @@ async function fetchApifyPosts(linkedinUrl) {
     }
     const items = await r.json();
     if (!Array.isArray(items)) return [];
-    // Different actors wrap differently - flatten both shapes
     return items.map(it => it.data || it).slice(0, 20);
   } catch (err) {
-    console.warn('[Apify posts] fetch error', err?.message || err);
+    console.warn('[Apify posts] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
     return [];
   }
 }
