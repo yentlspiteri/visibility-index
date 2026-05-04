@@ -4748,7 +4748,7 @@ fbq('track', 'PageView');
       padding: 0 16px !important;
       overflow: visible;
     }
-    .logo { height: 36px !important; flex-shrink: 0; }
+    .logo { height: 48px !important; flex-shrink: 0; }
 
     /* Hide ALL inline nav text links on mobile - they live in the slide-down panel.
        Using both `.nav-link` and `.nav-link-desktop` so cached deploys without the new class still hide. */
@@ -5546,21 +5546,30 @@ fbq('track', 'PageView');
     }
     footer .footer-col a:active { opacity: 0.7; }
 
-    /* Email becomes a prominent CTA-style link */
+    /* Email becomes a brand-indigo CTA pill — visible against the dark footer
+       (the previous cream-on-cream went invisible on the dark mobile footer). */
     footer .footer-email {
-      display: inline-block !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       min-height: 0 !important;
-      padding: 14px 18px !important;
+      padding: 14px 22px !important;
       margin: 0 !important;
       font-size: 15px !important;
       font-weight: 600 !important;
       letter-spacing: -0.005em !important;
       line-height: 1 !important;
       text-transform: none !important;
-      color: var(--vp-deep-black, #0c0b09) !important;
-      background: var(--vp-cream, #fafafa) !important;
+      color: #fcfcfc !important;
+      background: var(--vp-indigo, #3F36B2) !important;
       border-radius: 999px !important;
       text-decoration: none !important;
+      box-shadow: 0 6px 18px rgba(63,54,178,0.35) !important;
+      transition: transform .15s ease, box-shadow .15s ease !important;
+    }
+    footer .footer-email:active {
+      transform: scale(0.97) !important;
+      box-shadow: 0 3px 10px rgba(63,54,178,0.30) !important;
     }
 
     /* Legal row → clean compact bottom strip */
