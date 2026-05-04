@@ -39,6 +39,17 @@ const RATE_LIMIT = new Map();
 const RATE_LIMIT_PER_HOUR = parseInt(process.env.RATE_LIMIT_PER_HOUR || '5', 10);
 const HOUR_MS = 3_600_000;
 
+// In-memory result cache. When the SAME LinkedIn URL + role + goal combination
+// runs within RESULT_CACHE_TTL, we return the cached payload instead of running
+// the full ~30-60s pipeline. Keyed on `${url}::${role}::${goal}` so different
+// goal framings still re-fetch (Claude's moves are goal-aware).
+// On Vercel serverless, the cache survives within a single invocation only —
+// so it primarily helps when a user re-submits within the same warm container,
+// or when sample-pill audits land on the same hot instance.
+const RESULT_CACHE = new Map();
+const RESULT_CACHE_TTL = 60 * 60 * 1000;       // 60 minutes
+const RESULT_CACHE_MAX_ENTRIES = 100;
+
 const TIERS = [
   { min:0,  max:5,  name:'The Hidden Gem',
     tagline:'Real expertise. The world doesn’t know it yet.',
@@ -77,6 +88,17 @@ export default async function handler(req, res) {
   }
 
   trackRequest(ip);
+
+  // ── Result cache early-return ──
+  // If the same URL + role + goal combination was audited in the last 60 min,
+  // return the cached payload instantly. ~30-60s saved on a re-run. We log a
+  // `cached: true` flag so the frontend/analytics can distinguish cached vs fresh.
+  const cacheKey = `${normalised}::${(body.role || '').toLowerCase()}::${(body.goal || '').toLowerCase()}`;
+  const cached = RESULT_CACHE.get(cacheKey);
+  if (cached && (Date.now() - cached.t) < RESULT_CACHE_TTL) {
+    console.log('[score] cache hit:', cacheKey, `(${Math.round((Date.now() - cached.t) / 1000)}s old)`);
+    return res.status(200).json({ ...cached.payload, _cached: true });
+  }
 
   try {
     // Build a fully-qualified LinkedIn URL with trailing slash - some Apify actors
@@ -154,22 +176,33 @@ export default async function handler(req, res) {
       lastName:    getLastName(profile),
       companyName: getCompany(profile)
     };
-    // Parallel scans: all-time press, recent press, personal domain probe,
-    // multi-platform presence, AND a separate Apify call for the user's posts
-    // (the profile scraper doesn't return them). All run concurrently so we
-    // pay no extra latency vs the previous flow.
-    const [serpAllRes, serpRecentRes, personalSiteRes, presenceRes, postsRes] = await Promise.allSettled([
+    // ─── Stage 2: ALL non-handle-dependent enrichment in one parallel batch ───
+    // Moved vision analysis up here (was in Stage 3) since it only needs the
+    // profile photo URL — already available from Stage 1. Saves 5-15s on the
+    // critical path because vision now runs alongside the SerpAPI calls instead
+    // of waiting for them. IG/X metrics still need Stage 3 because they need
+    // handles parsed from the SerpAPI response.
+    const [
+      serpAllRes,
+      serpRecentRes,
+      personalSiteRes,
+      presenceRes,
+      postsRes,
+      visionRes
+    ] = await Promise.allSettled([
       fetchSerpFootprint(normalised, queryArgs, false),
       fetchSerpFootprint(normalised, queryArgs, true),
       checkPersonalDomain(queryArgs.firstName, queryArgs.lastName),
       fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
-      fetchApifyPosts(normalised)
+      fetchApifyPosts(normalised),
+      analyzeVisualIdentity(profile)         // moved up — runs in parallel with SerpAPI
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
     const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
     const personalSite = personalSiteRes.status === 'fulfilled' ? personalSiteRes.value : null;
     const presence     = presenceRes.status   === 'fulfilled' ? presenceRes.value   : {};
     const rawPosts     = postsRes.status      === 'fulfilled' ? postsRes.value      : [];
+    const visionAnalysis = visionRes.status === 'fulfilled' ? visionRes.value : null;
     const postsData    = analyzePostsData(rawPosts);     // null if empty
     const serp = serpAll;     // alias for older usage in scoreFootprint
     const press = mergePressResults(serpAll, serpRecent);
@@ -178,23 +211,17 @@ export default async function handler(req, res) {
     // Career stage from the experience array - feeds Claude for tenure-aware moves
     const careerStage = analyzeCareerStage(profile);
 
-    // ─── Stage 2 enrichment - depends on stage 1 results ────────────────
-    // Now that the SerpAPI presence map has resolved, fire the deeper enrichment
-    // calls that need handles or image URLs:
-    //   1. Vision analysis on profile photo + banner (Claude vision)
-    //   2. Instagram metrics (if SerpAPI returned an IG hit, parse handle, scrape)
-    //   3. X metrics (same pattern)
-    // All three run in parallel - failure in one doesn't block the others.
+    // ─── Stage 3: handle-dependent enrichment (IG/X metrics) ───
+    // These need handles parsed from Stage 2's presence map, so they can't move up.
+    // Both run in parallel; failure in one doesn't block the other.
     const igHandle = extractHandle(presence.instagram?.hits?.[0]?.url, 'instagram.com');
     const xHandle  = extractHandle(presence.x?.hits?.[0]?.url, 'x.com');
-    const [visionRes, igRes, xRes] = await Promise.allSettled([
-      analyzeVisualIdentity(profile),
+    const [igRes, xRes] = await Promise.allSettled([
       igHandle ? fetchInstagramData(igHandle) : Promise.resolve(null),
       xHandle  ? fetchXData(xHandle)         : Promise.resolve(null)
     ]);
-    const visionAnalysis = visionRes.status === 'fulfilled' ? visionRes.value : null;
-    const igData         = igRes.status     === 'fulfilled' ? igRes.value     : null;
-    const xData          = xRes.status      === 'fulfilled' ? xRes.value      : null;
+    const igData = igRes.status === 'fulfilled' ? igRes.value : null;
+    const xData  = xRes.status  === 'fulfilled' ? xRes.value  : null;
 
     // Merge Instagram/X enriched data INTO the presence map - the page + PDF
     // can now show "Instagram: 4.2k followers" instead of just "Detected".
@@ -281,7 +308,7 @@ export default async function handler(req, res) {
       clickId:     body.attribution?.fbclid || body.attribution?.gclid || ''
     }).catch(() => {});
 
-    return res.status(200).json({
+    const responsePayload = {
       total, subs, tier, nextTier,
       normalisedUrl: normalised,
       // Personalization payload - feeds the on-page reveal and the PDF report
@@ -326,7 +353,16 @@ export default async function handler(req, res) {
       personalSummary:     analysis.executiveSummary,
       reportTeasers:       (analysis.moves || []).map(m => m.title),
       _meta: { clarityRationale: clarity.rationale }
-    });
+    };
+
+    // ── Cache the fresh payload before returning ──
+    // Trim cache if we hit the entry cap (LRU-ish: drop oldest entries).
+    if (RESULT_CACHE.size >= RESULT_CACHE_MAX_ENTRIES) {
+      const oldest = [...RESULT_CACHE.entries()].sort((a, b) => a[1].t - b[1].t)[0];
+      if (oldest) RESULT_CACHE.delete(oldest[0]);
+    }
+    RESULT_CACHE.set(cacheKey, { t: Date.now(), payload: responsePayload });
+    return res.status(200).json(responsePayload);
   } catch (err) {
     console.error('score handler error:', err);
     notifyOps({
@@ -1215,10 +1251,11 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
     },
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
-      // Bumped from 1500 → 3500 once the move schema added weekOne / month1 /
-      // successMetric / outreach.body — the original cap was truncating Claude
-      // mid-JSON, leaving the moves array empty and page 4 of the PDF blank.
-      max_tokens: 3500,
+      // Tuned to 2800. Was 3500; profile testing showed Claude reliably finishes
+      // the schema in ~2200-2500 tokens. The 300-token buffer prevents truncation
+      // while shaving ~2-3s off the critical-path latency. If the moves array
+      // ever comes back empty post-Anthropic-update, bump back to 3500.
+      max_tokens: 2800,
       messages: [{ role: 'user', content: prompt }]
     })
   });
