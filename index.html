@@ -330,6 +330,26 @@
   //   - Generates a shared event_id for CAPI deduplication
   //   - Hashes email and forwards as user_data (em) for EMQ
   //   - Adds value + currency for value-based campaign optimisation
+  // Haptic feedback helper — gives iPhone/Android users a real "app twitch" on
+  // primary interactions. No-op on desktop and on devices that don't support
+  // navigator.vibrate. Always wrapped in try/catch because some browsers throw
+  // on cross-origin or feature-policy denial.
+  window.haptic = function(pattern) {
+    try {
+      if (!('vibrate' in navigator)) return;
+      // Respect users who prefer reduced motion — skip vibration entirely
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      navigator.vibrate(pattern || 8);
+    } catch (e) { /* silent */ }
+  };
+  // Auto-fire haptic on any element marked data-haptic, plus on every primary CTA
+  // and form-submit button. Single delegated listener, capture phase so it runs
+  // before any JS preventDefault might cancel the click.
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-haptic], .nav-cta, .nav-mobile-cta, .picker-option, .submit-btn, .btn-primary, #bottom-bar-cta, #cal-popup-launch, .nav-burger, button[type="submit"]');
+    if (t) window.haptic(8);
+  }, true);
+
   window.track = async function(name, params) {
     try {
       // Honour an externally-provided event_id (used when the browser pixel
@@ -554,8 +574,19 @@ fbq('track', 'PageView');
     letter-spacing: 0.01em; cursor: pointer; text-decoration: none;
     transition: transform .18s ease, background .18s ease, color .18s ease;
   }
-  .btn-primary { background: var(--vp-white); color: var(--vp-navy); }
-  .btn-primary:hover { transform: translateY(-1px); background: var(--vp-ice); }
+  /* Brand-aligned indigo gradient with subtle shadow — pops against the navy circle
+     section much harder than the previous flat cream pill. */
+  .btn-primary {
+    background: linear-gradient(135deg, #5147CB 0%, var(--vp-indigo, #3F36B2) 100%);
+    color: #fcfcfc;
+    box-shadow: 0 10px 30px rgba(63,54,178,0.45), 0 2px 6px rgba(11,3,89,0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #6259DB 0%, #4A40C4 100%);
+    box-shadow: 0 14px 36px rgba(63,54,178,0.55), 0 2px 8px rgba(11,3,89,0.30);
+  }
+  .btn-primary:active { transform: scale(0.97); }
   .btn-ghost { background: transparent; color: var(--vp-white); border: 1px solid rgba(252,252,252,0.25); }
   .btn-ghost:hover { border-color: var(--vp-white); }
   .btn-indigo { background: var(--vp-indigo); color: var(--vp-white); }
@@ -4403,7 +4434,37 @@ fbq('track', 'PageView');
       text-align: center;
       padding: 0 12px;
     }
-    .action-card.is-loading .loading-list { display: none !important; }
+    /* Show the phased loading list on mobile too — gives users a real "I see
+       progress" feeling during the 30-60s scrape window. Compact column with
+       smaller type and tight rows so all 8 phases fit on a single screen. */
+    .action-card.is-loading .loading-list {
+      display: grid !important;
+      gap: 8px !important;
+      width: 100% !important;
+      max-width: 320px !important;
+      margin: 24px auto 0 !important;
+      padding: 0 !important;
+      list-style: none !important;
+      text-align: left !important;
+    }
+    .action-card.is-loading .loading-row {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      padding: 8px 12px !important;
+      font-size: 14px !important;
+      color: rgba(15,15,15,0.45) !important;
+      border-radius: 10px !important;
+      transition: background .25s ease, color .25s ease !important;
+    }
+    .action-card.is-loading .loading-row.running {
+      color: var(--vp-deep-black) !important;
+      background: rgba(63,54,178,0.06) !important;
+      font-weight: 600 !important;
+    }
+    .action-card.is-loading .loading-row.done {
+      color: rgba(15,15,15,0.55) !important;
+    }
 
     /* 2.4 - Sticky thin progress bar on results, fills as user scrolls toward gate */
     body.audit-complete::before {
@@ -4609,6 +4670,60 @@ fbq('track', 'PageView');
     .vi-error-icon { width: 32px; height: 32px; font-size: 20px; }
     .vi-error-title { font-size: 15px; }
     .vi-error-msg { font-size: 13.5px; }
+  }
+
+  /* Mobile dimension list — hidden on desktop, visible only on mobile where the
+     hex diagram is suppressed. Six numbered rows with title + 1-line description. */
+  .method-list-mobile { display: none; }
+  @media (max-width: 768px) {
+    .method-list-mobile {
+      display: grid;
+      gap: 14px;
+      list-style: none;
+      counter-reset: dim;
+      padding: 0 24px;
+      margin: 8px auto 0;
+      max-width: 560px;
+    }
+    .method-list-mobile li {
+      counter-increment: dim;
+      position: relative;
+      padding: 16px 18px 16px 56px;
+      background: #fff;
+      border: 1px solid rgba(15,15,15,0.06);
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(11,3,89,0.04);
+    }
+    .method-list-mobile li::before {
+      content: "0" counter(dim);
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--vp-indigo);
+      background: rgba(63,54,178,0.08);
+      padding: 5px 9px;
+      border-radius: 999px;
+      line-height: 1;
+    }
+    .method-list-mobile strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.012em;
+      color: var(--vp-deep-black);
+      margin-bottom: 4px;
+    }
+    .method-list-mobile span {
+      display: block;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--vp-text-grey);
+    }
   }
 
   /* ════════════════════════════════════════════════════════════════════════════
@@ -5008,8 +5123,11 @@ fbq('track', 'PageView');
   }
 
   @media (max-width: 600px) {
-    /* Section padding cut by ~35% */
-    .hero          { padding: 40px 0 80px !important; min-height: auto !important; }
+    /* Section padding cut hard so the audit form sits above the fold */
+    .hero          { padding: 18px 0 40px !important; min-height: auto !important; }
+    .hero-eyebrow  { margin-bottom: 14px !important; }
+    .hero .display { margin-bottom: 12px !important; }
+    .hero-subhead  { margin-bottom: 22px !important; }
     .pillars       { padding: 56px 0 !important; }
     .results-wrap  { padding: 56px 0 !important; }
     .next-moves-wrap { padding: 56px 0 !important; }
@@ -5706,7 +5824,7 @@ fbq('track', 'PageView');
     <h1 class="display">How visible are you, really?</h1>
 
     <!-- Goal-aware subhead - primes the value prop based on the role + goal selection -->
-    <p class="hero-subhead" id="hero-subhead">The CEOs attracting the right clients are usually the ones easiest to find. See how findable you are.</p>
+    <p class="hero-subhead" id="hero-subhead">The clients you want already Google you. Here's what they find.</p>
 
     <!-- 2-COLUMN GRID: mad-libs LEFT, preview RIGHT -->
     <!-- Single full-width action area: editorial prose form + loading panel.
@@ -6063,6 +6181,19 @@ fbq('track', 'PageView');
     </div>
 
   </div>
+
+  <!-- ─── MOBILE-ONLY DIMENSION LIST ───
+       The interactive hex diagram is hidden on mobile (too dense for small screens).
+       This compact six-row list replaces it with the same information in a scannable
+       form, so the "What we look at." section keeps its credibility on phones. -->
+  <ol class="method-list-mobile" aria-label="The six dimensions of the Visibility Index">
+    <li><strong>Digital Footprint</strong><span>Can people find you online — and is what they find on-brand?</span></li>
+    <li><strong>Brand Clarity</strong><span>Within ten seconds of landing on your profile, do they know what you do?</span></li>
+    <li><strong>Authority Signals</strong><span>Press, podcasts, talks — proof that other people vouch for you.</span></li>
+    <li><strong>Content Cadence</strong><span>Predictable rhythm beats sporadic volume. Are you showing up consistently?</span></li>
+    <li><strong>Visual Identity</strong><span>Photo, banner, design language — does it look like a serious operator?</span></li>
+    <li><strong>Network Recognition</strong><span>Who interacts, comments, endorses. Does the right room know your name?</span></li>
+  </ol>
 </section>
 
 <!-- "How it works (geeky version)" section removed - was outdated. -->
@@ -6734,11 +6865,12 @@ fbq('track', 'PageView');
 
   // Goal-aware HERO subhead - primes the value prop based on the user's role + goal selection.
   // Concrete, brand-aligned, no synthetic "4.2 points higher" stats that mean nothing to the reader.
+  // Punchier subheads — short, concrete, scannable on mobile.
   const HERO_SUBHEADS = {
-    clients:     'The {role} attracting the right clients are usually the ones easiest to find. See how findable you are.',
-    speaking:    'The speaking circuit favours visible voices. See how recognisable yours is.',
-    credibility: 'Tier-one press quotes the people they can already place. See how clearly the world sees you.',
-    legacy:      'Lasting recognition is built from six small signals. See where yours stand today.'
+    clients:     'The clients you want already Google you. Here\'s what they find.',
+    speaking:    'Bookers Google you before they pitch. Here\'s what they see.',
+    credibility: 'Reporters Google you before they quote. Here\'s what they find.',
+    legacy:      'Six signals decide how the world remembers you. Here\'s yours.'
   };
   const ROLE_PLURALS = {
     ceo:        'CEOs and C-suite leaders',
