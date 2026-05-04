@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Articles on personal-brand visibility | Von Peach</title>
+<meta name="description" content="Deep articles on the six dimensions of personal-brand visibility — Brand Clarity, Authority Signals, Content Cadence, Visual Identity, Network Recognition, and Digital Footprint." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://index.vonpeach.com/articles" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Articles — Von Peach Visibility Index" />
+<meta property="og:description" content="Deep dives on personal-brand visibility, by the team that built the free 60-second audit." />
+<meta property="og:url" content="https://index.vonpeach.com/articles" />
+<meta property="og:image" content="https://index.vonpeach.com/img/01.png" />
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
+<meta name="theme-color" content="#3F36B2" />
+
+<link rel="preconnect" href="https://api.fontshare.com" />
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600,700&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --vp-cream: #fafafa; --vp-deep-black: #0c0b09; --vp-text-grey: #56556B;
+    --vp-indigo: #3F36B2; --vp-lavender: #8683E5; --vp-navy: #0B0359;
+    --font-body: 'General Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { overflow-x: clip; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--vp-cream); color: var(--vp-deep-black); font-family: var(--font-body); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  a { color: var(--vp-indigo); text-decoration: none; }
+  a:hover { color: var(--vp-deep-black); }
+  .container { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+  nav.top { position: sticky; top: 0; z-index: 50; background: rgba(250,250,250,0.92); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid rgba(15,15,15,0.08); }
+  nav.top .container { display: flex; align-items: center; justify-content: space-between; height: 64px; max-width: 1080px; }
+  nav.top a.brand { font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--vp-deep-black); }
+  nav.top a.cta { background: var(--vp-deep-black); color: #fcfcfc; padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600; }
+  nav.top a.cta:hover { background: var(--vp-indigo); }
+  header.hero { padding: 80px 0 36px; border-bottom: 1px solid rgba(15,15,15,0.08); margin-bottom: 48px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--vp-indigo); margin-bottom: 18px; }
+  h1 { font-size: clamp(36px, 5.5vw, 52px); font-weight: 700; line-height: 1.1; letter-spacing: -0.025em; margin: 0 0 16px; }
+  .lede { font-size: 20px; color: var(--vp-text-grey); max-width: 56ch; margin: 0; }
+  /* Article list */
+  .articles { display: grid; gap: 24px; padding-bottom: 64px; }
+  .article-card {
+    background: #fff;
+    border: 1px solid rgba(15,15,15,0.08);
+    border-radius: 14px;
+    padding: 28px 30px;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(11,3,89,0.10);
+    border-color: rgba(63,54,178,0.30);
+  }
+  .article-card .tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--vp-indigo);
+    background: rgba(63,54,178,0.06);
+    padding: 4px 10px; border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .article-card h2 {
+    font-size: 24px; font-weight: 700; letter-spacing: -0.018em;
+    line-height: 1.22; margin: 0 0 10px;
+    color: var(--vp-deep-black);
+  }
+  .article-card p {
+    margin: 0 0 14px; color: var(--vp-text-grey); font-size: 16px;
+  }
+  .article-card .meta {
+    font-size: 13px; color: var(--vp-text-grey);
+  }
+  /* Coming-soon stub */
+  .article-card.stub {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .article-card.stub .tag {
+    background: rgba(15,15,15,0.06);
+    color: var(--vp-text-grey);
+  }
+  footer.site { background: #0c0b09; color: rgba(252,252,252,0.55); padding: 40px 0; font-size: 13px; }
+  footer.site .container { max-width: 1080px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; }
+  footer.site a { color: rgba(252,252,252,0.75); }
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="container">
+    <a href="/" class="brand">Von Peach · Visibility Index</a>
+    <a href="/" class="cta">Run the audit →</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="eyebrow">ARTICLES · DEEP DIVES</div>
+    <h1>How visibility actually works.</h1>
+    <p class="lede">Long-form pieces on each dimension of the Visibility Index — what it measures, why it matters, and how to fix it.</p>
+  </div>
+</header>
+
+<main class="container">
+  <div class="articles">
+
+    <a href="/articles/brand-clarity" class="article-card">
+      <span class="tag">Brand Clarity · Dimension #2</span>
+      <h2>What is brand clarity — and why most executives fail it.</h2>
+      <p>The 10-second LinkedIn test most professionals fail. The 20-minute fix. How clarity scores in the Visibility Index — and why going from 1 to 3 is the single highest-leverage change in personal branding.</p>
+      <div class="meta">By Yentl Spiteri · 9 min read</div>
+    </a>
+
+    <div class="article-card stub">
+      <span class="tag">Authority Signals · Coming soon</span>
+      <h2>How to earn authority signals as a founder (without faking it).</h2>
+      <p>The compounding asset most founders ignore — and the realistic 12-month plan to earn one tier-1 mention, one named talk, and one podcast appearance per quarter.</p>
+      <div class="meta">By Yentl Spiteri</div>
+    </div>
+
+    <div class="article-card stub">
+      <span class="tag">Content Cadence · Coming soon</span>
+      <h2>Why posting once a week beats posting daily.</h2>
+      <p>The cadence trap most executives fall into, why the LinkedIn algorithm rewards rhythm over volume, and a 90-day cadence plan that survives a busy quarter.</p>
+      <div class="meta">By Yentl Spiteri</div>
+    </div>
+
+    <div class="article-card stub">
+      <span class="tag">Methodology · Coming soon</span>
+      <h2>How to audit your personal-brand visibility — the 6-dimension framework.</h2>
+      <p>A walkthrough of the full Visibility Index methodology with worked examples, what each score means in practice, and how to use the framework on yourself before running the tool.</p>
+      <div class="meta">By Yentl Spiteri</div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="container">
+    <div>VON PEACH GMBH · FUTUREMAKERS · VISIBILITY INDEX</div>
+    <div><a href="https://www.vonpeach.com" target="_blank" rel="noopener">vonpeach.com</a> · <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a></div>
+  </div>
+</footer>
+
+</body>
+</html>

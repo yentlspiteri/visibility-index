@@ -5,8 +5,12 @@
 ## Run the audit
 
 - [Visibility Index — run the free audit](https://index.vonpeach.com/): Paste a LinkedIn URL, get a personalised PDF report.
-- [Methodology](https://index.vonpeach.com/#methodology): How the six dimensions are scored.
+- [Full methodology page](https://index.vonpeach.com/methodology): The canonical reference for the six dimensions, scoring rubric, and four tier outcomes.
 - [Book a 15-minute walkthrough](https://calendly.com/yentl-spiteri/15-min-intro): Free walkthrough of your audit results, no pitch.
+
+## Articles
+
+- [What is brand clarity (and why most executives fail it)](https://index.vonpeach.com/articles/brand-clarity): The 10-second LinkedIn test most professionals fail. The 20-minute fix. How Brand Clarity scores in the Visibility Index.
 
 ## The Visibility Index framework
 
