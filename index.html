@@ -95,15 +95,61 @@
     'cookie_domain': '.vonpeach.com',
     'cookie_flags':  'SameSite=None;Secure'
   });
-  // Helper used everywhere else in the page JS - never throws if GA fails to load.
+  // Helper used everywhere else in the page JS - never throws if either
+  // analytics provider fails to load. Mirrors every event to BOTH GA4 and
+  // the Meta Pixel (see below) so paid campaigns can optimize against the
+  // same conversion signals we measure in GA.
   window.track = function(name, params) {
     try {
+      // GA4 always gets the raw event name + all params
       if (typeof gtag === 'function') gtag('event', name, params || {});
-      // Mirror to console so you can verify in dev without opening GA Realtime
+      // Meta Pixel: map our event names to Meta's standard event taxonomy
+      // where one exists (Lead, Schedule, etc.) - those are the ones the
+      // ads platform can optimise toward. Everything else fires as a
+      // trackCustom so it still shows in Events Manager.
+      if (typeof fbq === 'function') {
+        const META_MAP = {
+          audit_started:     { event: 'InitiateCheckout',     standard: true  },
+          audit_completed:   { event: 'CompleteRegistration', standard: true  },
+          lead_captured:     { event: 'Lead',                 standard: true  },
+          walkthrough_booked:{ event: 'Schedule',             standard: true  }, // ← key conversion
+          calendly_opened:   { event: 'CalendlyOpened',       standard: false },
+          report_downloaded: { event: 'ReportDownloaded',     standard: false },
+          share_linkedin:    { event: 'ShareLinkedIn',        standard: false },
+          cta_calendly:      { event: 'CalendlyClick',        standard: false }
+        };
+        const mapped = META_MAP[name];
+        if (mapped) {
+          fbq(mapped.standard ? 'track' : 'trackCustom', mapped.event, params || {});
+        }
+      }
+      // Mirror to console so you can verify in dev without opening Realtime
       if (window.location.hostname === 'localhost') console.log('[track]', name, params);
     } catch (_) {}
   };
 </script>
+
+<!-- ─────────── META PIXEL (Facebook + Instagram ads) ───────────
+     Pixel ID: 1714917946519921 (Von Peach business account).
+     PageView fires automatically on load. Conversion events (Lead, Schedule,
+     etc.) are routed through window.track() above so we get the same data
+     in both GA4 and Meta Events Manager from a single call site. -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1714917946519921');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1714917946519921&ev=PageView&noscript=1"
+  alt="" /></noscript>
+<!-- End Meta Pixel Code -->
 
 <!-- General Sans (body). Aileron should be self-hosted from brand assets in v1. -->
 <link rel="preconnect" href="https://api.fontshare.com" />
