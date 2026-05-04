@@ -202,6 +202,10 @@ export default async function handler(req, res) {
       const tierName = tier?.name || '';
       const tierSlug = tierName.toLowerCase().replace(/^the\s+/, '').replace(/\s+/g, '-') || 'unknown';
       const merge_fields = {
+        // Standard MC fields - populated so *|FNAME|* / *|LNAME|* work in
+        // every drip email (the 48h follow-up greets by first name).
+        FNAME:        String(profile?.firstName || ''),
+        LNAME:        String(profile?.lastName  || ''),
         VIS_SCORE:    typeof score === 'number' ? score : 0,
         VIS_TIER:     tierName,
         VIS_GOAL:     String(goal || ''),

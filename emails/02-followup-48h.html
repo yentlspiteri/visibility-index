@@ -1,0 +1,272 @@
+<!--
+  ──────────────────────────────────────────────────────────────────────
+  VISIBILITY INDEX · MAILCHIMP DRIP · EMAIL 02
+  Trigger: 48 hours after email 01 (report delivered)
+  Goal:    re-engage + drive walkthrough bookings (Calendly 15-min-intro)
+
+  PASTE THIS INTO MAILCHIMP:
+   1. Mailchimp → Automations → Customer Journeys → New journey
+   2. Trigger: "Tag added" (the lead.js code adds tags like `tier:rising-voice`)
+      OR: "Subscriber added to audience" if running the entire audience
+   3. Add a "Wait for time interval" step → 48 hours
+   4. Add an "Email" step → Code editor → paste the contents of this file
+   5. Subject:    Did you make move #1, *|FNAME|*?
+      Preheader: Most read the report. Few start. Which group are you in?
+      From:      Yentl <hello@vonpeach.com>
+      Reply-to:  yentl@vonpeach.com  (replies hit your inbox, not no-reply)
+
+  MERGE TAGS USED (must exist in your Mailchimp audience):
+    *|FNAME|*       - first name (standard MC field; needs to be POPULATED)
+    *|VIS_TIER|*    - "The Rising Voice", "The Emerging Authority", etc.
+    *|VIS_SCORE|*   - 0-18 (we render as /100 by multiplying ×5.55 in copy below)
+
+  IMPORTANT: api/lead.js does NOT push FNAME today. Add it - one line edit:
+    merge_fields.FNAME = profile?.firstName || '';
+  Otherwise *|FNAME|* renders blank and the greeting falls back to "Hi,".
+
+  Brand tokens used inline (so Outlook/Gmail render correctly):
+    Indigo:  #3F36B2   (primary CTA, links, eyebrow)
+    Lavender:#8683E5   (accent, divider hairlines)
+    Navy:    #0B0359   (CTA shadow)
+    Cream:   #fafafa   (page background)
+    Ink:     #0c0b09   (body copy, headlines)
+    Muted:   #56556B   (tertiary text)
+  ──────────────────────────────────────────────────────────────────────
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light only" />
+  <title>Did you make move #1?</title>
+  <style>
+    /* Most clients strip <style>, but a few honour it - we keep this minimal */
+    @media (max-width: 600px) {
+      .container  { width: 100% !important; }
+      .px-pad     { padding-left: 24px !important; padding-right: 24px !important; }
+      .h1         { font-size: 30px !important; line-height: 1.18 !important; }
+      .h2         { font-size: 20px !important; }
+      .cta-btn a  { display: block !important; }
+    }
+    a { color: #3F36B2; }
+    /* Force light mode on Apple Mail dark-mode users (the design depends on cream bg) */
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#fafafa; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
+
+  <!-- ── PRE-HEADER (inbox preview text) ──────────────────────────────
+       Hidden in the email body via 0px sizing + collapsed visibility.
+       Most clients show ~90 chars after the subject in the inbox list. -->
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#fafafa;">
+    Most read the report. Few start. Which group are you in?
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+  </div>
+
+  <!-- Outer wrapper - cream background runs full-width -->
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fafafa;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <!-- ── 600px CONTAINER ───────────────────────────────────── -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" style="width:600px; max-width:600px; background-color:#ffffff; border-radius:16px; box-shadow:0 1px 3px rgba(11,3,89,0.06), 0 12px 36px rgba(11,3,89,0.10);">
+
+          <!-- Brand strip (slim navy bar with eyebrow) -->
+          <tr>
+            <td style="background-color:#0B0359; padding:18px 40px; border-radius:16px 16px 0 0;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="left" style="font-family:Helvetica, Arial, sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; color:#8683E5; text-transform:uppercase;">
+                    Von Peach · FutureMakers
+                  </td>
+                  <td align="right" style="font-family:Helvetica, Arial, sans-serif; font-size:11px; font-weight:600; letter-spacing:1px; color:rgba(252,252,252,0.55); text-transform:uppercase;">
+                    Visibility Index
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── HEADLINE ───────────────────────────────────────── -->
+          <tr>
+            <td class="px-pad" style="padding:48px 48px 8px 48px;">
+              <p style="margin:0 0 14px 0; font-family:Helvetica, Arial, sans-serif; font-size:11px; font-weight:700; letter-spacing:2.4px; color:#3F36B2; text-transform:uppercase;">
+                TWO DAYS IN
+              </p>
+              <h1 class="h1" style="margin:0 0 0 0; font-family:Helvetica, Arial, sans-serif; font-size:38px; font-weight:700; line-height:1.12; letter-spacing:-0.6px; color:#0c0b09;">
+                Did you make<br/>move #1?
+              </h1>
+            </td>
+          </tr>
+
+          <!-- ── BODY ───────────────────────────────────────────── -->
+          <tr>
+            <td class="px-pad" style="padding:28px 48px 0 48px; font-family:Helvetica, Arial, sans-serif; font-size:16px; line-height:1.65; color:#0c0b09;">
+
+              <p style="margin:0 0 18px 0;">
+                *|FNAME|*, your Visibility Index landed two days ago — <strong style="color:#3F36B2;">*|VIS_TIER|*</strong>.
+              </p>
+
+              <p style="margin:0 0 18px 0;">
+                The report flagged three moves. The honest question:
+                <strong style="color:#0c0b09;">did you start the first one?</strong>
+              </p>
+
+              <!-- Pull-quote block - signals "this is the important bit" -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 22px 0;">
+                <tr>
+                  <td style="border-left:3px solid #3F36B2; padding:6px 0 6px 18px; background-color:rgba(63,54,178,0.04); border-radius:0 8px 8px 0;">
+                    <p style="margin:0; font-family:Helvetica, Arial, sans-serif; font-size:15px; line-height:1.6; color:#56556B; font-style:italic;">
+                      About 7 in 10 audits get read cover-to-cover and never turn into action. The score sits in the inbox. Three weeks pass. Nothing shifts.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 18px 0;">
+                The hard bit isn't the doing — most moves take twenty minutes. It's deciding which one to start, and starting <em>today</em>.
+              </p>
+
+              <p style="margin:0 0 8px 0;">
+                Which is exactly what a 15-minute walkthrough fixes.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- ── WHAT YOU GET (compact 3-line breakdown) ────────── -->
+          <tr>
+            <td class="px-pad" style="padding:14px 48px 8px 48px;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fafafa; border-radius:12px;">
+                <tr>
+                  <td style="padding:22px 26px; font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:1.65; color:#0c0b09;">
+                    <p style="margin:0 0 12px 0; font-weight:700; font-size:11px; letter-spacing:2px; color:#3F36B2; text-transform:uppercase;">
+                      What you'll leave with
+                    </p>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td valign="top" width="22" style="padding-top:2px; font-family:Helvetica, Arial, sans-serif; font-size:14px; font-weight:700; color:#3F36B2;">→</td>
+                        <td style="padding-bottom:8px; font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:1.55; color:#0c0b09;">
+                          The one move you'll start this week, picked together
+                        </td>
+                      </tr>
+                      <tr>
+                        <td valign="top" width="22" style="padding-top:2px; font-family:Helvetica, Arial, sans-serif; font-size:14px; font-weight:700; color:#3F36B2;">→</td>
+                        <td style="padding-bottom:8px; font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:1.55; color:#0c0b09;">
+                          The exact words for it (headline rewrite, pitch sentence, post topic)
+                        </td>
+                      </tr>
+                      <tr>
+                        <td valign="top" width="22" style="padding-top:2px; font-family:Helvetica, Arial, sans-serif; font-size:14px; font-weight:700; color:#3F36B2;">→</td>
+                        <td style="font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:1.55; color:#0c0b09;">
+                          A clear answer on whether we're a fit (no pitch, no follow-up sales call)
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── CTA BUTTON ─────────────────────────────────────── -->
+          <tr>
+            <td class="px-pad" style="padding:30px 48px 12px 48px;" align="left">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="cta-btn">
+                <tr>
+                  <td align="center" style="border-radius:12px; background-color:#3F36B2; box-shadow:0 6px 20px rgba(63,54,178,0.32);">
+                    <a href="https://calendly.com/yentl-spiteri/15-min-intro?utm_source=mailchimp&utm_medium=email&utm_campaign=followup-48h"
+                       target="_blank"
+                       style="display:inline-block; padding:16px 30px; font-family:Helvetica, Arial, sans-serif; font-size:15px; font-weight:700; letter-spacing:0.4px; color:#ffffff; text-decoration:none; border-radius:12px;">
+                      Book a 15-min walkthrough →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:14px 0 0 0; font-family:Helvetica, Arial, sans-serif; font-size:13px; line-height:1.55; color:#56556B;">
+                Pick a slot that suits you. No prep needed — bring questions, we'll bring your report.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ── DIVIDER ────────────────────────────────────────── -->
+          <tr>
+            <td class="px-pad" style="padding:28px 48px 0 48px;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr><td style="border-top:1px solid rgba(63,54,178,0.12); height:1px; line-height:1px; font-size:1px;">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── REPLY-INSTEAD INVITATION ───────────────────────── -->
+          <tr>
+            <td class="px-pad" style="padding:24px 48px 8px 48px; font-family:Helvetica, Arial, sans-serif; font-size:15px; line-height:1.6; color:#0c0b09;">
+              <p style="margin:0 0 14px 0;">
+                If now's not the moment, no problem — the report stays useful.
+              </p>
+              <p style="margin:0;">
+                Or just hit reply and tell me which move you've started — or the one that's stalling. I read every reply.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ── SIGN-OFF ───────────────────────────────────────── -->
+          <tr>
+            <td class="px-pad" style="padding:24px 48px 12px 48px; font-family:Helvetica, Arial, sans-serif; font-size:15px; line-height:1.5; color:#0c0b09;">
+              <p style="margin:0 0 4px 0;">— Yentl</p>
+              <p style="margin:0; font-size:13px; color:#56556B;">Founder, Von Peach</p>
+            </td>
+          </tr>
+
+          <!-- ── P.S. ───────────────────────────────────────────── -->
+          <tr>
+            <td class="px-pad" style="padding:18px 48px 40px 48px;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top:1px dashed rgba(63,54,178,0.25);">
+                <tr>
+                  <td style="padding-top:18px; font-family:Helvetica, Arial, sans-serif; font-size:13px; line-height:1.6; color:#56556B;">
+                    <strong style="color:#0c0b09;">P.S.</strong> The walkthrough is fifteen minutes flat. We've never run over. If you can spare a coffee break, you can spare this.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── DARK BAND FOOTER ───────────────────────────────── -->
+          <tr>
+            <td style="background-color:#0B0359; padding:28px 40px; border-radius:0 0 16px 16px; font-family:Helvetica, Arial, sans-serif;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="left" style="font-size:11px; font-weight:700; letter-spacing:2px; color:#8683E5; text-transform:uppercase;">
+                    index.vonpeach.com
+                  </td>
+                  <td align="right" style="font-size:12px; color:rgba(252,252,252,0.55);">
+                    <a href="https://www.vonpeach.com" target="_blank" style="color:rgba(252,252,252,0.7); text-decoration:none;">vonpeach.com</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /container -->
+
+        <!-- ── LEGAL FOOTER (Mailchimp will append unsubscribe link) ── -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" class="container" style="width:600px; max-width:600px;">
+          <tr>
+            <td align="center" style="padding:24px 48px 8px 48px; font-family:Helvetica, Arial, sans-serif; font-size:11px; line-height:1.6; color:#56556B;">
+              You're getting this because you ran the Visibility Index audit at <a href="https://index.vonpeach.com" target="_blank" style="color:#3F36B2; text-decoration:none;">index.vonpeach.com</a>.<br/>
+              Von Peach GmbH · Beethovenstrasse 19, 8002 Zürich, Switzerland<br/>
+              <span style="color:#3F36B2;">*|UNSUB|*</span> · <a href="https://www.vonpeach.com/privacy" target="_blank" style="color:#3F36B2; text-decoration:none;">Privacy</a>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
