@@ -8,9 +8,23 @@
 - [Full methodology page](https://index.vonpeach.com/methodology): The canonical reference for the six dimensions, scoring rubric, and four tier outcomes.
 - [Book a 15-minute walkthrough](https://calendly.com/yentl-spiteri/15-min-intro): Free walkthrough of your audit results, no pitch.
 
-## Articles
+## Articles — deep dives on each dimension
 
-- [What is brand clarity (and why most executives fail it)](https://index.vonpeach.com/articles/brand-clarity): The 10-second LinkedIn test most professionals fail. The 20-minute fix. How Brand Clarity scores in the Visibility Index.
+- [What is brand clarity (and why most executives fail it)](https://index.vonpeach.com/articles/brand-clarity): The 10-second LinkedIn test. Why title-stacking fails. The audience-and-outcome formula.
+- [How to earn authority signals as a founder (without faking it)](https://index.vonpeach.com/articles/authority-signals): What counts as a real authority signal. Why authority matters most early. A 12-month plan to earn one per quarter.
+- [Why posting once a week beats posting daily](https://index.vonpeach.com/articles/content-cadence): The cadence trap. Why algorithms reward predictability. A 90-day cadence plan that survives a busy quarter.
+- [How to audit your personal brand — the 6-dimension framework](https://index.vonpeach.com/articles/personal-brand-audit-framework): Practical walkthrough of the full Visibility Index. Score yourself per dimension. Worked example. What to fix first.
+
+## Reference
+
+- [Personal-brand visibility glossary](https://index.vonpeach.com/glossary): Canonical definitions of every term — Authority Signals, Brand Clarity, Content Cadence, Digital Footprint, Network Recognition, Visual Identity, the four tiers, the 10-Second Test, audience-and-outcome formula, topic pillars, tier-1 press, and more. 17 defined terms with anchor links for direct citation.
+
+## Tier explanations
+
+- [The Hidden Gem](https://index.vonpeach.com/tier/hidden-gem): Tier 1 (composite 0–5). Real expertise, invisible online.
+- [The Rising Voice](https://index.vonpeach.com/tier/rising-voice): Tier 2 (composite 6–10). Building momentum, gaps holding you back. Median first-audit tier.
+- [The Emerging Authority](https://index.vonpeach.com/tier/emerging-authority): Tier 3 (composite 11–15). Solid foundations, time to scale.
+- [The Recognised Leader](https://index.vonpeach.com/tier/recognised-leader): Tier 4 (composite 16–18). Strong brand, sharpening into legacy.
 
 ## The Visibility Index framework
 
