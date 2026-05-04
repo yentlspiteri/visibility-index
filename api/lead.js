@@ -510,14 +510,14 @@ function buildEmailHTML({ firstName, total, tierName, hasPdf }) {
 
       <!-- CTA pill -->
       <div style="text-align:center;margin:32px 0 12px;">
-        <a href="https://calendly.com/yentl-spiteri/30min"
+        <a href="https://calendly.com/yentl-spiteri/15-min-intro?utm_source=email&utm_medium=report-delivery&utm_campaign=audit-followup"
            style="display:inline-block;background:#0c0b09;color:#fafafa;padding:18px 32px;border-radius:999px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.04em;text-transform:uppercase;">
           Let's talk it through
         </a>
       </div>
 
       <p style="font-size:13px;color:#666;margin:14px 0 0;text-align:center;font-style:italic;">
-        30 minutes. No pitch. We'll walk through your audit together.
+        15 minutes. No pitch. We'll walk through your audit together.
       </p>
     </div>
 

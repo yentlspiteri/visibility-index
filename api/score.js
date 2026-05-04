@@ -905,7 +905,10 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
     },
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
-      max_tokens: 1500,
+      // Bumped from 1500 → 3500 once the move schema added weekOne / month1 /
+      // successMetric / outreach.body — the original cap was truncating Claude
+      // mid-JSON, leaving the moves array empty and page 4 of the PDF blank.
+      max_tokens: 3500,
       messages: [{ role: 'user', content: prompt }]
     })
   });

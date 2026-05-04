@@ -3984,33 +3984,69 @@ fbq('track', 'PageView');
          scrollable in-flow block centered on the page.
        - The compact success card sits above the inline calendar.
        - Sticky chrome (start-over, sticky CTAs, etc.) keeps working. */
+  /* Walkthrough mode breaks the gate-standalone OUT of its sticky-bottom-bar
+     layout and renders it as a single in-flow column. Children (gate-success
+     + gate-calendly) stack vertically inside a 760px-wide centered band.
+     `display: block` on the children is enforced via :where() chains so no
+     parent flex/grid can make them sit side-by-side. */
   body.audit-complete.walkthrough-mode .gate-standalone {
     position: static !important;
     transform: none !important;
     visibility: visible !important;
     z-index: auto !important;
     pointer-events: auto !important;
+    display: block !important;
     margin: 24px auto 80px !important;
     padding: 0 16px !important;
     max-width: 760px !important;
-  }
-  body.audit-complete.walkthrough-mode .gate-standalone .gate-success {
     background: transparent !important;
-    box-shadow: none !important;
-    padding: 12px 0 18px !important;
-    margin: 0 auto 8px !important;
-    max-width: 520px;
   }
-  /* Compact success state in walkthrough mode - show the tick, name, email,
-     but hide the verbose hint (the inline calendar makes the next step obvious). */
-  body.audit-complete.walkthrough-mode .gate-success-check {
-    width: 38px; height: 38px; margin-bottom: 10px !important;
+  /* Force children to stack as block-level items - kills any inherited flex/float */
+  body.audit-complete.walkthrough-mode .gate-standalone > * {
+    float: none !important;
+    width: auto !important;
   }
-  body.audit-complete.walkthrough-mode .gate-success-title {
-    font-size: 18px !important;
+  /* Hide the standalone success card in walkthrough mode - the calendly card
+     now carries its own confirmation strip at the top, so we don't need the
+     dark-on-navy floating success message that was unreadable. */
+  body.audit-complete.walkthrough-mode .gate-success {
+    display: none !important;
   }
-  body.audit-complete.walkthrough-mode #gate-success-hint { display: none; }
-  /* Body padding tweak so the inline embed doesn't get scrunched at the bottom */
+  /* Calendly card spans the full 760px container, light bg, fully visible */
+  body.audit-complete.walkthrough-mode .gate-calendly {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  /* Tiny confirmation strip rendered inside the calendly card by JS */
+  body.audit-complete.walkthrough-mode .gate-calendly-confirm {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(63,54,178,0.06);
+    border: 1px solid rgba(63,54,178,0.18);
+    border-radius: 999px;
+    padding: 10px 18px;
+    margin: 0 auto 18px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--vp-deep-black, #0c0b09);
+    width: fit-content;
+    max-width: 100%;
+  }
+  .gate-calendly-confirm .gcc-tick {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    background: var(--vp-indigo, #3F36B2);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .gate-calendly-confirm strong { color: var(--vp-indigo, #3F36B2); font-weight: 600; }
   body.audit-complete.walkthrough-mode { padding-bottom: 24px; }
   /* Add bottom padding to the body so the sticky bar never sits on top of footer content */
   body.audit-complete { padding-bottom: 92px; }
@@ -7310,12 +7346,16 @@ fbq('track', 'PageView');
           const firstUrl = p.hits?.[0]?.url;
           const label = escapeHtmlPage(p.label || k);
           return firstUrl
-            ? `<a href="${escapeHtmlPage(firstUrl)}" target="_blank" rel="noopener" style="color:var(--vp-cream);text-decoration:underline;text-decoration-color:rgba(252,252,252,0.4);text-underline-offset:2px;">${label}</a>`
+            ? `<a href="${escapeHtmlPage(firstUrl)}" target="_blank" rel="noopener" style="color:var(--vp-indigo,#3F36B2);font-weight:600;text-decoration:underline;text-decoration-color:rgba(63,54,178,0.35);text-underline-offset:3px;">${label}</a>`
             : `<strong>${label}</strong>`;
         });
+      // Subtitle: count CHANNELS (platforms detected), NOT the per-platform
+      // SerpAPI hit counts - those would mislead users into thinking we're
+      // measuring their actual posting activity (we're not, we're measuring
+      // Google indexing of their handle on each platform).
       const subText = platforms.googleNews
-        ? `${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} · including news coverage`
-        : `${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} where you appear publicly`;
+        ? `Detected on ${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} · including news coverage`
+        : `Detected on ${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} where you appear publicly`;
       cards.push({
         wide: true,
         icon: '🌐', label: 'Across the web',
