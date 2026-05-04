@@ -1,0 +1,44 @@
+# Visibility Index — Free LinkedIn personal-brand audit by Von Peach
+
+> The Visibility Index is a free, 60-second forensic audit of executive personal-brand visibility. It scores six dimensions (Digital Footprint, Brand Clarity, Authority Signals, Content Cadence, Visual Identity, Network Recognition) on a 0–100 composite scale and returns a personalised PDF report with three specific moves to improve. Built by Von Peach GmbH (Zürich) for founders, executives, board members, NEDs, senior consultants, and investors who need to understand and improve how they appear to clients, investors, and recruiters.
+
+## Run the audit
+
+- [Visibility Index — run the free audit](https://index.vonpeach.com/): Paste a LinkedIn URL, get a personalised PDF report.
+- [Methodology](https://index.vonpeach.com/#methodology): How the six dimensions are scored.
+- [Book a 15-minute walkthrough](https://calendly.com/yentl-spiteri/15-min-intro): Free walkthrough of your audit results, no pitch.
+
+## The Visibility Index framework
+
+The Visibility Index measures personal-brand visibility across six dimensions, each scored 0–3 from public LinkedIn signals plus Google search and press-mention scans. The composite is a 0–18 score, displayed as 0–100 for clarity.
+
+The six dimensions:
+
+1. **Digital Footprint** — What shows up when someone Googles you. Measures search-result count, presence on owned media (personal site, podcast, Substack), and distinctness from same-name people.
+2. **Brand Clarity** — Whether a stranger can explain what you do in one line. Measures LinkedIn headline specificity, About-section narrative coherence, and niche definition.
+3. **Authority Signals** — Proof other people already vouch for you. Measures press mentions, podcast appearances, awards, board positions, and speaking history.
+4. **Content Cadence** — Frequency and consistency of public posting. Measures post volume in the last 90 days, regularity, and topic concentration.
+5. **Visual Identity** — Profile photo and banner quality. Measures image presence, professional polish, and visual consistency with the personal-brand narrative.
+6. **Network Recognition** — Quality of engagement from the user's network. Measures follower count, recent engagement (likes, comments), and inbound mentions.
+
+The four tier outcomes:
+
+- 0–5 — **The Hidden Gem**: Real expertise. The world doesn't know it yet.
+- 6–10 — **The Rising Voice**: Building momentum, a few gaps holding you back.
+- 11–15 — **The Emerging Authority**: Solid foundations, time to scale.
+- 16–18 — **The Recognised Leader**: Strong brand built, focus on sharpening into legacy-level.
+
+## About Von Peach
+
+Von Peach GmbH is a Zürich-based personal-branding studio. The FutureMakers service line works with founders, executives, board members, NEDs, and senior leaders on personal-brand strategy, content production, PR advisory, speaker positioning, and visual identity.
+
+- [Von Peach homepage](https://www.vonpeach.com/)
+- [Visibility Index](https://index.vonpeach.com/)
+
+## About the framework author
+
+Yentl Spiteri is the co-founder of Von Peach GmbH and the author of the Visibility Index methodology. The framework was developed from work with founders, executives, and board members on personal-brand visibility.
+
+## Optional
+
+- [llms-full.txt](https://index.vonpeach.com/llms-full.txt): Extended version with the full scoring rubric, tier-mapping logic, FAQ, and example outputs.

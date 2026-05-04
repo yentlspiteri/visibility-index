@@ -1,9 +1,93 @@
 # Visibility Index - index.vonpeach.com
-# We want everything indexed except API endpoints (no value to crawlers).
+# We want everything indexed by both regular search engines AND AI/LLM
+# crawlers, except API endpoints which have no value for indexing.
+# Some bots respect a default User-agent: * allow; others (notably Anthropic
+# and OpenAI) only crawl when explicitly named, so we list them out.
 
 User-agent: *
 Allow: /
 Disallow: /api/
 
-# Sitemap (lets crawlers find all pages without guessing)
+# OpenAI - GPTBot trains models, ChatGPT-User is on-demand browsing,
+# OAI-SearchBot powers SearchGPT.
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+
+# Anthropic - ClaudeBot trains, claude-web is on-demand fetch,
+# anthropic-ai is the legacy name some headers still report.
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+
+User-agent: claude-web
+Allow: /
+Disallow: /api/
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /api/
+
+# Perplexity - powers their answer engine
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /api/
+
+# Google - Google-Extended controls AI training (Gemini, AI Overviews)
+# separately from search indexing
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+
+# Common Crawl - the dataset most open-source LLMs train on
+User-agent: CCBot
+Allow: /
+Disallow: /api/
+
+# Apple - Apple Intelligence + Spotlight Suggestions
+User-agent: Applebot
+Allow: /
+Disallow: /api/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+
+# Meta - powers AI-on-Facebook + Llama training
+User-agent: FacebookBot
+Allow: /
+Disallow: /api/
+
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /api/
+
+# DuckDuckGo - powers their AI assist
+User-agent: DuckAssistBot
+Allow: /
+Disallow: /api/
+
+# Mistral
+User-agent: MistralAI-User
+Allow: /
+Disallow: /api/
+
+# You.com
+User-agent: YouBot
+Allow: /
+Disallow: /api/
+
+# Sitemap
 Sitemap: https://index.vonpeach.com/sitemap.xml
