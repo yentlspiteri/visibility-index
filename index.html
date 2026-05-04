@@ -3185,12 +3185,43 @@ fbq('track', 'PageView');
   .gate-success {
     background: var(--vp-cream, #fafafa);
     border-radius: 20px;
-    padding: 40px 32px 36px;
+    padding: 28px 28px 24px;
     text-align: center;
     box-shadow: 0 24px 64px rgba(11,3,89,0.18);
     animation: gate-success-in .45s cubic-bezier(.34,1.56,.64,1);
   }
   .gate-success.hidden { display: none; }
+  /* Pin the success card to the bottom of the viewport so it stays visible
+     while the user scrolls through the rest of the report. Same horizontal
+     position the email gate had (sticky-bottom-bar layout). The next-moves
+     section below adds bottom padding so content can still scroll past it. */
+  body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) {
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+    width: calc(100% - 32px) !important;
+    max-width: 560px !important;
+    z-index: 60 !important;
+    margin: 0 !important;
+    background: rgba(252, 252, 252, 0.98) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  /* Reserve room at the bottom of the page so footer/circle don't sit behind it */
+  body.audit-complete:not(.walkthrough-mode):has(.gate-success:not(.hidden)) footer { padding-bottom: 140px !important; }
+  /* Compact the contents on mobile so the floating bar stays one row tall-ish */
+  @media (max-width: 600px) {
+    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) {
+      padding: 18px 18px 16px !important;
+    }
+    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-check {
+      width: 36px; height: 36px; margin: 0 auto 8px;
+    }
+    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-title { font-size: 18px; margin: 0 0 4px; }
+    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-line  { font-size: 13px; margin: 0 0 6px; }
+    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-hint  { font-size: 11px; }
+  }
   @keyframes gate-success-in {
     from { opacity: 0; transform: translateY(8px) scale(0.98); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -5621,6 +5652,29 @@ fbq('track', 'PageView');
   .results-wrap .finding-value strong { color: var(--vp-indigo) !important; }
   .results-wrap .finding-value em { color: rgba(15,15,15,0.78) !important; font-weight: 500; }
   .results-wrap .finding-sub { color: rgba(15,15,15,0.55) !important; }
+
+  /* Finding-card lives on a CREAM card-within-card. Override the headline + dot
+     + top-post quote colors that were originally designed for a dark background. */
+  .results-wrap .finding-headline {
+    color: var(--vp-deep-black, #0c0b09) !important;
+    text-shadow: none !important;
+  }
+  .results-wrap .finding-dot {
+    background: rgba(63,54,178,0.10) !important;
+    border-color: rgba(63,54,178,0.25) !important;
+  }
+  .results-wrap .finding-dot.is-on {
+    background: var(--vp-indigo, #3F36B2) !important;
+    border-color: var(--vp-indigo, #3F36B2) !important;
+    box-shadow: 0 0 12px rgba(63,54,178,0.30) !important;
+  }
+  .results-wrap .toppost-quote {
+    color: rgba(15,15,15,0.85) !important;
+    border-left-color: var(--vp-indigo, #3F36B2) !important;
+  }
+  .results-wrap .toppost-meta { color: rgba(15,15,15,0.55) !important; }
+  .results-wrap .toppost-meta span { color: rgba(15,15,15,0.78) !important; }
+  .results-wrap .toppost-link { color: var(--vp-indigo, #3F36B2) !important; }
 
   /* Hexagon + summary — cream card */
   .results-wrap .results-split {
@@ -8628,28 +8682,26 @@ fbq('track', 'PageView');
     }
   }
 
-  /* ────────── "LET US HELP YOU" CTA — when the inline Calendly is mounted on this
-     page (walkthrough mode), prevent the default new-tab open and smooth-scroll
-     to the calendar instead. Falls back to opening Calendly externally if no
-     mount is present. ────────── */
-  (function(){
-    const helpCta = document.getElementById('help-cta');
-    if (!helpCta) return;
-    helpCta.addEventListener('click', (e) => {
-      const mount = document.getElementById('calendly-mount');
-      const wrap  = document.getElementById('gate-walkthrough') || document.getElementById('gate-calendly');
-      const target = mount || wrap;
-      // Mount exists AND is visible (walkthrough mode revealed the calendar) → scroll on-page
-      if (target && target.offsetParent !== null) {
-        e.preventDefault();
-        const headerOffset = 80;
-        const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
-        window.scrollTo({ top, behavior: 'smooth' });
-        if (window.track) window.track('cta_calendly', { source: 'help-cta-anchor' });
-      }
-      // Otherwise let the default external link behaviour run.
-    });
-  })();
+  /* ────────── GLOBAL CALENDLY-ANCHOR HANDLER ──────────
+     Catches every click on a calendly.com link site-wide. If the inline calendar
+     mount is on this page AND visible (walkthrough mode), scroll to it on-page
+     instead of opening Calendly in a new tab. Falls through to the default link
+     behaviour otherwise. Single handler covers help-cta, bottom-bar CTA, nav-cta,
+     in-content links, etc. so no future Calendly link can ever miss this. ────── */
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href*="calendly.com/yentl-spiteri"], a[href="#calendly-mount"], a[href="#gate-calendly"], a[href="#gate-walkthrough"]');
+    if (!a) return;
+    const mount = document.getElementById('calendly-mount');
+    const wrap  = document.getElementById('gate-walkthrough') || document.getElementById('gate-calendly');
+    const target = mount || wrap;
+    if (target && target.offsetParent !== null) {
+      e.preventDefault();
+      const headerOffset = 80;
+      const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top, behavior: 'smooth' });
+      if (window.track) window.track('cta_calendly', { source: 'global-anchor', via: a.id || a.className || 'unknown' });
+    }
+  }, true);  // capture phase — runs before any other handler
 
   /* ────────── Render the "What to write / What to film" panels ──────────
      Driven by lastWritingIdeas + lastVideoIdeas arrays from /api/score.
