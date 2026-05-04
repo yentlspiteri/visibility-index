@@ -4613,8 +4613,8 @@ fbq('track', 'PageView');
      spans go the other way: shown on desktop, hidden on mobile. */
   .mobile-label { display: none; }
 
-  /* Hamburger button — visible on EVERY viewport now (we removed the inline desktop
-     nav links so Methodology + Circle live exclusively in the slide-down panel). */
+  /* Hamburger button — visible only on mobile. On desktop the inline nav links
+     (Methodology + The Circle) replace it. Hidden via media query below. */
   .nav-burger {
     display: inline-flex;
     flex-direction: column;
@@ -4628,6 +4628,9 @@ fbq('track', 'PageView');
     border: 0;
     cursor: pointer;
     flex-shrink: 0;
+  }
+  @media (min-width: 769px) {
+    .nav-burger { display: none !important; }
   }
   .nav-burger span {
     display: block;
@@ -5823,7 +5826,7 @@ fbq('track', 'PageView');
 <!-- ─────────── NAV ─────────── -->
 <nav class="top">
   <div class="container">
-    <a href="https://www.vonpeach.com" target="_blank" rel="noopener" class="logo" aria-label="Von Peach - visit homepage">
+    <a href="/" class="logo" aria-label="Visibility Index — homepage">
       <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <g fill="#FCFCFC">
           <path d="M298.99,614.13h-34.36c10.38-48.96,20.56-96.75,30.86-145.34,15.56,0,30.7,0,46.73,0,9.35,31.71,18.27,63.38,28.42,97.8,6.95-34.2,13.42-65.83,19.92-97.8h34.07c-10.31,49.35-19.87,96.44-30.16,145.34h-45.66c-9.62-33.84-19.33-68.24-29.03-102.37h-.85c-3.06,17.24-5.83,34.54-9.19,51.73-3.26,16.7-7.07,33.53-10.74,50.64Z"/>
