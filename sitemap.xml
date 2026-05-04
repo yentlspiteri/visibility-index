@@ -14,9 +14,12 @@
 
   <!-- Articles -->
   <url><loc>https://index.vonpeach.com/articles</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/brand-clarity</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/authority-signals</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/content-cadence</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://index.vonpeach.com/articles/digital-footprint</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://index.vonpeach.com/articles/brand-clarity</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://index.vonpeach.com/articles/authority-signals</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://index.vonpeach.com/articles/content-cadence</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://index.vonpeach.com/articles/visual-identity</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://index.vonpeach.com/articles/network-recognition</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url><loc>https://index.vonpeach.com/articles/personal-brand-audit-framework</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
   <!-- Tier landing pages -->
