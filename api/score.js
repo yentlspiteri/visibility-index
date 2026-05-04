@@ -300,7 +300,9 @@ export default async function handler(req, res) {
       dimensionCommentary: analysis.dimensionCommentary,
       moves:               analysis.moves,
       tierRoadmap:         analysis.tierRoadmap,
-      contentIdeas:        analysis.contentIdeas || [],
+      contentIdeas:        analysis.contentIdeas || [],     // legacy
+      writingIdeas:        analysis.writingIdeas || [],     // 3 writing prompts
+      videoIdeas:          analysis.videoIdeas   || [],     // 3 video prompts
       pressTargets:        analysis.pressTargets || [],
       personalSite:        personalSite,                // { url, found } or null
       // Tier-1 press hits - surfaced for both the landing page and the PDF
@@ -310,6 +312,14 @@ export default async function handler(req, res) {
       platforms:           presence,
       // Where the user lands in vanilla Google search for their own name
       googleRanking:       googleRanking,
+      // Top-performing recent post (text + likes + comments + url) for the
+      // "Your best post" finding card on the results page.
+      topPost: postsData && postsData.topPostText ? {
+        text:     postsData.topPostText,
+        likes:    postsData.topPostLikes,
+        comments: postsData.topPostComments,
+        url:      postsData.topPostUrl
+      } : null,
       // Claude vision read on profile photo + banner (null if vision skipped)
       visionAnalysis:      visionAnalysis,
       // Backward-compat: keep older field names mapped from the new payload
@@ -1111,10 +1121,26 @@ YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose arou
     "<max 10 words, punchy>",
     "<max 10 words>","<max 10 words>","<max 10 words>","<max 10 words>"
   ],
-  "contentIdeas": [
-    {"topic":"<a specific post title or hook, 6-12 words. Concrete, not generic.>","angle":"<one sentence on the take or insight that would resonate with their audience>","format":"<one of: short-form post | long-form essay | carousel | video | newsletter | thread>"},
-    {"topic":"...","angle":"...","format":"..."},
-    {"topic":"...","angle":"...","format":"..."}
+  "writingIdeas": [
+    {
+      "title":"<6-12 word post title — concrete, references their actual industry/role/expertise>",
+      "hook":"<the literal first line of the post — the line that stops a thumb scroll. ≤22 words. Must be opinionated.>",
+      "angle":"<one sentence on the take, why it lands with THEIR audience. ≤24 words. Reference one real thing about them — headline phrase, industry, follower count, prior employer, or detected platform.>",
+      "format":"<one of: LinkedIn post | LinkedIn long-form | Newsletter | Twitter thread | Carousel | Substack essay>"
+    },
+    {"title":"...","hook":"...","angle":"...","format":"..."},
+    {"title":"...","hook":"...","angle":"...","format":"..."}
+  ],
+  "videoIdeas": [
+    {
+      "title":"<6-12 word video title — concrete, references their domain expertise>",
+      "hook":"<the first 5 seconds of the video — what they say or show on camera. ≤22 words. Must earn the next 30 seconds of attention.>",
+      "angle":"<one sentence on what they'd actually film and why their audience would watch. ≤24 words. Reference something real about them.>",
+      "format":"<one of: 60s talking head | 90s explainer | LinkedIn vertical reel | Podcast clip | Behind-the-scenes B-roll | Whiteboard explainer>",
+      "shotIn":"<estimated time to film on a phone, no crew. one of: '15 min, no edit' | '30 min one-take' | '1hr light edit' | '2hr proper shoot'>"
+    },
+    {"title":"...","hook":"...","angle":"...","format":"...","shotIn":"..."},
+    {"title":"...","hook":"...","angle":"...","format":"...","shotIn":"..."}
   ],
   "pressTargets": [
     {"outlet":"<a specific tier-1 publication that fits their niche - e.g. Forbes Leadership, TechCrunch, HBR, Sifted, etc.>","why":"<one sentence on why their story fits this outlet specifically>","pitch":"<a 10-15 word pitch angle / headline they could use>"},
@@ -1138,6 +1164,23 @@ SPECIFICITY MANDATE for moves (very important):
 - If a move's "why" could be copy-pasted onto any other audit, REWRITE IT.
 - Reference detected platforms by name. If they have a YouTube interview, the move is "clip your YouTube interview into 5 LinkedIn posts" - not "go on more podcasts".
 - If they have NO press, do NOT pretend they do. If they HAVE press, build moves that compound it.
+
+CONTENT IDEAS — same specificity rule, even harder:
+- Each writingIdeas[].title and videoIdeas[].title MUST be a real post/video idea this person could actually make this week. NOT a generic topic header.
+- Each "hook" MUST be the literal opening line — write it the way they'd write it. Conversational, opinionated, concrete. NEVER "In today's world…" or "5 lessons I learned about…".
+- Each "angle" must reference one observable fact about the user (headline phrase, industry, prior employer, follower count, recent press, detected platform). If you can't, you don't understand them well enough yet.
+- Match the format to their actual reach. Someone with 200 followers and zero posts → start with simple LinkedIn posts, not Substack essays. Someone with 5k+ followers and an active podcast guest history → push to long-form / video.
+- Video ideas must be SHOOTABLE on a phone in under 2 hours. No "feature documentary" pitches. The shotIn field is a real promise to the user.
+- Diversify across the 3 of each — don't give them 3 LinkedIn posts. Mix formats so they can pick the one that fits their week.
+- BAD examples to NEVER write:
+  ✗ "5 lessons from being a CEO"
+  ✗ "My morning routine"
+  ✗ "Why authenticity matters in leadership"
+  ✗ "Tips for personal branding"
+- GOOD examples that earn the spot:
+  ✓ "The cap-table mistake that cost me Series B leverage" (for a founder)
+  ✓ "Why I stopped writing 'transforming the future of work' on my LinkedIn" (referencing their actual headline)
+  ✓ "What 8 years at Goldman taught me that I unlearned at [Current Co]" (referencing their actual experience)
 
 PLAIN-ENGLISH RULES (very important):
 - Write at a 6th-grade reading level. Imagine explaining it to a smart 10-year-old.
@@ -1237,11 +1280,30 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
       tierRoadmap: Array.isArray(p.tierRoadmap)
         ? p.tierRoadmap.slice(0, 5).map(t => String(t).slice(0, 160))
         : [],
+      // Legacy contentIdeas — kept for backward compat with cached deploys / old PDFs.
+      // New flow uses writingIdeas + videoIdeas below.
       contentIdeas: Array.isArray(p.contentIdeas)
         ? p.contentIdeas.slice(0, 3).map(c => ({
             topic:  String(c?.topic  || '').slice(0, 200),
             angle:  String(c?.angle  || '').slice(0, 300),
             format: String(c?.format || '').slice(0, 60)
+          }))
+        : [],
+      writingIdeas: Array.isArray(p.writingIdeas)
+        ? p.writingIdeas.slice(0, 3).map(c => ({
+            title:  String(c?.title  || '').slice(0, 200),
+            hook:   String(c?.hook   || '').slice(0, 280),
+            angle:  String(c?.angle  || '').slice(0, 300),
+            format: String(c?.format || '').slice(0, 60)
+          }))
+        : [],
+      videoIdeas: Array.isArray(p.videoIdeas)
+        ? p.videoIdeas.slice(0, 3).map(c => ({
+            title:  String(c?.title  || '').slice(0, 200),
+            hook:   String(c?.hook   || '').slice(0, 280),
+            angle:  String(c?.angle  || '').slice(0, 300),
+            format: String(c?.format || '').slice(0, 60),
+            shotIn: String(c?.shotIn || '').slice(0, 60)
           }))
         : [],
       pressTargets: Array.isArray(p.pressTargets)
@@ -1391,7 +1453,10 @@ function analyzePostsData(posts) {
     totalCount:    posts.length,
     recentCount,
     avgEngagement,
-    topPostText:   topPost ? (topPost.text || topPost.postText || '').slice(0, 200) : '',
+    topPostText:   topPost ? (topPost.text || topPost.postText || '').slice(0, 280) : '',
+    topPostLikes:    topPost ? Number(topPost.numLikes || topPost.likes || 0) : 0,
+    topPostComments: topPost ? Number(topPost.numComments || topPost.comments || 0) : 0,
+    topPostUrl:    topPost ? (topPost.url || topPost.postUrl || topPost.link || topPost.permalink || '') : '',
     topPostEng:    topPost ? Number(topPost.numLikes || topPost.likes || 0) + 2 * Number(topPost.numComments || topPost.comments || 0) : 0,
     samplePosts:   recent.slice(0, 5).map(r => r.text)
   };

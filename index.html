@@ -2941,6 +2941,138 @@ fbq('track', 'PageView');
   }
 
   /* - Next-moves section (post-submit unlock) - */
+  /* ════════════════════════════════════════════════════════════════════════════
+     CONTENT IDEAS SECTION — "What to write / What to film"
+     Lives below the Three Tips section. Two-column grid on desktop, stacked on
+     mobile. Each column shows three idea cards with hook, angle, and format.
+     ════════════════════════════════════════════════════════════════════════════ */
+  .content-ideas-wrap {
+    background: linear-gradient(180deg, var(--vp-navy) 0%, #06022e 100%);
+    color: var(--vp-cream, #fafafa);
+    padding: 100px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .content-ideas-wrap.hidden { display: none; }
+  .content-ideas-wrap::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(at 80% 10%, rgba(134,131,229,0.12), transparent 50%),
+      radial-gradient(at 15% 90%, rgba(63,54,178,0.15), transparent 55%);
+    pointer-events: none;
+  }
+  .content-ideas-wrap .container { position: relative; z-index: 1; }
+  .content-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 880px) {
+    .content-split { grid-template-columns: 1fr; gap: 24px; }
+    .content-ideas-wrap { padding: 56px 0; }
+  }
+  .content-col {
+    background: rgba(252,252,252,0.03);
+    border: 1px solid rgba(134,131,229,0.20);
+    border-radius: 20px;
+    padding: 28px;
+  }
+  .content-col-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--vp-lavender, #8683E5);
+    margin-bottom: 22px;
+  }
+  .content-col-eyebrow span { font-size: 20px; }
+  .content-list { display: flex; flex-direction: column; gap: 18px; }
+  .content-card {
+    background: rgba(252,252,252,0.05);
+    border: 1px solid rgba(252,252,252,0.08);
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .content-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(134,131,229,0.40);
+    background: rgba(252,252,252,0.07);
+  }
+  .content-card-num {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--vp-lavender);
+    background: rgba(134,131,229,0.12);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .content-card-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+    color: var(--vp-cream, #fafafa);
+    margin: 0 0 12px;
+  }
+  .content-card-hook {
+    position: relative;
+    padding-left: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(252,252,252,0.90);
+    font-style: italic;
+    margin-bottom: 12px;
+  }
+  .content-card-hook::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 4px; bottom: 4px;
+    width: 3px;
+    background: var(--vp-lavender, #8683E5);
+    border-radius: 2px;
+  }
+  .content-card-angle {
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(252,252,252,0.62);
+    margin: 0 0 14px;
+  }
+  .content-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .content-card-meta .pill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(134,131,229,0.10);
+    color: var(--vp-lavender);
+    border: 1px solid rgba(134,131,229,0.25);
+  }
+  .content-card-meta .pill.is-shotin {
+    background: rgba(252,252,252,0.04);
+    color: rgba(252,252,252,0.70);
+    border-color: rgba(252,252,252,0.10);
+  }
+  @media (max-width: 600px) {
+    .content-col { padding: 22px 18px; }
+    .content-card { padding: 16px 16px; }
+    .content-card-title { font-size: 16px; }
+  }
+
   .next-moves-wrap {
     background: var(--vp-navy);
     color: var(--vp-white);
@@ -3755,6 +3887,40 @@ fbq('track', 'PageView');
     margin-top: 6px;
     line-height: 1.5;
   }
+  /* ── Best-performing post quote block (within finding-card) ── */
+  .toppost-quote {
+    margin: 4px 0 12px;
+    padding: 10px 0 10px 14px;
+    border-left: 3px solid var(--vp-lavender, #8683E5);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(252,252,252,0.92);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .toppost-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: rgba(252,252,252,0.55);
+    margin-top: 4px;
+  }
+  .toppost-meta span {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(252,252,252,0.70);
+  }
+  .toppost-link {
+    color: var(--vp-lavender, #8683E5) !important;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity .15s ease;
+  }
+  .toppost-link:hover { opacity: 0.75; }
+
   /* "Gap" framing for missing things — softer visual treatment */
   .finding-card.is-gap {
     border-color: rgba(252,252,252,0.10);
@@ -3766,12 +3932,19 @@ fbq('track', 'PageView');
   .finding-headline {
     display: block;
     font-family: var(--font-display);
-    font-size: 22px;
+    font-size: 16px;
     font-weight: 600;
-    letter-spacing: -0.018em;
-    line-height: 1.15;
-    color: var(--vp-cream, #fafafa);
+    letter-spacing: -0.012em;
+    line-height: 1.3;
+    color: #fafafa !important;            /* explicit white-cream — beats any cascade */
     margin-bottom: 10px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.18); /* subtle separation from any backdrop */
+  }
+  /* When the dot card is in a light context (PDF reflow / desktop tooltip) drop the white */
+  body.audit-locked.is-light .finding-headline,
+  .finding-card[data-light="true"] .finding-headline {
+    color: var(--vp-deep-black) !important;
+    text-shadow: none;
   }
   .finding-dots {
     display: flex;
@@ -3810,7 +3983,7 @@ fbq('track', 'PageView');
     to   { opacity: 1; transform: scale(1); }
   }
   @media (max-width: 600px) {
-    .finding-headline { font-size: 18px; margin-bottom: 8px; }
+    .finding-headline { font-size: 15px; margin-bottom: 8px; }
     .finding-dot { width: 10px; height: 10px; }
     .finding-dots { gap: 5px; }
   }
@@ -4837,6 +5010,61 @@ fbq('track', 'PageView');
       transform: scale(0.96);
       opacity: 0.92;
     }
+  }
+
+  /* ════════════════════════════════════════════════════════════════════════════
+     WALKTHROUGH-FALLBACK STICKY BAR — shown when user scrolls past Calendly
+     without booking. Lets them grab the PDF report by email instead.
+     ════════════════════════════════════════════════════════════════════════════ */
+  .walkthrough-fallback {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 60;
+    padding: 14px 18px max(14px, env(safe-area-inset-bottom));
+    background: rgba(11, 3, 89, 0.96);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-top: 1px solid rgba(134, 131, 229, 0.30);
+    transform: translateY(110%);
+    transition: transform .35s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 0 -10px 32px rgba(11, 3, 89, 0.45);
+  }
+  body.walkthrough-fallback-active .walkthrough-fallback {
+    transform: translateY(0);
+  }
+  .walkthrough-fallback .wf-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .walkthrough-fallback .wf-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(252, 252, 252, 0.78);
+  }
+  .walkthrough-fallback .wf-cta {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    background: var(--vp-cream, #fafafa);
+    color: var(--vp-deep-black, #0c0b09) !important;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    text-decoration: none;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .walkthrough-fallback .wf-cta:hover { transform: translateY(-1px); }
+  .walkthrough-fallback .wf-cta:active { transform: scale(0.97); }
+  @media (max-width: 600px) {
+    .walkthrough-fallback .wf-inner { flex-direction: column; gap: 10px; align-items: stretch; }
+    .walkthrough-fallback .wf-text  { text-align: center; font-size: 13px; }
+    .walkthrough-fallback .wf-cta   { justify-content: center; }
   }
 
   /* ════════════════════════════════════════════════════════════════════════════
@@ -6152,9 +6380,38 @@ fbq('track', 'PageView');
     <!-- "Path to the next tier" block removed per request - moves above are enough -->
 
     <div class="next-cta-row next-cta-row--single">
-      <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="help-cta">
+      <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="help-cta" id="help-cta">
         LET US HELP YOU
       </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── CONTENT IDEAS (revealed after lead capture) ───────────
+     Two grouped panels: "What to write" (3 hyper-specific writing prompts) and
+     "What to film" (3 phone-shootable video ideas). Each card shows the title,
+     the literal opening hook, the angle, and the format. Hidden by default;
+     the JS in revealNextMoves() reveals it once Claude returns the arrays. -->
+<section class="content-ideas-wrap hidden" id="content-ideas">
+  <div class="container" style="max-width: 1080px;">
+    <div class="eyebrow-row" style="justify-content: center;">
+      <span class="dot"></span>
+      <span class="eyebrow">Content to make</span>
+    </div>
+    <h2 class="h2" id="content-ideas-title" style="text-align: center; margin: 18px auto;">What to write. What to film.</h2>
+    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(252,252,252,0.72); max-width: 540px;">
+      Six prompts pulled from your audit. Pick the ones that fit your week.
+    </p>
+
+    <div class="content-split">
+      <div class="content-col" id="writing-col">
+        <div class="content-col-eyebrow"><span>📝</span> WHAT TO WRITE</div>
+        <div class="content-list" id="writing-list"><!-- populated by JS --></div>
+      </div>
+      <div class="content-col" id="video-col">
+        <div class="content-col-eyebrow"><span>🎥</span> WHAT TO FILM</div>
+        <div class="content-list" id="video-list"><!-- populated by JS --></div>
+      </div>
     </div>
   </div>
 </section>
@@ -7257,11 +7514,14 @@ fbq('track', 'PageView');
   // Press hits + (future) content ideas / press targets from Claude — surfaced on page + in PDF
   let lastPress = { count: 0, outlets: [], hits: [] };
   let lastContentIdeas = [];
+  let lastWritingIdeas = [];
+  let lastVideoIdeas   = [];
   let lastPressTargets = [];
   let lastPersonalSite = null;     // { url, found } or null
   // Multi-platform presence (Instagram/X/Substack/Medium/YouTube/Crunchbase/Wikipedia/News)
   let lastPlatforms = {};
   let lastGoogleRanking = null;    // { topPosition, ownedTop10 }
+  let lastTopPost       = null;    // { text, likes, comments, url } or null
 
   // Maps Claude's service token → human label shown on the move-card service tag
   const SERVICE_LABELS = {
@@ -7490,10 +7750,13 @@ fbq('track', 'PageView');
     lastDimensionCommentary = (payload && payload.dimensionCommentary) || {};
     lastPress               = (payload && payload.press)               || { count: 0, outlets: [], hits: [] };
     lastContentIdeas        = (payload && payload.contentIdeas)        || [];
+    lastWritingIdeas        = (payload && payload.writingIdeas)        || [];
+    lastVideoIdeas          = (payload && payload.videoIdeas)          || [];
     lastPressTargets        = (payload && payload.pressTargets)        || [];
     lastPersonalSite        = (payload && payload.personalSite)        || null;
     lastPlatforms           = (payload && payload.platforms)           || {};
     lastGoogleRanking       = (payload && payload.googleRanking)       || null;
+    lastTopPost             = (payload && payload.topPost)              || null;
 
     // Personalize the result with profile data + Claude analysis from /api/score response.
     // We DON'T try to load the LinkedIn CDN photo any more - LinkedIn's media.licdn.com blocks
@@ -7838,6 +8101,35 @@ fbq('track', 'PageView');
         label: 'When someone Googles you',
         valueHTML: `<span class="finding-headline">${headline}</span><div class="finding-dots" aria-label="${owned} of 10 page-one results are yours">${dotsHtml}</div>`,
         sub: sub
+      });
+    }
+
+    // ── Best-performing post — quote the user's own top-engagement post so they
+    // can pattern-match what's working. Wide card with a styled quote block.
+    if (lastTopPost && lastTopPost.text) {
+      const txt = String(lastTopPost.text).trim();
+      const excerpt = txt.length > 220 ? txt.slice(0, 220).replace(/\s+\S*$/, '') + '…' : txt;
+      const likes    = Number(lastTopPost.likes || 0);
+      const comments = Number(lastTopPost.comments || 0);
+      const meta     = [
+        likes    > 0 ? `${likes.toLocaleString()} likes`       : '',
+        comments > 0 ? `${comments.toLocaleString()} comments` : ''
+      ].filter(Boolean).join(' · ');
+      const link = (lastTopPost.url || '').startsWith('http')
+        ? `<a href="${escapeHtmlPage(lastTopPost.url)}" target="_blank" rel="noopener" class="toppost-link">View post →</a>`
+        : '';
+      cards.push({
+        wide: true,
+        icon: '⭐',
+        label: 'Your best-performing post',
+        valueHTML:
+          `<blockquote class="toppost-quote">${escapeHtmlPage(excerpt)}</blockquote>` +
+          (meta || link
+            ? `<div class="toppost-meta">${meta ? `<span>${meta}</span>` : ''}${link}</div>`
+            : ''),
+        sub: likes >= 50
+          ? 'This format clearly resonates with your audience. Make more like it.'
+          : 'Pattern-match: what about this post got engagement? Lean into that angle.'
       });
     }
 
@@ -8224,9 +8516,148 @@ fbq('track', 'PageView');
 
     // (Roadmap section removed per request - moves above are the takeaway)
 
+    // Render content ideas (writing + video) below the moves
+    renderContentIdeas();
+
     // Reveal + scroll
     section.classList.remove('hidden');
     setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }
+
+  /* ────────── armWalkthroughFallback — re-show the sticky email gate when the user
+     scrolls past the Calendly without booking. The gate-standalone block is normally
+     hidden in walkthrough-mode (we replaced it with the inline calendar). When the
+     user scrolls 200px past the bottom of the calendar without dismissing or booking,
+     we lift the walkthrough-mode flag and add `gate-revealed` so the sticky bar
+     reappears at the bottom of the viewport. Disarms once the user books (Calendly
+     dispatches an event_scheduled message) or once they re-enter the calendar in view.
+     ────────── */
+  let _walkthroughFallbackArmed = false;
+  function armWalkthroughFallback() {
+    if (_walkthroughFallbackArmed) return;
+    _walkthroughFallbackArmed = true;
+
+    const mount = document.getElementById('calendly-mount');
+    const wrap  = document.getElementById('gate-walkthrough') || document.getElementById('gate-calendly');
+    const target = mount || wrap;
+    if (!target) return;
+
+    // Watch for Calendly's event_scheduled postMessage so we know the user booked.
+    let booked = false;
+    window.addEventListener('message', (e) => {
+      if (e?.data?.event === 'calendly.event_scheduled') {
+        booked = true;
+        document.body.classList.remove('walkthrough-fallback-active');
+      }
+    });
+
+    // IntersectionObserver: when the calendar's bottom edge has fully left the viewport
+    // (rootMargin pushes the trigger 200px past), reveal the sticky bar. While the
+    // calendar is in view, hide the sticky bar so the two CTAs don't fight.
+    const io = new IntersectionObserver((entries) => {
+      if (booked) return;
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Calendar is back in view → hide the sticky reveal
+          document.body.classList.remove('walkthrough-fallback-active');
+        } else if (entry.boundingClientRect.top < 0) {
+          // Calendar has scrolled OFF the top of the viewport (user is below it) →
+          // reveal the sticky email bar so they can still grab the report.
+          document.body.classList.add('walkthrough-fallback-active');
+          if (window.track) window.track('walkthrough_fallback_shown', {});
+        }
+      });
+    }, { rootMargin: '0px 0px -200px 0px', threshold: 0 });
+    io.observe(target);
+
+    // Wire the wf-cta link to scroll to the gate-card (email entry)
+    const wfCta = document.getElementById('wf-cta');
+    if (wfCta) {
+      wfCta.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Find any visible email input (gate-card or inline gate) and scroll/focus it
+        const emailInput = document.querySelector('input[type="email"]:not([disabled])');
+        const scrollTarget = emailInput ? emailInput.closest('.gate-card, .gate-standalone, form') || emailInput : document.getElementById('gate-card');
+        if (scrollTarget) {
+          const top = scrollTarget.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top, behavior: 'smooth' });
+          setTimeout(() => emailInput?.focus(), 600);
+        }
+        document.body.classList.remove('walkthrough-fallback-active');
+        if (window.track) window.track('walkthrough_fallback_clicked', {});
+      });
+    }
+  }
+
+  /* ────────── "LET US HELP YOU" CTA — when the inline Calendly is mounted on this
+     page (walkthrough mode), prevent the default new-tab open and smooth-scroll
+     to the calendar instead. Falls back to opening Calendly externally if no
+     mount is present. ────────── */
+  (function(){
+    const helpCta = document.getElementById('help-cta');
+    if (!helpCta) return;
+    helpCta.addEventListener('click', (e) => {
+      const mount = document.getElementById('calendly-mount');
+      const wrap  = document.getElementById('gate-walkthrough') || document.getElementById('gate-calendly');
+      const target = mount || wrap;
+      // Mount exists AND is visible (walkthrough mode revealed the calendar) → scroll on-page
+      if (target && target.offsetParent !== null) {
+        e.preventDefault();
+        const headerOffset = 80;
+        const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top, behavior: 'smooth' });
+        if (window.track) window.track('cta_calendly', { source: 'help-cta-anchor' });
+      }
+      // Otherwise let the default external link behaviour run.
+    });
+  })();
+
+  /* ────────── Render the "What to write / What to film" panels ──────────
+     Driven by lastWritingIdeas + lastVideoIdeas arrays from /api/score.
+     Keeps the section hidden if both arrays are empty (e.g. cached deploy
+     before the prompt update returned the new fields). */
+  function renderContentIdeas() {
+    const wrap   = document.getElementById('content-ideas');
+    const wList  = document.getElementById('writing-list');
+    const vList  = document.getElementById('video-list');
+    if (!wrap || !wList || !vList) return;
+
+    const writes = Array.isArray(lastWritingIdeas) ? lastWritingIdeas : [];
+    const films  = Array.isArray(lastVideoIdeas)   ? lastVideoIdeas   : [];
+
+    // If the API didn't return either array, hide the section. Avoid showing an empty card.
+    if (writes.length === 0 && films.length === 0) {
+      wrap.classList.add('hidden');
+      return;
+    }
+
+    function cardHTML(idea, idx, kind) {
+      const num    = '0' + (idx + 1);
+      const title  = escapeHtmlPage(idea.title  || '');
+      const hook   = escapeHtmlPage(idea.hook   || '');
+      const angle  = escapeHtmlPage(idea.angle  || '');
+      const format = escapeHtmlPage(idea.format || '');
+      const shotIn = escapeHtmlPage(idea.shotIn || '');
+      const meta = [
+        format ? `<span class="pill">${format}</span>` : '',
+        (kind === 'video' && shotIn) ? `<span class="pill is-shotin">${shotIn}</span>` : ''
+      ].filter(Boolean).join('');
+      return `
+        <article class="content-card">
+          <span class="content-card-num">${num}</span>
+          <h3 class="content-card-title">${title}</h3>
+          ${hook  ? `<p class="content-card-hook">"${hook}"</p>` : ''}
+          ${angle ? `<p class="content-card-angle">${angle}</p>` : ''}
+          ${meta  ? `<div class="content-card-meta">${meta}</div>` : ''}
+        </article>`;
+    }
+
+    wList.innerHTML = writes.map((c, i) => cardHTML(c, i, 'write')).join('') ||
+      `<p style="opacity:0.5;font-size:14px;">Writing prompts unavailable for this audit.</p>`;
+    vList.innerHTML = films.map((c, i) => cardHTML(c, i, 'video')).join('') ||
+      `<p style="opacity:0.5;font-size:14px;">Video prompts unavailable for this audit.</p>`;
+
+    wrap.classList.remove('hidden');
   }
 
   // The "Get my full PDF report" button inside the personal-card → scroll to the gate + focus email
@@ -8577,6 +9008,8 @@ fbq('track', 'PageView');
           // Real press hits + Claude-generated content/PR ideas (when present)
           press:               lastPress,
           contentIdeas:        lastContentIdeas,
+          writingIdeas:        lastWritingIdeas,
+          videoIdeas:          lastVideoIdeas,
           pressTargets:        lastPressTargets,
           // Multi-platform presence map + Google name-position scoring
           platforms:           lastPlatforms,
@@ -8660,6 +9093,19 @@ fbq('track', 'PageView');
     }
   });
 </script>
+
+<!-- ─────────── WALKTHROUGH FALLBACK STICKY BAR ───────────
+     When the user is in walkthrough mode and scrolls past the inline Calendly
+     without booking, this fixed bar slides up so they can still get the PDF
+     report by email. Shown by armWalkthroughFallback() once the calendar leaves
+     the viewport via IntersectionObserver. Hidden again when calendar re-enters
+     view OR when Calendly fires event_scheduled (booking confirmed). -->
+<div class="walkthrough-fallback" id="walkthrough-fallback" aria-hidden="true">
+  <div class="wf-inner">
+    <span class="wf-text">Or just send me the report by email</span>
+    <a href="#gate-card" class="wf-cta" id="wf-cta">Email me the report →</a>
+  </div>
+</div>
 
 <!-- ─────────── MOBILE BOTTOM ACTION BAR ───────────
      Adaptive thumb-zone CTA. Pre-result → focuses the audit form (smooth scroll
