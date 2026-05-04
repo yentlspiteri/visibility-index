@@ -42,6 +42,7 @@ export default async function handler(req, res) {
     profile,                                                     // { firstName, headline, companyName, pictureUrl, ... }
     executiveSummary, dimensionCommentary, moves, tierRoadmap,   // Claude analysis payload
     press, contentIdeas, pressTargets,                           // press hits + content/PR ideas (optional)
+    platforms, googleRanking,                                    // multi-platform presence + Google name-position
     intent,                                                      // "email" | "walkthrough" - which CTA was clicked at score reveal
     metaCapi                                                     // { eventId, sourceUrl, userAgent, fbp, fbc } - CAPI deduplication payload
   } = body;
@@ -70,7 +71,9 @@ export default async function handler(req, res) {
       // Press hits + content/PR ideas (optional, rendered only when present)
       press:               press        || { count: 0, outlets: [], hits: [] },
       contentIdeas:        Array.isArray(contentIdeas) ? contentIdeas : [],
-      pressTargets:        Array.isArray(pressTargets) ? pressTargets : []
+      pressTargets:        Array.isArray(pressTargets) ? pressTargets : [],
+      platforms:           platforms    || {},
+      googleRanking:       googleRanking || null
     });
     pdfBase64 = Buffer.from(pdfBytes).toString('base64');
   } catch (err) {

@@ -6802,6 +6802,9 @@ fbq('track', 'PageView');
   let lastContentIdeas = [];
   let lastPressTargets = [];
   let lastPersonalSite = null;     // { url, found } or null
+  // Multi-platform presence (Instagram/X/Substack/Medium/YouTube/Crunchbase/Wikipedia/News)
+  let lastPlatforms = {};
+  let lastGoogleRanking = null;    // { topPosition, ownedTop10 }
 
   // Maps Claude's service token → human label shown on the move-card service tag
   const SERVICE_LABELS = {
@@ -7032,6 +7035,8 @@ fbq('track', 'PageView');
     lastContentIdeas        = (payload && payload.contentIdeas)        || [];
     lastPressTargets        = (payload && payload.pressTargets)        || [];
     lastPersonalSite        = (payload && payload.personalSite)        || null;
+    lastPlatforms           = (payload && payload.platforms)           || {};
+    lastGoogleRanking       = (payload && payload.googleRanking)       || null;
 
     // Personalize the result with profile data + Claude analysis from /api/score response.
     // We DON'T try to load the LinkedIn CDN photo any more - LinkedIn's media.licdn.com blocks
@@ -7288,6 +7293,62 @@ fbq('track', 'PageView');
         icon: '📰', label: 'In the press',
         valueHTML: 'Nothing landed yet',
         sub: 'Press is the biggest jump for your tier - we can help.'
+      });
+    }
+
+    // ── Cross-platform presence — Instagram, X, Substack, YouTube, Wikipedia, Crunchbase, news ──
+    // Built from observed signals (SerpAPI site-targeted scans) - not self-reported.
+    const platforms = (payload && payload.platforms) || {};
+    const detectedPlatforms = Object.keys(platforms);
+    if (detectedPlatforms.length > 0) {
+      // Map keys to short visible labels with their first hit URL when relevant
+      const labelOrder = ['wikipedia','googleNews','youtube','crunchbase','substack','medium','instagram','x'];
+      const items = labelOrder
+        .filter(k => platforms[k])
+        .map(k => {
+          const p = platforms[k];
+          const firstUrl = p.hits?.[0]?.url;
+          const label = escapeHtmlPage(p.label || k);
+          return firstUrl
+            ? `<a href="${escapeHtmlPage(firstUrl)}" target="_blank" rel="noopener" style="color:var(--vp-cream);text-decoration:underline;text-decoration-color:rgba(252,252,252,0.4);text-underline-offset:2px;">${label}</a>`
+            : `<strong>${label}</strong>`;
+        });
+      const subText = platforms.googleNews
+        ? `${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} · including news coverage`
+        : `${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} where you appear publicly`;
+      cards.push({
+        wide: true,
+        icon: '🌐', label: 'Across the web',
+        valueHTML: items.join(' · '),
+        sub: subText
+      });
+    } else if (profile.firstName) {
+      // Empty cross-platform state - opportunity framing
+      cards.push({
+        wide: false,
+        gap: true,
+        icon: '🌐', label: 'Across the web',
+        valueHTML: 'LinkedIn-only',
+        sub: 'Owning a 2nd channel (Substack, podcast guesting, X) is the fastest tier-up move.'
+      });
+    }
+
+    // ── Google ranking — where do you sit when someone Googles your name? ──
+    const ranking = (payload && payload.googleRanking);
+    if (ranking?.topPosition && ranking.topPosition <= 3) {
+      cards.push({
+        icon: '🥇', label: 'Google ranking for your name',
+        valueHTML: `Position <strong>#${ranking.topPosition}</strong>`,
+        sub: ranking.ownedTop10 >= 3
+          ? `${ranking.ownedTop10} of the top 10 results are about you. Strong signal.`
+          : 'You own the top of search for your name.'
+      });
+    } else if (ranking && ranking.topPosition) {
+      cards.push({
+        gap: true,
+        icon: '🥈', label: 'Google ranking for your name',
+        valueHTML: `Position <strong>#${ranking.topPosition}</strong>`,
+        sub: 'You should be in the top 3. Improving Footprint is how.'
       });
     }
 
@@ -7638,6 +7699,23 @@ fbq('track', 'PageView');
         card.appendChild(title);
         card.appendChild(why);
         card.appendChild(stepWrap);
+
+        // Time-investment + success-metric meta line — small, low-prominence,
+        // signals "this is doable + measurable" without crowding the card
+        const metaLines = [];
+        if (m.timeInvest)    metaLines.push(`<span style="color:var(--vp-indigo);font-weight:600;">⏱ ${m.timeInvest}</span>`);
+        if (m.successMetric) metaLines.push(`<span style="opacity:0.75;">✓ ${m.successMetric}</span>`);
+        if (m.outreach && m.outreach.body) {
+          metaLines.push(`<span style="opacity:0.75;">✉ Draft email in your PDF</span>`);
+        }
+        if (metaLines.length) {
+          const meta = document.createElement('div');
+          meta.className = 'move-meta';
+          meta.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12px;line-height:1.5;color:var(--vp-deep-black,#0c0b09);';
+          meta.innerHTML = metaLines.join('<span style="opacity:0.3;">·</span>');
+          card.appendChild(meta);
+        }
+
         card.appendChild(service);
         grid.appendChild(card);
       });
@@ -7872,7 +7950,10 @@ fbq('track', 'PageView');
           // Real press hits + Claude-generated content/PR ideas (when present)
           press:               lastPress,
           contentIdeas:        lastContentIdeas,
-          pressTargets:        lastPressTargets
+          pressTargets:        lastPressTargets,
+          // Multi-platform presence map + Google name-position scoring
+          platforms:           lastPlatforms,
+          googleRanking:       lastGoogleRanking
         })
       });
       const data = await res.json().catch(() => ({}));

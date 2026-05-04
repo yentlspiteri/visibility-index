@@ -15,7 +15,11 @@
 import { notifyOps } from '../lib/notify.js';
 
 const APIFY_API     = 'https://api.apify.com/v2/acts';
-const APIFY_ACTOR   = process.env.APIFY_LINKEDIN_ACTOR || 'dev_fusion~Linkedin-Profile-Scraper';
+const APIFY_ACTOR       = process.env.APIFY_LINKEDIN_ACTOR || 'dev_fusion~Linkedin-Profile-Scraper';
+// Post-scraper actor - separate call for posts since the profile actor doesn't return them.
+// Defaults to apimaestro/linkedin-profile-posts which is reliable and reasonably priced.
+// Override via env var if you want to use a different actor.
+const APIFY_POSTS_ACTOR = process.env.APIFY_POSTS_ACTOR    || 'apimaestro~linkedin-profile-posts';
 const SERPAPI_API   = 'https://serpapi.com/search.json';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
@@ -139,23 +143,29 @@ export default async function handler(req, res) {
       lastName:    getLastName(profile),
       companyName: getCompany(profile)
     };
-    // Parallel scans: all-time press, recent press, personal domain probe, and
-    // multi-platform presence (Instagram/X/Substack/YouTube/Crunchbase/Wikipedia).
-    // All derived from the LinkedIn name + company - no extra user input required.
-    const [serpAllRes, serpRecentRes, personalSiteRes, presenceRes] = await Promise.allSettled([
+    // Parallel scans: all-time press, recent press, personal domain probe,
+    // multi-platform presence, AND a separate Apify call for the user's posts
+    // (the profile scraper doesn't return them). All run concurrently so we
+    // pay no extra latency vs the previous flow.
+    const [serpAllRes, serpRecentRes, personalSiteRes, presenceRes, postsRes] = await Promise.allSettled([
       fetchSerpFootprint(normalised, queryArgs, false),
       fetchSerpFootprint(normalised, queryArgs, true),
       checkPersonalDomain(queryArgs.firstName, queryArgs.lastName),
-      fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName)
+      fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
+      fetchApifyPosts(normalised)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
     const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
     const personalSite = personalSiteRes.status === 'fulfilled' ? personalSiteRes.value : null;
     const presence     = presenceRes.status   === 'fulfilled' ? presenceRes.value   : {};
+    const rawPosts     = postsRes.status      === 'fulfilled' ? postsRes.value      : [];
+    const postsData    = analyzePostsData(rawPosts);     // null if empty
     const serp = serpAll;     // alias for older usage in scoreFootprint
     const press = mergePressResults(serpAll, serpRecent);
     // Google name-position scoring - uses the serpAll we already have, no extra API call.
     const googleRanking = scoreGoogleNamePosition(queryArgs.firstName, queryArgs.lastName, serpAll);
+    // Career stage from the experience array - feeds Claude for tenure-aware moves
+    const careerStage = analyzeCareerStage(profile);
 
     // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
@@ -163,7 +173,7 @@ export default async function handler(req, res) {
     const heuristic = {
       footprint: scoreFootprint(profile, serp, presence, googleRanking, personalSite),
       authority: scoreAuthority(profile, press, presence),
-      cadence:   scoreCadence(profile),
+      cadence:   scoreCadence(profile, postsData),
       visual:    scoreVisual(profile, { score: 1 }),
       network:   scoreNetwork(profile, presence)
     };
@@ -185,7 +195,9 @@ export default async function handler(req, res) {
       platforms:      presence,
       press:          press,
       personalSite:   personalSite,
-      googleRanking:  googleRanking
+      googleRanking:  googleRanking,
+      careerStage:    careerStage,    // { totalYears, currentRoleYears, isRecentTransition, notablePast, careerStage }
+      postsData:      postsData       // null OR { recentCount, avgEngagement, topPostText, samplePosts }
     };
     const analysis = await analyzeProfile(profile, heuristic, analysisCtx).catch(err => {
       console.error('Claude analysis failed:', err);
@@ -257,6 +269,47 @@ export default async function handler(req, res) {
 }
 
 /* ═══════════════════════════ EXTERNAL CALLS ═══════════════════════════ */
+
+// Posts-only Apify call. Runs in parallel with the profile scrape so it adds
+// no critical-path latency. Failure mode is silent (returns []) - we'd rather
+// score with no post data than fail the audit.
+async function fetchApifyPosts(linkedinUrl) {
+  if (!process.env.APIFY_API_TOKEN || !APIFY_POSTS_ACTOR) return [];
+  const url = `${APIFY_API}/${APIFY_POSTS_ACTOR}/run-sync-get-dataset-items`;
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.APIFY_API_TOKEN}`
+      },
+      // Same multi-shape input pattern as the profile actor - covers the common
+      // post-scraper actors without per-actor branching.
+      body: JSON.stringify({
+        profileUrls:        [linkedinUrl],
+        urls:               [{ url: linkedinUrl }],
+        startUrls:          [{ url: linkedinUrl }],
+        username:           linkedinUrl.split('/in/')[1]?.split('/')[0] || '',
+        // Most post scrapers respect a result-count cap to keep cost bounded
+        maxItems:           20,
+        maxResults:         20,
+        limitPerSource:     20
+      })
+    });
+    if (!r.ok) {
+      const text = await r.text().catch(() => '');
+      console.warn('[Apify posts] non-OK', r.status, text.slice(0, 200));
+      return [];
+    }
+    const items = await r.json();
+    if (!Array.isArray(items)) return [];
+    // Different actors wrap differently - flatten both shapes
+    return items.map(it => it.data || it).slice(0, 20);
+  } catch (err) {
+    console.warn('[Apify posts] fetch error', err?.message || err);
+    return [];
+  }
+}
 
 async function fetchApify(linkedinUrl) {
   // Apify "run-sync-get-dataset-items" runs the actor and returns the dataset rows directly.
@@ -643,6 +696,26 @@ async function analyzeProfile(profile, heuristic, ctx = {}) {
   const goalFrame   = GOAL_FRAMING[goal] || null;
   const tierDirective = TIER_DIRECTIVES[tierName] || '';
 
+  // Career-stage line - tenure context for moves
+  const cs = ctx.careerStage || {};
+  const careerLine = (() => {
+    const parts = [];
+    if (cs.totalYears !== null && cs.totalYears !== undefined) parts.push(`${cs.totalYears} years total professional experience`);
+    if (cs.currentRoleYears !== null && cs.currentRoleYears !== undefined) {
+      const m = cs.currentRoleYears < 1 ? '<1 year' : `${cs.currentRoleYears} year${cs.currentRoleYears > 1 ? 's' : ''}`;
+      parts.push(`current role: ${m}`);
+    }
+    if (cs.isRecentTransition) parts.push('RECENT TRANSITION (just changed roles)');
+    if (cs.notablePast?.length) parts.push(`prior companies: ${cs.notablePast.slice(0, 3).join(', ')}`);
+    return parts.length ? parts.join(' • ') : 'no career history available';
+  })();
+
+  // Posts data line - real cadence + topic + engagement signal
+  const pd = ctx.postsData;
+  const postsLine = pd
+    ? `Posts in last 90 days: ${pd.recentCount}. Avg engagement (likes + 2×comments): ${pd.avgEngagement}. Top post: "${(pd.topPostText || '').slice(0, 140)}". Sample recent posts: ${(pd.samplePosts || []).slice(0, 3).map(s => `"${s.slice(0, 80)}…"`).join(' / ')}`
+    : 'No post-scraper data — cadence is unobserved (treat as 0 unless proxied by creator/verified status)';
+
   // Cross-platform presence summary - feed Claude the actual evidence so it can
   // reference specific channels in moves ("your Substack at X has 3 posts...")
   const platforms = ctx.platforms || {};
@@ -686,6 +759,15 @@ USER CONTEXT (they self-selected on the audit form):
 - Role: ${role || '(not specified)'}${roleFrame ? `\n  → Their audience: ${roleFrame.audience}\n  → What matters most for this role: ${roleFrame.priority}\n  → Voice/tone fit: ${roleFrame.tone}` : ''}
 - Goal: ${goal || '(not specified)'}${goalFrame ? `\n  → Tactical priority for this goal: ${goalFrame.priority}\n  → ${goalFrame.directive}` : ''}
 
+CAREER STAGE (from LinkedIn experience):
+- ${careerLine}
+- Career stage band: ${cs.careerStage || 'unknown'}
+- USE THIS in moves. Reference notable past companies as credibility anchors. If they recently transitioned, that's the framing hook. If they have 20+ years experience, the moves should match (no "first LinkedIn post" suggestions to a senior exec).
+
+POSTING ACTIVITY (from dedicated post scraper):
+- ${postsLine}
+- If you have real samplePosts text, REFERENCE IT. Quote the topic of their highest-engagement post. If their last 5 posts cover 5 different topics, NAME the topic-scatter problem.
+
 OBSERVED CROSS-CHANNEL EVIDENCE (use this to write SPECIFIC moves, not generic ones):
 - Tier: ${tierName || 'unknown'}
 - ${personalSiteLine}
@@ -694,6 +776,28 @@ OBSERVED CROSS-CHANNEL EVIDENCE (use this to write SPECIFIC moves, not generic o
 ${pressHits}
 - Other public channels detected:
 ${detectedPlatforms}
+
+INDUSTRY INFERENCE TASK (do this BEFORE writing moves):
+First, infer the user's industry from their company name + headline + experience. Common buckets:
+  - SaaS / B2B software
+  - Climate / cleantech
+  - Fintech / financial services
+  - Biotech / health
+  - Consulting / professional services
+  - E-commerce / DTC
+  - Media / creator economy
+  - Education / edtech
+  - Manufacturing / industrial
+  - Investment / VC / PE
+  - Other (specify)
+Then USE the industry to make moves SPECIFIC to that vertical. Examples:
+  - SaaS founder → Sifted, TechCrunch, ProductHunt, SaaStr conference
+  - Climate exec → Sifted (climate beat), Cipher, Nature Climate, ClimateWeekNYC
+  - Fintech → Sifted (fintech), CB Insights, Money 20/20, Finovate
+  - Biotech → Endpoints, BioPharma Dive, BIO International
+  - Consulting → HBR, Forbes, named industry conferences for their vertical
+  - Investment → The Information, Newcomer, LP-targeted publications
+The journalist names + outlet names you suggest MUST be real and currently active. If unsure, use the outlet name without naming a journalist - we'd rather skip a name than invent one.
 
 PROVISIONAL SCORES (already computed from public signals - you fill in Brand Clarity):
 - Digital Footprint: ${heuristic.footprint}/3
@@ -721,10 +825,21 @@ YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose arou
     "network":    "<max 14 words. Quote their follower or connection number.>"
   },
   "moves": [
-    {"title":"<imperative, 3-6 words>","why":"<ONE sentence, max 18 words. MUST reference SOMETHING specific from this user: a phrase from their headline/About in quotes, a follower count, a detected platform (e.g. their Substack at X), a press outlet they were featured in, or their company name. Do NOT generate generic advice that could apply to anyone.>","firstStep":"<max 12 words. Concrete first action they can take TODAY.>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
-    {"title":"...","why":"...","firstStep":"...","service":"..."},
-    {"title":"...","why":"...","firstStep":"...","service":"..."}
+    {
+      "title":"<imperative, 3-6 words>",
+      "why":"<ONE sentence, max 18 words. MUST reference SOMETHING specific from this user: a phrase from their headline/About in quotes, a follower count, a detected platform (e.g. their Substack at X), a press outlet they were featured in, a previous employer from their experience, or their company name. Do NOT generate generic advice that could apply to anyone.>",
+      "firstStep":"<max 12 words. Concrete first action they can take TODAY.>",
+      "weekOne":"<max 14 words. What done by end of week 1.>",
+      "month1":"<max 14 words. What done by end of month 1.>",
+      "successMetric":"<max 12 words. Observable measure that tells them this worked, e.g. 'follower count up 8-12%', 'one tier-1 reply'.>",
+      "timeInvest":"<one of: '20 min', '1 hour', '2 hours', '4 hours', 'weekly hour', '1 day'>",
+      "service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>",
+      "outreach": null
+    },
+    {"title":"...","why":"...","firstStep":"...","weekOne":"...","month1":"...","successMetric":"...","timeInvest":"...","service":"...","outreach":null},
+    {"title":"...","why":"...","firstStep":"...","weekOne":"...","month1":"...","successMetric":"...","timeInvest":"...","service":"...","outreach":null}
   ],
+  "// outreach": "For moves that involve outbound contact (press pitch, podcast pitch, board outreach, conference CFP, advisor cold-email), set outreach to an object: { type: 'press'|'podcast'|'speaker'|'board'|'advisor', recipient: '<who - role + outlet/company>', subject: '<email subject line, ≤60 chars>', body: '<2-4 sentence draft email body the user can copy-paste, addressing the specific recipient with the user's specific angle>' }. For moves that DON'T involve outreach (e.g. headline rewrite, banner upload, weekly cadence commitment), keep outreach as null.",
   "tierRoadmap": [
     "<max 10 words, punchy>",
     "<max 10 words>","<max 10 words>","<max 10 words>","<max 10 words>"
@@ -821,14 +936,50 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
         visual:    String(p.dimensionCommentary.visual    || '').slice(0, 240),
         network:   String(p.dimensionCommentary.network   || '').slice(0, 240)
       } : {},
-      moves: Array.isArray(p.moves) ? p.moves.slice(0, 3).map(m => ({
-        title:     String(m?.title     || '').slice(0, 140),
-        why:       String(m?.why       || '').slice(0, 500),
-        firstStep: String(m?.firstStep || '').slice(0, 280),
-        service:   ['strategy','content','video','photo','linkedin','speaker','pr'].includes(m?.service) ? m.service : 'strategy'
-      })) : [],
+      moves: Array.isArray(p.moves) ? p.moves.slice(0, 3).map(m => {
+        // Optional outreach draft - validated and clamped
+        let outreach = null;
+        if (m?.outreach && typeof m.outreach === 'object') {
+          const validTypes = ['press','podcast','speaker','board','advisor','partner','investor'];
+          const t = String(m.outreach.type || '').toLowerCase();
+          outreach = {
+            type:      validTypes.includes(t) ? t : 'press',
+            recipient: String(m.outreach.recipient || '').slice(0, 160),
+            subject:   String(m.outreach.subject   || '').slice(0, 140),
+            body:      String(m.outreach.body      || '').slice(0, 1200)
+          };
+          // Drop the outreach object entirely if both subject and body are empty
+          if (!outreach.subject && !outreach.body) outreach = null;
+        }
+        const validTimes = ['20 min','1 hour','2 hours','4 hours','weekly hour','1 day'];
+        return {
+          title:         String(m?.title         || '').slice(0, 140),
+          why:           String(m?.why           || '').slice(0, 500),
+          firstStep:     String(m?.firstStep     || '').slice(0, 280),
+          weekOne:       String(m?.weekOne       || '').slice(0, 280),
+          month1:        String(m?.month1        || '').slice(0, 280),
+          successMetric: String(m?.successMetric || '').slice(0, 200),
+          timeInvest:    validTimes.includes(m?.timeInvest) ? m.timeInvest : '',
+          service:       ['strategy','content','video','photo','linkedin','speaker','pr'].includes(m?.service) ? m.service : 'strategy',
+          outreach
+        };
+      }) : [],
       tierRoadmap: Array.isArray(p.tierRoadmap)
         ? p.tierRoadmap.slice(0, 5).map(t => String(t).slice(0, 160))
+        : [],
+      contentIdeas: Array.isArray(p.contentIdeas)
+        ? p.contentIdeas.slice(0, 3).map(c => ({
+            topic:  String(c?.topic  || '').slice(0, 200),
+            angle:  String(c?.angle  || '').slice(0, 300),
+            format: String(c?.format || '').slice(0, 60)
+          }))
+        : [],
+      pressTargets: Array.isArray(p.pressTargets)
+        ? p.pressTargets.slice(0, 3).map(t => ({
+            outlet: String(t?.outlet || '').slice(0, 120),
+            why:    String(t?.why    || '').slice(0, 280),
+            pitch:  String(t?.pitch  || '').slice(0, 280)
+          }))
         : []
     };
   } catch {
@@ -869,6 +1020,121 @@ function getCompany(p) {
          p.experience?.[0]?.companyName ||
          p.experiences?.[0]?.company ||
          '';
+}
+
+// Normalize the experience array across actor shapes (dev_fusion vs supreme_coder vs generic).
+function getExperience(p) {
+  const arr = p.experience || p.experiences || p.workHistory || p.positions || [];
+  if (!Array.isArray(arr)) return [];
+  return arr.map(e => {
+    const company = e.companyName || e.company || e.organisationName || e.organization || '';
+    const title   = e.title || e.position || e.jobTitle || e.role || '';
+    // Date can come as { year, month } object, ISO string, or "Mon YYYY" string. Normalize to year integer.
+    const startObj = e.startDate || e.starts_at || e.dates?.start || e.durationDates?.start;
+    const endObj   = e.endDate   || e.ends_at   || e.dates?.end   || e.durationDates?.end;
+    const startYear = parseDateYear(startObj);
+    const endYear   = parseDateYear(endObj);
+    const isCurrent = !endObj || e.isCurrent === true || e.current === true;
+    return { company, title, startYear, endYear, isCurrent };
+  }).filter(e => e.company || e.title);
+}
+
+function parseDateYear(d) {
+  if (!d) return null;
+  if (typeof d === 'number') return d > 1900 && d < 2100 ? d : null;
+  if (typeof d === 'string') {
+    const m = d.match(/(19|20)\d{2}/);
+    return m ? parseInt(m[0], 10) : null;
+  }
+  if (typeof d === 'object') {
+    return d.year || d.years || null;
+  }
+  return null;
+}
+
+// Career-stage inference. Pulls structured signals from the experience array
+// so Claude can reference them in moves ("11 months into [Company] after 8 years
+// at Goldman" - much more specific than generic role/tier moves).
+function analyzeCareerStage(profile) {
+  const exp = getExperience(profile);
+  if (!exp.length) {
+    return { totalYears: null, currentRoleYears: null, isRecentTransition: false, notablePast: [], careerStage: 'unknown' };
+  }
+  const thisYear = new Date().getFullYear();
+  // Total years = (latest end year or now) − earliest start year
+  const startYears = exp.map(e => e.startYear).filter(Boolean);
+  const earliestStart = startYears.length ? Math.min(...startYears) : null;
+  const totalYears = earliestStart ? Math.max(0, thisYear - earliestStart) : null;
+
+  // Current role tenure (years since the start of the most-recent isCurrent role)
+  const current = exp.find(e => e.isCurrent) || exp[0];
+  const currentRoleYears = (current?.startYear) ? Math.max(0, thisYear - current.startYear) : null;
+  const isRecentTransition = currentRoleYears !== null && currentRoleYears < 1.5;
+
+  // Notable past companies (top 3 distinct, not the current one)
+  const notablePast = exp
+    .filter(e => !e.isCurrent && e.company)
+    .map(e => e.company.trim())
+    .filter((c, i, arr) => c && arr.indexOf(c) === i)
+    .slice(0, 3);
+
+  // Career-stage band - calibrated to the kinds of credibility moves available
+  let careerStage = 'unknown';
+  if (totalYears !== null) {
+    if (totalYears < 5)        careerStage = 'early';      // 0–4 yrs
+    else if (totalYears < 12)  careerStage = 'mid';        // 5–11 yrs
+    else if (totalYears < 22)  careerStage = 'senior';     // 12–21 yrs
+    else                       careerStage = 'late';       // 22+ yrs
+  }
+
+  return { totalYears, currentRoleYears, isRecentTransition, notablePast, careerStage };
+}
+
+// Posts-data analysis - if Apify post-scraper returned posts, compute real
+// cadence + topic + engagement signals. Otherwise null.
+function analyzePostsData(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) return null;
+  const now = Date.now();
+  const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
+  const recent = [];
+  const allEngagement = [];
+  posts.forEach(p => {
+    // Date can be ISO string, timestamp, "X days ago" relative
+    const postedAt = parsePostTimestamp(p);
+    const likes    = Number(p.numLikes || p.likes || p.reactions || p.reactionCount || 0);
+    const comments = Number(p.numComments || p.comments || p.commentCount || 0);
+    const eng = likes + (comments * 2);   // comments worth more than likes
+    if (postedAt && (now - postedAt) <= NINETY_DAYS) {
+      recent.push({ postedAt, text: (p.text || p.postText || '').slice(0, 200), engagement: eng });
+    }
+    if (eng > 0) allEngagement.push(eng);
+  });
+  recent.sort((a, b) => b.postedAt - a.postedAt);
+  const recentCount = recent.length;
+  const avgEngagement = allEngagement.length ? Math.round(allEngagement.reduce((a, b) => a + b, 0) / allEngagement.length) : 0;
+  const topPost = posts.slice().sort((a, b) => {
+    const ea = Number(a.numLikes || a.likes || 0) + 2 * Number(a.numComments || a.comments || 0);
+    const eb = Number(b.numLikes || b.likes || 0) + 2 * Number(b.numComments || b.comments || 0);
+    return eb - ea;
+  })[0];
+  return {
+    totalCount:    posts.length,
+    recentCount,
+    avgEngagement,
+    topPostText:   topPost ? (topPost.text || topPost.postText || '').slice(0, 200) : '',
+    topPostEng:    topPost ? Number(topPost.numLikes || topPost.likes || 0) + 2 * Number(topPost.numComments || topPost.comments || 0) : 0,
+    samplePosts:   recent.slice(0, 5).map(r => r.text)
+  };
+}
+function parsePostTimestamp(post) {
+  const v = post.postedAt || post.timestamp || post.date || post.posted_at || post.publishedAt;
+  if (!v) return null;
+  if (typeof v === 'number') return v > 1e12 ? v : v * 1000;
+  if (typeof v === 'string') {
+    const t = Date.parse(v);
+    if (!Number.isNaN(t)) return t;
+  }
+  return null;
 }
 function getHeadline(p) {
   return p.headline || p.headlineText || p.title || '';
@@ -992,26 +1258,32 @@ function scoreAuthority(profile, press, presence) {
   return clamp03(Math.round(pts));
 }
 
-function scoreCadence(profile) {
-  // KNOWN LIMITATION: supreme_coder/linkedin-profile-scraper does NOT return
-  // posts in the basic profile call. Previously we returned 1 (neutral) when
-  // the activity field was missing - this inflated scores by ~5pt average.
-  // Tightened May 2026: missing activity = 0. If users have a real cadence,
-  // it's because they're verified/creator (proxy), or the scraper returned data.
+// Cadence scoring (May 2026: now uses the dedicated post-scraper output when
+// available - no more "neutral 1" default). Hierarchy:
+//   1. If the post-scraper returned posts → score from the real recent count
+//   2. Else if the profile actor returned activities → score from those
+//   3. Else fall back: creator/verified gets partial credit, otherwise 0
+function scoreCadence(profile, postsData) {
+  // Tier 1: real post-scraper data
+  if (postsData) {
+    if (postsData.recentCount >= 12) return 3;       // ≥1/week
+    if (postsData.recentCount >= 6)  return 2;       // ≥1/fortnight
+    if (postsData.recentCount >= 2)  return 1;       // sporadic
+    return 0;                                         // truly silent
+  }
+  // Tier 2: profile-actor's activities/posts field if present
   const hasActivityField =
     'activities' in profile || 'posts' in profile ||
     'recentActivities' in profile || 'recent_posts' in profile || 'updates' in profile;
-
-  // No activity data → score 0 unless we have other signals suggesting cadence
-  if (!hasActivityField) {
-    // Creator/verified status implies sustained content - give partial credit
-    if (profile.creator || profile.isVerified) return 1;
+  if (hasActivityField) {
+    const activities = getActivities(profile);
+    if (activities.length >= 12) return 3;
+    if (activities.length >= 6)  return 2;
+    if (activities.length >= 2)  return 1;
     return 0;
   }
-  const activities = getActivities(profile);
-  if (activities.length >= 12) return 3;
-  if (activities.length >= 6)  return 2;
-  if (activities.length >= 2)  return 1;
+  // Tier 3: fallback - creator/verified implies sustained content
+  if (profile.creator || profile.isVerified) return 1;
   return 0;
 }
 
