@@ -176,6 +176,14 @@ footer .footer-grid {
   gap: 48px;
   margin-bottom: 48px;
 }
+/* Four-column variant — for footers that include the new "Tools" column */
+footer .footer-grid.footer-grid--4col {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 36px;
+}
+@media (max-width: 960px) {
+  footer .footer-grid.footer-grid--4col { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
 footer .footer-col-eyebrow {
   font-family: var(--font-body);
   font-size: 11px;

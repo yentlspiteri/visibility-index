@@ -3614,8 +3614,17 @@ fbq('track', 'PageView');
     align-items: start;
     margin-bottom: 56px;
   }
+  /* Four-column variant for footers that include the new "Tools" column */
+  footer .footer-grid.footer-grid--4col {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 48px;
+  }
+  @media (max-width: 960px) {
+    footer .footer-grid.footer-grid--4col { grid-template-columns: 1fr 1fr; gap: 36px; }
+  }
   @media (max-width: 720px) {
     footer .footer-grid { grid-template-columns: 1fr; gap: 40px; text-align: left; }
+    footer .footer-grid.footer-grid--4col { grid-template-columns: 1fr; gap: 36px; }
     footer .footer-col-center, footer .footer-col-right { text-align: left !important; }
   }
   footer .footer-col-eyebrow {
@@ -6530,6 +6539,19 @@ fbq('track', 'PageView');
     <li><strong>Visual Identity</strong><span>A hi-res profile picture. A real banner. Elements that feel consistent.</span></li>
     <li><strong>Network Recognition</strong><span>Lots of followers but no engagement is just an empty number.</span></li>
   </ol>
+
+  <!-- ─── In-content related-tools links — strong internal SEO signal back to the
+       four keyword-targeted lander variants. Wrapped in a contextual paragraph
+       so it reads as natural copy, not a link farm. -->
+  <div class="container-narrow" style="max-width: 760px; margin: 36px auto 0; padding: 0 24px; text-align: center;">
+    <p style="font-size: 15px; line-height: 1.65; color: rgba(15,15,15,0.55);">
+      The same audit, framed for different searches:
+      <a href="/linkedin-audit" style="font-weight: 600;">LinkedIn audit</a> ·
+      <a href="/personal-brand-checker" style="font-weight: 600;">personal brand checker</a> ·
+      <a href="/free-personal-brand-audit" style="font-weight: 600;">free personal brand audit</a> ·
+      <a href="/executive-personal-brand-audit" style="font-weight: 600;">executive personal brand audit</a>.
+    </p>
+  </div>
 </section>
 
 <!-- "How it works (geeky version)" section removed - was outdated. -->
@@ -6600,8 +6622,8 @@ fbq('track', 'PageView');
 <footer>
   <div class="container">
 
-    <div class="footer-grid">
-      <!-- Left column: company links -->
+    <div class="footer-grid footer-grid--4col">
+      <!-- Column 1: company links -->
       <div class="footer-col">
         <p class="footer-col-eyebrow">Company</p>
         <ul>
@@ -6613,13 +6635,25 @@ fbq('track', 'PageView');
         </ul>
       </div>
 
-      <!-- Center column: contact email only (CTA pill removed per request) -->
+      <!-- Column 2: SEO tool landers (internal links to keyword-targeted variants) -->
+      <div class="footer-col">
+        <p class="footer-col-eyebrow">Tools</p>
+        <ul>
+          <li><a href="/linkedin-audit">LinkedIn audit</a></li>
+          <li><a href="/personal-brand-checker">Personal brand checker</a></li>
+          <li><a href="/free-personal-brand-audit">Free brand audit</a></li>
+          <li><a href="/executive-personal-brand-audit">Executive audit</a></li>
+          <li><a href="/glossary">Glossary</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3: contact email -->
       <div class="footer-col footer-col-center">
         <p class="footer-col-eyebrow">Reach out to us</p>
         <a class="footer-email" href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
       </div>
 
-      <!-- Right column: socials -->
+      <!-- Column 4: socials -->
       <div class="footer-col footer-col-right">
         <p class="footer-col-eyebrow">Socials</p>
         <ul>
