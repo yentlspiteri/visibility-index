@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">
   <url><loc>https://index.vonpeach.com/</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+
+  <!-- Keyword-targeted SEO landing pages -->
+  <url><loc>https://index.vonpeach.com/linkedin-audit</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://index.vonpeach.com/personal-brand-checker</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://index.vonpeach.com/free-personal-brand-audit</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://index.vonpeach.com/executive-personal-brand-audit</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
+
+  <!-- Methodology + reference -->
   <url><loc>https://index.vonpeach.com/methodology</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://index.vonpeach.com/glossary</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+
+  <!-- Articles -->
   <url><loc>https://index.vonpeach.com/articles</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://index.vonpeach.com/articles/brand-clarity</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://index.vonpeach.com/articles/authority-signals</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://index.vonpeach.com/articles/content-cadence</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://index.vonpeach.com/articles/personal-brand-audit-framework</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- Tier landing pages -->
   <url><loc>https://index.vonpeach.com/tier/hidden-gem</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://index.vonpeach.com/tier/rising-voice</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://index.vonpeach.com/tier/emerging-authority</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
