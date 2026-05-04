@@ -109,6 +109,13 @@
 <link rel="preconnect" href="https://api.fontshare.com" />
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap" rel="stylesheet" />
 
+<!-- Calendly popup widget - loaded async, only used when the user picks the
+     "Walk me through it" CTA at score reveal. Resources are <30KB combined; we
+     don't gate on them - the email-only path never triggers them. -->
+<link rel="preconnect" href="https://assets.calendly.com" />
+<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet" />
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+
 <style>
   /* ──────────────────────────────────────────────────────────
      VON PEACH - FUTUREMAKERS PALETTE (personal branding)
@@ -3507,15 +3514,19 @@
   body.audit-complete .gate-label {
     display: none !important;
   }
-  /* The form goes inline: input fills the row, button hugs the right */
+  /* Form layout: email input on row 1, two CTAs on row 2.
+     Both buttons capture email + send PDF; the primary one ALSO opens the
+     Calendly popup so the user is 2 clicks from a booked walkthrough.
+     The walkthrough button gets the visually heavier treatment to nudge
+     conversion toward the call. */
   body.audit-complete .gate-form {
     display: flex !important;
-    gap: 8px;
+    flex-direction: column !important;
+    gap: 10px;
     margin: 0 !important;
-    flex-direction: row !important;
   }
   body.audit-complete .gate-form input[type="email"] {
-    flex: 1;
+    width: 100%;
     min-width: 0;
     height: 48px;
     padding: 0 16px !important;
@@ -3535,24 +3546,92 @@
     border-color: var(--vp-lavender) !important;
     background: rgba(252,252,252,0.14) !important;
   }
-  body.audit-complete .gate-form button[type="submit"] {
-    flex-shrink: 0;
+  /* Two-button row - flex on desktop, stacked on mobile */
+  body.audit-complete .gate-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-direction: row;
+    width: 100%;
+  }
+  body.audit-complete .gate-btn {
+    flex: 1;
+    min-width: 0;
     height: 48px;
-    padding: 0 22px !important;
+    padding: 0 14px;
     border-radius: 12px;
-    background: var(--vp-cream) !important;
-    color: var(--vp-deep-black) !important;
     font-family: var(--font-body);
     font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     border: 0;
     cursor: pointer;
-    transition: transform .12s cubic-bezier(.34,1.56,.64,1);
+    transition: transform .12s cubic-bezier(.34,1.56,.64,1), background .15s ease, opacity .15s ease;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  body.audit-complete .gate-form button[type="submit"]:hover { transform: translateY(-1px); }
-  body.audit-complete .gate-form button[type="submit"]:active { transform: scale(0.97); }
+  body.audit-complete .gate-btn--secondary {
+    background: rgba(252,252,252,0.12) !important;
+    color: var(--vp-cream) !important;
+    border: 1px solid rgba(252,252,252,0.22) !important;
+  }
+  body.audit-complete .gate-btn--secondary:hover {
+    background: rgba(252,252,252,0.18) !important;
+    transform: translateY(-1px);
+  }
+  body.audit-complete .gate-btn--primary {
+    background: var(--vp-cream) !important;
+    color: var(--vp-deep-black) !important;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(252,252,252,0.18);
+  }
+  body.audit-complete .gate-btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px rgba(252,252,252,0.28);
+  }
+  body.audit-complete .gate-btn:active { transform: scale(0.97); }
+  body.audit-complete .gate-btn:disabled {
+    opacity: 0.6; cursor: wait; transform: none !important;
+  }
+  /* Mobile - keep buttons side-by-side; if labels truncate, ellipsis handles it.
+     Falling back to a stacked layout under 380px where horizontal space runs out. */
+  @media (max-width: 380px) {
+    body.audit-complete .gate-btn-row {
+      flex-direction: column;
+    }
+    body.audit-complete .gate-btn {
+      width: 100%;
+    }
+  }
+  /* Persistent walkthrough re-open button on the success card - only shown if
+     the user dismissed the Calendly popup without booking. Indigo + lavender
+     to match the brand and make it the most prominent thing in the success state. */
+  .gate-success-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+    height: 46px;
+    padding: 0 22px;
+    background: var(--vp-indigo, #3F36B2);
+    color: #fff;
+    border: 0;
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(63,54,178,0.32);
+    transition: transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
+  }
+  .gate-success-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(63,54,178,0.42);
+  }
+  .gate-success-cta:active { transform: scale(0.97); }
+  .gate-success-cta.hidden { display: none; }
   /* Add bottom padding to the body so the sticky bar never sits on top of footer content */
   body.audit-complete { padding-bottom: 92px; }
   /* Mobile bar — slightly shorter, no max-width corners (full-bleed) */
@@ -5226,12 +5305,24 @@
         <form class="gate-form" id="gate-form" novalidate>
           <span class="gate-label">Work email</span>
           <input type="email" id="gate-email" placeholder="you@company.com" required />
-          <button type="submit">Send me my report</button>
+          <!-- Two CTAs, both POST the same payload to /api/lead.
+               The walkthrough button additionally fires Calendly's popup widget
+               on success - prefilled with name + email, so the user is 2 clicks
+               from a booked slot rather than re-typing details on a new domain. -->
+          <div class="gate-btn-row">
+            <button type="submit" data-action="email"
+                    class="gate-btn gate-btn--secondary">Email me the report</button>
+            <button type="submit" data-action="walkthrough"
+                    class="gate-btn gate-btn--primary">Walk me through it · 15 min</button>
+          </div>
         </form>
         <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime.</div>
       </div>
 
-      <!-- Success state - replaces the form once /api/lead returns ok -->
+      <!-- Success state - replaces the form once /api/lead returns ok.
+           Two variants controlled by data-variant attribute:
+             - "email"       : standard "Report on its way" success message
+             - "walkthrough" : same message + a "pick a time" CTA that opened Calendly -->
       <div class="gate-success hidden" id="gate-success" role="status" aria-live="polite">
         <div class="gate-success-check" aria-hidden="true">
           <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
@@ -5239,9 +5330,15 @@
             <path d="M14 27 L23 36 L39 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="gs-tick"/>
           </svg>
         </div>
-        <h3 class="gate-success-title">Report on its way.</h3>
+        <h3 class="gate-success-title" id="gate-success-title">Report on its way.</h3>
         <p class="gate-success-line">We sent it to <strong id="gate-success-email">your inbox</strong>.</p>
-        <p class="gate-success-hint">Also downloaded to your device · check spam if it doesn’t land in 60 seconds</p>
+        <p class="gate-success-hint" id="gate-success-hint">Also downloaded to your device · check spam if it doesn’t land in 60 seconds</p>
+        <!-- Walkthrough-only re-open button. Hidden by default, shown if Calendly
+             popup got dismissed before booking - so the user can retry without
+             refreshing. -->
+        <button type="button" class="gate-success-cta hidden" id="gate-success-cta">
+          Pick a time → 15-min walkthrough
+        </button>
       </div>
     </div>
   </div>
@@ -7151,16 +7248,70 @@
     ];
   }
 
-  /* ────────── Email gate → POST /api/lead (Mailchimp upsert) ────────── */
+  /* ────────── Email gate → POST /api/lead (Mailchimp upsert) ──────────
+     Two submit buttons share this handler. `e.submitter.dataset.action` tells
+     us which one was clicked:
+       - "email"       : just send the report (current behaviour)
+       - "walkthrough" : send the report AND open Calendly's popup widget so
+                         the user can pick a slot inline. Calendly is prefilled
+                         with the user's first name + email so it's a 2-click
+                         booking (pick day → pick time → confirm).
+     Calendly URL is configurable via CALENDLY_URL below; switch to a 15-min
+     event type once that's created in your Calendly dashboard. */
+  const CALENDLY_URL = 'https://calendly.com/yentl-spiteri/30min';
+
+  function openCalendlyWalkthrough(email) {
+    const firstName = (lastProfile?.firstName || '').trim();
+    const lastName  = (lastProfile?.lastName  || '').trim();
+    const fullName  = [firstName, lastName].filter(Boolean).join(' ');
+    // Calendly object lives on window once widget.js loads (async).
+    // Defensive check + retry in case the user clicked before the script loaded.
+    function fire() {
+      if (!window.Calendly || !window.Calendly.initPopupWidget) return false;
+      window.Calendly.initPopupWidget({
+        url: `${CALENDLY_URL}?hide_event_type_details=0&hide_gdpr_banner=1&primary_color=3F36B2`,
+        prefill: {
+          name:       fullName || undefined,
+          firstName:  firstName || undefined,
+          lastName:   lastName  || undefined,
+          email:      email
+        },
+        utm: {
+          utmSource:   'visibility-index',
+          utmMedium:   'lead-magnet',
+          utmCampaign: 'walkthrough-cta',
+          utmContent:  lastTier?.name || ''
+        }
+      });
+      if (window.track) window.track('calendly_opened', {
+        source: 'gate-walkthrough',
+        tier:   lastTier?.name || '',
+        score:  Math.round((lastScore / 18) * 100)
+      });
+      return true;
+    }
+    if (!fire()) {
+      // Calendly script still loading - retry every 200ms up to 3s
+      let tries = 0;
+      const t = setInterval(() => {
+        if (fire() || ++tries > 15) clearInterval(t);
+      }, 200);
+    }
+  }
+
   $('#gate-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('#gate-email').value.trim();
     if (!email || !email.includes('@')) { $('#gate-email').focus(); return; }
 
-    const submitBtn = e.target.querySelector('button[type="submit"]');
+    // Which button submitted? Fall back to "email" if not present.
+    const action = (e.submitter && e.submitter.dataset && e.submitter.dataset.action) || 'email';
+    const submitBtn = e.submitter || e.target.querySelector('button[type="submit"]');
     const origText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending…';
+    // Disable BOTH buttons during submit so the user can't double-fire
+    const allBtns = e.target.querySelectorAll('button[type="submit"]');
+    allBtns.forEach(b => { b.disabled = true; });
+    submitBtn.textContent = action === 'walkthrough' ? 'Sending + opening calendar…' : 'Sending…';
 
     try {
       const res = await fetch('/api/lead', {
@@ -7176,6 +7327,7 @@
           nextTier:            lastNextTier,
           normalisedUrl:       lastUrl,
           attribution:         ATTRIBUTION,
+          intent:              action,   // "email" or "walkthrough" - segment leads downstream
           // Full payload that the backend uses to build the PDF
           profile:             lastProfile,
           executiveSummary:    lastExecutiveSummary,
@@ -7196,12 +7348,14 @@
       });
       if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed.');
 
-      // Analytics: lead captured (the conversion that matters for paid ads)
+      // Analytics: lead captured (the conversion that matters for paid ads).
+      // intent= helps measure the walkthrough vs PDF split downstream.
       if (window.track) window.track('lead_captured', {
         score:        Math.round((lastScore / 18) * 100),
         tier:         lastTier?.name || '',
         role:         lastRole,
         goal:         lastGoal,
+        intent:       action,
         utm_source:   ATTRIBUTION?.utm_source   || '',
         utm_campaign: ATTRIBUTION?.utm_campaign || ''
       });
@@ -7216,15 +7370,32 @@
       if (data.emailDelivered === false) console.warn('[VI] Email NOT delivered. Most likely cause: Resend free tier only sends to your registered email. Verify domain in Resend → Domains, or test with the email you used to sign up.');
 
       // Swap the gate-card for the success state - clear visual signal the report is on its way
-      const gateCard    = document.getElementById('gate-card');
-      const gateSuccess = document.getElementById('gate-success');
-      const successEmail = document.getElementById('gate-success-email');
+      const gateCard      = document.getElementById('gate-card');
+      const gateSuccess   = document.getElementById('gate-success');
+      const successEmail  = document.getElementById('gate-success-email');
+      const successTitle  = document.getElementById('gate-success-title');
+      const successHint   = document.getElementById('gate-success-hint');
+      const successCta    = document.getElementById('gate-success-cta');
       if (successEmail) successEmail.textContent = email;
       if (gateCard)    gateCard.classList.add('hidden');
       if (gateSuccess) gateSuccess.classList.remove('hidden');
+
+      // Walkthrough variant: tweak success copy + show the persistent "pick a time"
+      // button in case the popup is dismissed without booking.
+      if (action === 'walkthrough') {
+        if (successTitle) successTitle.textContent = 'Report sent. Now pick a time.';
+        if (successHint)  successHint.textContent  = "Calendar opening in a moment - if it doesn't, hit the button below.";
+        if (successCta) {
+          successCta.classList.remove('hidden');
+          successCta.onclick = () => openCalendlyWalkthrough(email);
+        }
+        // Fire Calendly with a small delay so the success state renders first
+        setTimeout(() => openCalendlyWalkthrough(email), 350);
+      }
+
       revealNextMoves();
     } catch (err) {
-      submitBtn.disabled = false;
+      allBtns.forEach(b => { b.disabled = false; });
       submitBtn.textContent = origText;
       const errEl = document.querySelector('.gate-disclaimer');
       if (errEl) {

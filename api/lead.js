@@ -41,7 +41,8 @@ export default async function handler(req, res) {
     score, subs, tier, nextTier, normalisedUrl, attribution,
     profile,                                                     // { firstName, headline, companyName, pictureUrl, ... }
     executiveSummary, dimensionCommentary, moves, tierRoadmap,   // Claude analysis payload
-    press, contentIdeas, pressTargets                            // press hits + content/PR ideas (optional)
+    press, contentIdeas, pressTargets,                           // press hits + content/PR ideas (optional)
+    intent                                                       // "email" | "walkthrough" - which CTA was clicked at score reveal
   } = body;
 
   if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -270,12 +271,22 @@ export default async function handler(req, res) {
       const linkedin = normalisedUrl ? `https://www.${normalisedUrl}/` : '';
       const utm = attribution?.utm_campaign ? `${attribution.utm_source || '?'}/${attribution.utm_campaign}` : 'direct';
 
+      // Hot leads (asked for the walkthrough) get a 🔥 prefix so they're impossible
+      // to miss in a busy Slack channel - prioritise outreach to these first.
+      const isWalkthrough = intent === 'walkthrough';
+      const heroPrefix    = isWalkthrough ? '🔥' : '🎯';
+      const intentLabel   = isWalkthrough ? '*Walkthrough requested* — Calendly opened in their browser' : 'PDF only';
+
       const slackPayload = {
-        text: `🎯 New Visibility Index lead: ${profileName} (${email})`,
+        text: `${heroPrefix} ${isWalkthrough ? 'HOT LEAD - walkthrough requested' : 'New Visibility Index lead'}: ${profileName} (${email})`,
         blocks: [
           {
             type: 'header',
-            text: { type: 'plain_text', text: `🎯 New lead: ${profileName}` }
+            text: { type: 'plain_text', text: `${heroPrefix} ${isWalkthrough ? 'HOT LEAD' : 'New lead'}: ${profileName}` }
+          },
+          {
+            type: 'section',
+            text: { type: 'mrkdwn', text: intentLabel }
           },
           {
             type: 'section',
