@@ -15,11 +15,21 @@
 import { notifyOps } from '../lib/notify.js';
 
 const APIFY_API     = 'https://api.apify.com/v2/acts';
-const APIFY_ACTOR       = process.env.APIFY_LINKEDIN_ACTOR || 'dev_fusion~Linkedin-Profile-Scraper';
-// Post-scraper actor - separate call for posts since the profile actor doesn't return them.
-// Defaults to apimaestro/linkedin-profile-posts which is reliable and reasonably priced.
-// Override via env var if you want to use a different actor.
-const APIFY_POSTS_ACTOR = process.env.APIFY_POSTS_ACTOR    || 'apimaestro~linkedin-profile-posts';
+// LinkedIn profile actor. dev_fusion is reliable but lean - if you want
+// richer data (recommendations text, named comments on posts, full work
+// history with dates), swap to one of these via the APIFY_LINKEDIN_ACTOR
+// env var:
+//   - apimaestro~linkedin-profile-detail   (most comprehensive, ~$0.02/profile)
+//   - harvestapi~linkedin-profile-scraper  (rich, slightly cheaper)
+//   - apify~linkedin-profile-scraper       (official, most reliable, priciest)
+// Field mappers below are actor-agnostic - any swap is plug-and-play.
+const APIFY_ACTOR           = process.env.APIFY_LINKEDIN_ACTOR  || 'dev_fusion~Linkedin-Profile-Scraper';
+// Post-scraper for LinkedIn posts (the profile actor doesn't return them).
+const APIFY_POSTS_ACTOR     = process.env.APIFY_POSTS_ACTOR     || 'apimaestro~linkedin-profile-posts';
+// Per-platform metrics scrapers. Configurable so you can swap providers without
+// code changes. Defaults work with most Apify accounts that have credit.
+const APIFY_INSTAGRAM_ACTOR = process.env.APIFY_INSTAGRAM_ACTOR || 'apify~instagram-profile-scraper';
+const APIFY_TWITTER_ACTOR   = process.env.APIFY_TWITTER_ACTOR   || 'apidojo~twitter-scraper-lite';
 const SERPAPI_API   = 'https://serpapi.com/search.json';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
@@ -167,6 +177,33 @@ export default async function handler(req, res) {
     // Career stage from the experience array - feeds Claude for tenure-aware moves
     const careerStage = analyzeCareerStage(profile);
 
+    // ─── Stage 2 enrichment - depends on stage 1 results ────────────────
+    // Now that the SerpAPI presence map has resolved, fire the deeper enrichment
+    // calls that need handles or image URLs:
+    //   1. Vision analysis on profile photo + banner (Claude vision)
+    //   2. Instagram metrics (if SerpAPI returned an IG hit, parse handle, scrape)
+    //   3. X metrics (same pattern)
+    // All three run in parallel - failure in one doesn't block the others.
+    const igHandle = extractHandle(presence.instagram?.hits?.[0]?.url, 'instagram.com');
+    const xHandle  = extractHandle(presence.x?.hits?.[0]?.url, 'x.com');
+    const [visionRes, igRes, xRes] = await Promise.allSettled([
+      analyzeVisualIdentity(profile),
+      igHandle ? fetchInstagramData(igHandle) : Promise.resolve(null),
+      xHandle  ? fetchXData(xHandle)         : Promise.resolve(null)
+    ]);
+    const visionAnalysis = visionRes.status === 'fulfilled' ? visionRes.value : null;
+    const igData         = igRes.status     === 'fulfilled' ? igRes.value     : null;
+    const xData          = xRes.status      === 'fulfilled' ? xRes.value      : null;
+
+    // Merge Instagram/X enriched data INTO the presence map - the page + PDF
+    // can now show "Instagram: 4.2k followers" instead of just "Detected".
+    if (igData && presence.instagram) {
+      presence.instagram.metrics = igData;
+    }
+    if (xData && presence.x) {
+      presence.x.metrics = xData;
+    }
+
     // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
     //    Footprint, authority, network now also factor in cross-platform presence.
@@ -174,7 +211,7 @@ export default async function handler(req, res) {
       footprint: scoreFootprint(profile, serp, presence, googleRanking, personalSite),
       authority: scoreAuthority(profile, press, presence),
       cadence:   scoreCadence(profile, postsData),
-      visual:    scoreVisual(profile, { score: 1 }),
+      visual:    scoreVisual(profile, { score: 1 }, visionAnalysis),  // vision overrides when present
       network:   scoreNetwork(profile, presence)
     };
 
@@ -192,12 +229,13 @@ export default async function handler(req, res) {
       role:           body.role  || '',
       goal:           body.goal  || '',
       tier:           provisionalTier,
-      platforms:      presence,
+      platforms:      presence,         // includes .metrics on instagram/x when enriched
       press:          press,
       personalSite:   personalSite,
       googleRanking:  googleRanking,
-      careerStage:    careerStage,    // { totalYears, currentRoleYears, isRecentTransition, notablePast, careerStage }
-      postsData:      postsData       // null OR { recentCount, avgEngagement, topPostText, samplePosts }
+      careerStage:    careerStage,
+      postsData:      postsData,
+      visionAnalysis: visionAnalysis    // null OR { photo: {score, notes}, banner: {score, notes} }
     };
     const analysis = await analyzeProfile(profile, heuristic, analysisCtx).catch(err => {
       console.error('Claude analysis failed:', err);
@@ -214,7 +252,7 @@ export default async function handler(req, res) {
       clarity:   clarity.score,
       authority: heuristic.authority,
       cadence:   heuristic.cadence,
-      visual:    scoreVisual(profile, clarity),
+      visual:    scoreVisual(profile, clarity, visionAnalysis),
       network:   heuristic.network
     };
 
@@ -246,11 +284,13 @@ export default async function handler(req, res) {
       personalSite:        personalSite,                // { url, found } or null
       // Tier-1 press hits - surfaced for both the landing page and the PDF
       press:               press,
-      // Multi-platform presence map: { instagram: {hits, label, ...}, x: {...}, ... }
-      // Surfaced in the report under "Where you show up across the web."
+      // Multi-platform presence map: { instagram: {hits, label, metrics?, ...}, x: {...}, ... }
+      // Now includes .metrics on instagram/x when the deep scrapers returned data.
       platforms:           presence,
       // Where the user lands in vanilla Google search for their own name
       googleRanking:       googleRanking,
+      // Claude vision read on profile photo + banner (null if vision skipped)
+      visionAnalysis:      visionAnalysis,
       // Backward-compat: keep older field names mapped from the new payload
       personalSummary:     analysis.executiveSummary,
       reportTeasers:       (analysis.moves || []).map(m => m.title),
@@ -269,6 +309,178 @@ export default async function handler(req, res) {
 }
 
 /* ═══════════════════════════ EXTERNAL CALLS ═══════════════════════════ */
+
+/* ─────────── VISUAL IDENTITY ANALYSIS (Claude vision) ───────────
+   Sends the user's profile photo + banner URLs to Claude with a vision prompt.
+   Returns structured judgments on lighting, framing, dating signals, banner
+   coherence, and brand fit. This is the unlock that makes the Visual Identity
+   dimension meaningfully scored - without it we only know presence/absence. */
+async function analyzeVisualIdentity(profile) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const photoUrl  = getPhotoUrl(profile);
+  const bannerUrl = getBannerUrl(profile);
+  if (!photoUrl && !bannerUrl) return null;
+
+  // Build the multimodal content array - one image block per available URL,
+  // followed by the analysis prompt.
+  const content = [];
+  if (photoUrl) {
+    content.push({ type: 'image', source: { type: 'url', url: photoUrl } });
+  }
+  if (bannerUrl) {
+    content.push({ type: 'image', source: { type: 'url', url: bannerUrl } });
+  }
+  const imageMap = photoUrl && bannerUrl
+    ? "Image 1 is the profile photo; Image 2 is the banner."
+    : photoUrl ? "The image is the profile photo." : "The image is the banner.";
+  content.push({
+    type: 'text',
+    text: `You're judging an executive's LinkedIn visual identity for a personal-brand audit. ${imageMap}
+
+For each image you can see, return JSON:
+{
+  "photo": ${photoUrl ? '{ "score": 0|1|2|3, "notes": "<max 30 words. Specific: lighting quality, framing, dating signals (era of style/clothing/glasses), professional vs casual, distractions in background, eye contact and direction>" }' : 'null'},
+  "banner": ${bannerUrl ? '{ "score": 0|1|2|3, "notes": "<max 30 words. Specific: template vs custom, narrative coherence with personal brand, visual hierarchy, brand fit, what it communicates about the person>" }' : 'null'}
+}
+
+Scoring rubric (be honest, most score 0-2):
+- Photo: 0 = missing/unprofessional/very dated; 1 = basic/iPhone-era flat; 2 = solid professional with reasonable craft; 3 = considered, recent, intentional, well-lit, framed for narrative
+- Banner: 0 = LinkedIn default or absent; 1 = stock template / generic gradient; 2 = custom but generic message; 3 = bespoke design that reinforces a clear personal-brand narrative
+
+Return JSON ONLY. No prose, no markdown fences. Be direct - skip "great photo!" praise.`
+  });
+
+  try {
+    const r = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 600,
+        messages: [{ role: 'user', content }]
+      })
+    });
+    if (!r.ok) {
+      const errText = await r.text().catch(() => '');
+      console.warn('[vision] non-OK', r.status, errText.slice(0, 200));
+      return null;
+    }
+    const data = await r.json();
+    const text = data.content?.[0]?.text || '';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    const p = JSON.parse(match[0]);
+    return {
+      photo: p.photo ? {
+        score: Math.max(0, Math.min(3, Math.round(Number(p.photo.score) || 0))),
+        notes: String(p.photo.notes || '').slice(0, 240)
+      } : null,
+      banner: p.banner ? {
+        score: Math.max(0, Math.min(3, Math.round(Number(p.banner.score) || 0))),
+        notes: String(p.banner.notes || '').slice(0, 240)
+      } : null
+    };
+  } catch (err) {
+    console.warn('[vision] error', err?.message || err);
+    return null;
+  }
+}
+
+// Helper: extract a platform handle from a result URL like instagram.com/username/
+function extractHandle(url, domain) {
+  if (!url) return null;
+  const re = new RegExp(`(?:${domain.replace('.', '\\.')})/([^/?#]+)`, 'i');
+  const m = url.match(re);
+  if (!m) return null;
+  const handle = m[1].trim();
+  if (!handle || handle.length < 2 || handle.length > 30) return null;
+  // Common false-positive paths that aren't usernames
+  const blocklist = ['p', 'reel', 'reels', 'stories', 'tv', 'tagged', 'hashtag', 'explore', 'web', 'home', 'about', 'help', 'i', 'login', 'signup', 'directory', 'search', 'status'];
+  if (blocklist.includes(handle.toLowerCase())) return null;
+  return handle;
+}
+
+/* ─────────── PER-PLATFORM REAL METRICS (Apify) ───────────
+   When SerpAPI's site-targeted scan returns a hit on Instagram or X, parse the
+   handle from the URL and call a dedicated platform scraper for real metrics:
+   follower count, post count, recent posts, bio. Far richer than "we detected
+   an Instagram exists." Both are conditional - if no handle found, skip. */
+async function fetchInstagramData(handle) {
+  if (!process.env.APIFY_API_TOKEN || !handle) return null;
+  const url = `${APIFY_API}/${APIFY_INSTAGRAM_ACTOR}/run-sync-get-dataset-items`;
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.APIFY_API_TOKEN}`
+      },
+      body: JSON.stringify({
+        usernames:    [handle],
+        username:     [handle],
+        directUrls:   [`https://www.instagram.com/${handle}/`],
+        resultsLimit: 6,
+        resultsType:  'details'
+      })
+    });
+    if (!r.ok) return null;
+    const items = await r.json();
+    if (!Array.isArray(items) || !items.length) return null;
+    const d = items[0].data || items[0];
+    return {
+      handle:         d.username || d.handle || handle,
+      followersCount: Number(d.followersCount ?? d.followers ?? 0) || null,
+      followingCount: Number(d.followsCount   ?? d.following ?? 0) || null,
+      postsCount:     Number(d.postsCount     ?? d.posts_count ?? 0) || null,
+      bio:            String(d.biography      || d.bio || '').slice(0, 280),
+      isVerified:     !!(d.verified || d.isVerified),
+      profileUrl:     d.url || `https://www.instagram.com/${handle}/`
+    };
+  } catch (err) {
+    console.warn('[instagram] error', err?.message || err);
+    return null;
+  }
+}
+
+async function fetchXData(handle) {
+  if (!process.env.APIFY_API_TOKEN || !handle) return null;
+  const url = `${APIFY_API}/${APIFY_TWITTER_ACTOR}/run-sync-get-dataset-items`;
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.APIFY_API_TOKEN}`
+      },
+      body: JSON.stringify({
+        handles:        [handle],
+        twitterHandles: [handle],
+        startUrls:      [{ url: `https://x.com/${handle}` }],
+        maxItems:       5
+      })
+    });
+    if (!r.ok) return null;
+    const items = await r.json();
+    if (!Array.isArray(items) || !items.length) return null;
+    const d = items[0].data || items[0];
+    return {
+      handle:    d.username  || d.userName  || handle,
+      followers: Number(d.followers     ?? d.followersCount ?? 0) || null,
+      following: Number(d.following     ?? d.followingCount ?? 0) || null,
+      posts:     Number(d.tweetsCount   ?? d.statusesCount  ?? 0) || null,
+      bio:       String(d.description || d.bio || '').slice(0, 280),
+      isVerified: !!d.verified,
+      profileUrl: d.url || `https://x.com/${handle}`
+    };
+  } catch (err) {
+    console.warn('[x] error', err?.message || err);
+    return null;
+  }
+}
 
 // Posts-only Apify call. Runs in parallel with the profile scrape so it adds
 // no critical-path latency. Failure mode is silent (returns []) - we'd rather
@@ -716,14 +928,31 @@ async function analyzeProfile(profile, heuristic, ctx = {}) {
     ? `Posts in last 90 days: ${pd.recentCount}. Avg engagement (likes + 2×comments): ${pd.avgEngagement}. Top post: "${(pd.topPostText || '').slice(0, 140)}". Sample recent posts: ${(pd.samplePosts || []).slice(0, 3).map(s => `"${s.slice(0, 80)}…"`).join(' / ')}`
     : 'No post-scraper data — cadence is unobserved (treat as 0 unless proxied by creator/verified status)';
 
-  // Cross-platform presence summary - feed Claude the actual evidence so it can
-  // reference specific channels in moves ("your Substack at X has 3 posts...")
+  // Cross-platform presence summary - now includes real metrics for Instagram
+  // and X when the deep scrapers returned data. Claude can reference specific
+  // numbers in moves ("your Instagram has 4,200 followers but only 2 posts...")
   const platforms = ctx.platforms || {};
   const detectedPlatforms = Object.entries(platforms).map(([k, p]) => {
     const firstUrl = p.hits?.[0]?.url || '';
     const firstTitle = p.hits?.[0]?.title || '';
-    return `  - ${p.label || k}: ${firstUrl}${firstTitle ? ` ("${firstTitle.slice(0, 80)}")` : ''}`;
+    let line = `  - ${p.label || k}: ${firstUrl}${firstTitle ? ` ("${firstTitle.slice(0, 80)}")` : ''}`;
+    // If we have real metrics, append them so Claude can use them
+    if (p.metrics) {
+      const m = p.metrics;
+      const bits = [];
+      if (m.followersCount || m.followers) bits.push(`${(m.followersCount || m.followers).toLocaleString()} followers`);
+      if (m.postsCount || m.posts)         bits.push(`${(m.postsCount || m.posts).toLocaleString()} posts`);
+      if (m.bio)                           bits.push(`bio: "${m.bio.slice(0, 80)}"`);
+      if (bits.length) line += `\n      → REAL METRICS: ${bits.join(' · ')}`;
+    }
+    return line;
   }).join('\n') || '  - none detected beyond LinkedIn';
+
+  // Vision analysis - what Claude saw when actually looking at the photo + banner
+  const va = ctx.visionAnalysis;
+  const visionLine = va
+    ? `Vision-analysed photo: ${va.photo ? `${va.photo.score}/3 - ${va.photo.notes}` : 'not provided'}\n- Vision-analysed banner: ${va.banner ? `${va.banner.score}/3 - ${va.banner.notes}` : 'not provided'}`
+    : 'Vision analysis unavailable - score Visual heuristically';
 
   // Press hits summary
   const press = ctx.press || {};
@@ -772,9 +1001,10 @@ OBSERVED CROSS-CHANNEL EVIDENCE (use this to write SPECIFIC moves, not generic o
 - Tier: ${tierName || 'unknown'}
 - ${personalSiteLine}
 - Google name search: ${rankingLine}
+- ${visionLine}
 - Tier-1 press hits:
 ${pressHits}
-- Other public channels detected:
+- Other public channels detected (with REAL metrics where shown):
 ${detectedPlatforms}
 
 INDUSTRY INFERENCE TASK (do this BEFORE writing moves):
@@ -1293,10 +1523,30 @@ function scoreCadence(profile, postsData) {
 // Visual Identity (tightened May 2026). Photo alone is the LinkedIn default -
 // not a signal. Banner alone matters more (it requires intent). Both together
 // plus a clarity signal earns max.
-function scoreVisual(profile, clarity) {
+// Visual Identity scoring. When Claude vision analysis is available, we trust
+// IT over the heuristic - vision actually looks at the image quality, framing,
+// dating signals, and banner narrative. The heuristic is the fallback when
+// vision is unavailable.
+function scoreVisual(profile, clarity, visionAnalysis) {
+  // Vision-driven path - average of photo + banner scores from Claude vision
+  if (visionAnalysis && (visionAnalysis.photo || visionAnalysis.banner)) {
+    const photoScore  = visionAnalysis.photo?.score  ?? null;
+    const bannerScore = visionAnalysis.banner?.score ?? null;
+    const scores = [photoScore, bannerScore].filter(s => s !== null);
+    if (scores.length) {
+      // Weight banner higher than photo (banner takes intent)
+      const photoWeight  = 0.4;
+      const bannerWeight = 0.6;
+      let weighted = 0, total = 0;
+      if (photoScore !== null)  { weighted += photoScore  * photoWeight;  total += photoWeight; }
+      if (bannerScore !== null) { weighted += bannerScore * bannerWeight; total += bannerWeight; }
+      return clamp03(Math.round(weighted / total));
+    }
+  }
+  // Heuristic fallback - presence/absence only
   let pts = 0;
   if (getPhotoUrl(profile))  pts += 0.6;
-  if (getBannerUrl(profile)) pts += 1.2;   // banner takes intent - weighted higher
+  if (getBannerUrl(profile)) pts += 1.2;
   const about = getAbout(profile);
   if (about && about.length > 400) pts += 0.5;
   if (clarity?.score >= 2) pts += 0.4;
