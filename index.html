@@ -4499,9 +4499,41 @@ fbq('track', 'PageView');
      spans go the other way: shown on desktop, hidden on mobile. */
   .mobile-label { display: none; }
 
-  /* Hamburger button + mobile slide-down panel - hidden on desktop */
-  .nav-burger        { display: none; }
+  /* Hamburger button — visible on EVERY viewport now (we removed the inline desktop
+     nav links so Methodology + Circle live exclusively in the slide-down panel). */
+  .nav-burger {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .nav-burger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--vp-cream, #fafafa);
+    border-radius: 1px;
+    transition: transform .25s ease, opacity .2s ease, background .25s ease;
+  }
+  /* When the nav has scrolled (white-ish background) the burger spans must be dark
+     to stay visible. */
+  nav.top.scrolled .nav-burger span { background: var(--vp-deep-black, #0c0b09); }
+  /* Burger morphs into a close X when the panel is open */
+  body.menu-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  body.menu-open .nav-burger span:nth-child(2) { opacity: 0; }
+  body.menu-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  /* Slide-down panel — default hidden, made visible by JS toggle (body.menu-open).
+     Scoped styles for the panel itself live in the mobile media query for layout. */
   .nav-mobile-panel  { display: none; }
+  body.menu-open .nav-mobile-panel { display: flex; }
 
   /* ════════════════════════════════════════════════════════════════════════════
      ERROR CARD - shown when audit fails (LinkedIn private, scraper down, etc.)
@@ -4680,6 +4712,11 @@ fbq('track', 'PageView');
   body.walkthrough-mode .bottom-bar,
   body.menu-open .bottom-bar { display: none !important; }
 
+  /* Force-hide <template> elements site-wide. Browsers should do this by default
+     (templates are inert) but some iOS Safari versions briefly flash the contents
+     during HTML parse. Inline display:none kills that paint window. */
+  template, template * { display: none !important; }
+
   /* ════════════════════════════════════════════════════════════════════════════
      BULLETPROOF DESKTOP-ONLY NAV LINKS
      Flipped the logic: hidden by DEFAULT (mobile-first), shown only when the
@@ -4729,87 +4766,61 @@ fbq('track', 'PageView');
       flex-shrink: 0;
     }
 
-    /* Show the hamburger button - !important so cached deploys without the new HTML still
-       fail safely (no double-burger), and so cascade can't hide it from a desktop rule. */
-    .nav-burger,
-    nav.top .nav-burger,
-    button.nav-burger {
-      display: inline-flex !important;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 5px;
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      background: transparent;
-      border: 0;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .nav-burger span {
-      display: block;
-      width: 22px;
-      height: 2px;
-      background: var(--vp-cream, #fafafa);
-      border-radius: 1px;
-      transition: transform .25s ease, opacity .2s ease, background .25s ease;
-    }
-    nav.top.scrolled .nav-burger span { background: var(--vp-deep-black, #0c0b09); }
-
-    /* Burger morphs into a close X when the panel is open */
-    body.menu-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    body.menu-open .nav-burger span:nth-child(2) { opacity: 0; }
-    body.menu-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-    /* Slide-down panel - covers the rest of the viewport when open */
-    .nav-mobile-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      position: fixed;
-      top: 56px;
-      left: 0; right: 0;
-      bottom: 0;
-      padding: 32px 24px max(32px, env(safe-area-inset-bottom));
-      background: rgba(250, 250, 250, 0.98);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      transform: translateY(-100%);
-      transition: transform .35s cubic-bezier(.4,0,.2,1);
-      z-index: 49;
-      overflow-y: auto;
-    }
-    body.menu-open .nav-mobile-panel {
-      transform: translateY(0);
-    }
-    body.menu-open .nav-mobile-panel { aria-hidden: false; }
-    .nav-mobile-link {
-      font-family: var(--font-display);
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--vp-deep-black);
-      text-decoration: none;
-      padding: 18px 0;
-      border-bottom: 1px solid rgba(15,15,15,0.08);
-    }
-    .nav-mobile-cta {
-      margin-top: 24px;
-      padding: 16px 22px;
-      background: var(--vp-deep-black);
-      color: var(--vp-cream, #fafafa);
-      font-family: var(--font-body);
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: none;
-      text-decoration: none;
-      border-radius: 999px;
-      text-align: center;
-    }
-
     /* Lock scroll while menu is open */
     body.menu-open { overflow: hidden !important; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     SLIDE-DOWN PANEL — used on every viewport now that the burger is universal.
+     The panel itself, link styles, and the open-state transform live OUTSIDE the
+     mobile media query so desktop users also get the burger menu pattern.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .nav-mobile-panel {
+    flex-direction: column;
+    gap: 8px;
+    position: fixed;
+    top: 64px;
+    left: 0; right: 0;
+    bottom: 0;
+    padding: 40px 28px max(40px, env(safe-area-inset-bottom));
+    background: rgba(250, 250, 250, 0.98);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transform: translateY(-100%);
+    transition: transform .35s cubic-bezier(.4,0,.2,1);
+    z-index: 49;
+    overflow-y: auto;
+  }
+  body.menu-open .nav-mobile-panel {
+    display: flex;
+    transform: translateY(0);
+  }
+  .nav-mobile-link {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--vp-deep-black);
+    text-decoration: none;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(15,15,15,0.08);
+  }
+  .nav-mobile-cta {
+    margin-top: 24px;
+    padding: 16px 22px;
+    background: var(--vp-deep-black);
+    color: var(--vp-cream, #fafafa);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    text-decoration: none;
+    border-radius: 999px;
+    text-align: center;
+  }
+  /* Tighter top offset on small viewports where nav.top is 56px tall */
+  @media (max-width: 768px) {
+    .nav-mobile-panel { top: 56px; padding: 32px 24px max(32px, env(safe-area-inset-bottom)); }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -5466,78 +5477,124 @@ fbq('track', 'PageView');
   /* ── MOBILE FOOTER (≤640px) — compact, single column, centered, no oversized tap targets ──
      The 44px min-height tap-target rule was making the footer ~2× too tall.
      Footer links are tertiary navigation, not primary actions — they don't need it. */
+  /* ════════════════════════════════════════════════════════════════════════════
+     MOBILE FOOTER — clean, app-like, single-column.
+     Drops the three-column desktop grid for a vertical stack with proper rhythm.
+     Removes the all-caps eyebrows (visual noise on small screens), tightens the
+     email-as-CTA pattern, gives social links breathing room, and lands the
+     legal/copyright line on a clean compact bottom strip.
+     ════════════════════════════════════════════════════════════════════════════ */
   @media (max-width: 640px) {
-    footer { padding: 40px 0 0 !important; }
-    footer .container { padding-inline: 24px !important; }
+    footer {
+      padding: 56px 0 0 !important;
+      background: #0c0b09 !important;
+      color: rgba(252,252,252,0.72) !important;
+    }
+    footer .container { padding-inline: 24px !important; max-width: 100% !important; }
+
     footer .footer-grid {
       display: flex !important;
       flex-direction: column !important;
-      gap: 28px !important;
-      text-align: center !important;
-      margin-bottom: 28px !important;
+      gap: 36px !important;
+      text-align: left !important;
+      margin-bottom: 32px !important;
+      align-items: stretch !important;
     }
     footer .footer-col,
     footer .footer-col-center,
-    footer .footer-col-right { text-align: center !important; }
-
-    /* Eyebrow much tighter */
-    footer .footer-col-eyebrow {
-      font-size: 10px !important;
-      letter-spacing: 0.16em !important;
-      margin: 0 0 12px !important;
-      color: rgba(15,15,15,0.4) !important;
+    footer .footer-col-right {
+      text-align: left !important;
+      width: 100% !important;
     }
 
-    /* Compact link list - no min-height enforcement on tertiary nav links */
+    /* Eyebrow → soft uppercase label, lower contrast */
+    footer .footer-col-eyebrow {
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.18em !important;
+      text-transform: uppercase !important;
+      margin: 0 0 14px !important;
+      color: rgba(252,252,252,0.42) !important;
+    }
+
+    /* Vertical link list with breathing room */
     footer .footer-col ul {
       display: flex !important;
       flex-direction: column !important;
-      gap: 10px !important;
+      gap: 14px !important;
       padding: 0 !important;
       margin: 0 !important;
+      list-style: none !important;
     }
-    footer .footer-col a,
-    footer .footer-col li,
-    footer .footer-email {
-      min-height: 0 !important;
+    footer .footer-col li {
+      list-style: none !important;
+      margin: 0 !important;
       padding: 0 !important;
+    }
+    footer .footer-col a {
+      min-height: 0 !important;
+      padding: 4px 0 !important;
       margin: 0 !important;
       display: inline-block !important;
-      font-size: 14px !important;
-      letter-spacing: 0.04em !important;
-      line-height: 1.4 !important;
-      word-break: break-word !important;
-    }
-    footer .footer-email {
       font-size: 16px !important;
-      letter-spacing: 0 !important;
+      font-weight: 500 !important;
+      letter-spacing: -0.005em !important;
+      line-height: 1.4 !important;
+      color: rgba(252,252,252,0.82) !important;
       text-transform: none !important;
+      word-break: normal !important;
+    }
+    footer .footer-col a:active { opacity: 0.7; }
+
+    /* Email becomes a prominent CTA-style link */
+    footer .footer-email {
+      display: inline-block !important;
+      min-height: 0 !important;
+      padding: 14px 18px !important;
+      margin: 0 !important;
+      font-size: 15px !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.005em !important;
+      line-height: 1 !important;
+      text-transform: none !important;
+      color: var(--vp-deep-black, #0c0b09) !important;
+      background: var(--vp-cream, #fafafa) !important;
+      border-radius: 999px !important;
+      text-decoration: none !important;
     }
 
-    /* Legal row sits compact at bottom with a divider above */
+    /* Legal row → clean compact bottom strip */
     footer .footer-legal-row {
       flex-direction: column !important;
-      align-items: center !important;
-      gap: 10px !important;
-      border-top: 1px solid rgba(15,15,15,0.08) !important;
-      padding: 20px 0 24px !important;
-      margin-top: 4px !important;
-      font-size: 11px !important;
+      align-items: flex-start !important;
+      gap: 14px !important;
+      border-top: 1px solid rgba(252,252,252,0.08) !important;
+      padding: 24px 0 calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+      margin-top: 8px !important;
+      font-size: 12px !important;
+      color: rgba(252,252,252,0.42) !important;
     }
     footer .footer-legal-row > div {
       display: flex !important;
       flex-direction: row !important;
-      gap: 16px !important;
+      gap: 18px !important;
       flex-wrap: wrap !important;
-      justify-content: center !important;
-      text-align: center !important;
+      justify-content: flex-start !important;
+      text-align: left !important;
     }
     footer .footer-legal-row a {
       min-height: 0 !important;
       padding: 0 !important;
       margin: 0 !important;
-      font-size: 11px !important;
+      font-size: 12px !important;
+      color: rgba(252,252,252,0.62) !important;
+      letter-spacing: 0 !important;
+      text-transform: none !important;
     }
+
+    /* Add room at the very bottom so the persistent action bar doesn't overlap
+       the last legal line. */
+    body.show-bottom-bar footer { padding-bottom: 84px !important; }
   }
 
   /* Tap targets minimum 44x44 across the board */
@@ -5597,14 +5654,11 @@ fbq('track', 'PageView');
       </svg>
     </a>
     <div class="nav-right">
-      <!-- DESKTOP-ONLY links live inside this template and are cloned into the nav
-           by JS only when the viewport is genuinely desktop. Inert on mobile because
-           browsers don't render <template> contents — bulletproofs the "Methodology
-           still visible on mobile" bug regardless of CSS race conditions. -->
-      <template id="nav-desktop-links">
-        <a href="#methodology" class="nav-link nav-link-desktop">Methodology</a>
-        <a href="#circle"      class="nav-link nav-link-desktop">The Circle</a>
-      </template>
+      <!-- Nav links removed entirely — they live in the burger panel on every viewport.
+           This kills the persistent "Methodology shows in white bar above hero" bug
+           that survived CSS hiding, JS removal, and template-cloning approaches.
+           Desktop users get logo + Book a call + burger; tapping burger reveals
+           Methodology, The Circle, and the Calendly CTA in a slide-down panel. -->
       <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
       <button type="button" class="nav-burger" id="nav-burger"
               aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-panel">
@@ -5621,31 +5675,13 @@ fbq('track', 'PageView');
   </div>
 </nav>
 
-<!-- BULLETPROOF NAV GUARD - desktop-only links live in a <template> and are
-     cloned into the nav ONLY when window.matchMedia matches >=769px.
-     On mobile the DOM literally has no Methodology/Circle nodes inside nav.top,
-     so no CSS or cached deploy can ever show them. -->
+<!-- POST-NAV CLEANUP - removes any stray .nav-link-desktop nodes left over from
+     cached deploys. Belt for the new HTML's braces. -->
 <script>
 (function() {
-  var mq  = window.matchMedia('(min-width: 769px)');
-  var tpl = document.getElementById('nav-desktop-links');
-  var cta = document.querySelector('nav.top .nav-cta');
-  if (!tpl || !cta) return;
-
-  function syncDesktopLinks() {
-    // Always clear any previously cloned links before deciding whether to re-inject.
-    document.querySelectorAll('nav.top .nav-right .nav-link-desktop').forEach(function(el){ el.remove(); });
-    if (mq.matches) {
-      var frag = tpl.content.cloneNode(true);
-      cta.parentNode.insertBefore(frag, cta);
-    }
-  }
-  syncDesktopLinks();
-  // matchMedia change is the right hook here — fires once when crossing the breakpoint
-  // and avoids the resize-spam pattern.
-  if (mq.addEventListener) mq.addEventListener('change', syncDesktopLinks);
-  else if (mq.addListener) mq.addListener(syncDesktopLinks);
-  window.addEventListener('orientationchange', syncDesktopLinks);
+  document.querySelectorAll('nav.top .nav-link-desktop, nav.top .nav-right .nav-link').forEach(function(el){
+    el.remove();
+  });
 })();
 </script>
 
