@@ -4859,11 +4859,14 @@ fbq('track', 'PageView');
     nav.top .container {
       flex-wrap: nowrap !important;
       gap: 12px;
-      height: 56px !important;
+      height: 76px !important;
       padding: 0 16px !important;
       overflow: visible;
     }
-    .logo { height: 48px !important; flex-shrink: 0; }
+    /* Bigger, more confident logo. The SVG viewBox has padding, so the visible
+       wordmark renders ~60% of the height value. 72px height → ~44px wordmark. */
+    .logo { height: 72px !important; flex-shrink: 0; display: flex; align-items: center; }
+    .logo svg { height: 100%; width: auto; }
 
     /* Hide ALL inline nav text links on mobile - they live in the slide-down panel.
        Using both `.nav-link` and `.nav-link-desktop` so cached deploys without the new class still hide. */
@@ -4935,7 +4938,7 @@ fbq('track', 'PageView');
   }
   /* Tighter top offset on small viewports where nav.top is 56px tall */
   @media (max-width: 768px) {
-    .nav-mobile-panel { top: 56px; padding: 32px 24px max(32px, env(safe-area-inset-bottom)); }
+    .nav-mobile-panel { top: 76px; padding: 32px 24px max(32px, env(safe-area-inset-bottom)); }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -5664,19 +5667,26 @@ fbq('track', 'PageView');
     }
     footer .footer-col a:active { opacity: 0.7; }
 
-    /* Email becomes a brand-indigo CTA pill — visible against the dark footer
-       (the previous cream-on-cream went invisible on the dark mobile footer). */
+    /* Email becomes a brand-indigo CTA pill — visible against the dark footer.
+       Sizes to content with safe overflow handling so the text never bleeds past
+       the rounded background (was happening on iPhone 14 sized viewports). */
     footer .footer-email {
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
+      box-sizing: border-box !important;
+      width: auto !important;
+      max-width: 100% !important;
       min-height: 0 !important;
-      padding: 14px 22px !important;
+      padding: 13px 20px !important;
       margin: 0 !important;
-      font-size: 15px !important;
+      font-size: 14px !important;
       font-weight: 600 !important;
       letter-spacing: -0.005em !important;
-      line-height: 1 !important;
+      line-height: 1.1 !important;
+      white-space: nowrap !important;
+      text-overflow: ellipsis !important;
+      overflow: hidden !important;
       text-transform: none !important;
       color: #fcfcfc !important;
       background: var(--vp-indigo, #3F36B2) !important;
@@ -5836,22 +5846,25 @@ fbq('track', 'PageView');
              Same form, two layouts via CSS. -->
         <label class="mobile-label" for="ml-role">I am a</label>
         <div class="audit-prose">
-          <span class="prose-text">I'm a&nbsp;</span><span class="picker" data-picker-name="role">
+          <span class="prose-text" id="prose-article">I'm a&nbsp;</span><span class="picker" data-picker-name="role">
             <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your role">
               <span class="picker-label" data-picker-label>CEO</span>
             </button>
+            <!-- data-prose = lowercase prose-form text shown in the audit prose
+                 data-article = "a" or "an" article that precedes it
+                 data-opps    = "1" if this role should swap "clients & investors" → "opportunities" -->
             <div class="picker-popover" role="listbox" aria-label="Choose your role">
-              <button type="button" class="picker-option" role="option" data-value="ceo" aria-selected="true">CEO / C-suite</button>
-              <button type="button" class="picker-option" role="option" data-value="founder">Founder</button>
-              <button type="button" class="picker-option" role="option" data-value="investor">Investor</button>
-              <button type="button" class="picker-option" role="option" data-value="board">Board member / NED</button>
-              <button type="button" class="picker-option" role="option" data-value="consultant">Consultant / Advisor</button>
-              <button type="button" class="picker-option" role="option" data-value="marketer">Marketer</button>
-              <button type="button" class="picker-option" role="option" data-value="creative">Creative director</button>
-              <button type="button" class="picker-option" role="option" data-value="artist">Artist</button>
-              <button type="button" class="picker-option" role="option" data-value="creator">Creator / Influencer</button>
-              <button type="button" class="picker-option" role="option" data-value="speaker">Speaker / Author</button>
-              <button type="button" class="picker-option" role="option" data-value="senior">Senior leader</button>
+              <button type="button" class="picker-option" role="option" data-value="ceo"        data-prose="CEO"                 data-article="a"  aria-selected="true">CEO / C-suite</button>
+              <button type="button" class="picker-option" role="option" data-value="founder"    data-prose="founder"             data-article="a">Founder</button>
+              <button type="button" class="picker-option" role="option" data-value="investor"   data-prose="investor"            data-article="an">Investor</button>
+              <button type="button" class="picker-option" role="option" data-value="board"      data-prose="board member"        data-article="a">Board member / NED</button>
+              <button type="button" class="picker-option" role="option" data-value="consultant" data-prose="consultant"          data-article="a">Consultant / Advisor</button>
+              <button type="button" class="picker-option" role="option" data-value="marketer"   data-prose="marketer"            data-article="a">Marketer</button>
+              <button type="button" class="picker-option" role="option" data-value="creative"   data-prose="creative director"   data-article="a">Creative director</button>
+              <button type="button" class="picker-option" role="option" data-value="artist"     data-prose="artist"              data-article="an" data-opps="1">Artist</button>
+              <button type="button" class="picker-option" role="option" data-value="creator"    data-prose="creator"             data-article="a"  data-opps="1">Creator / Influencer</button>
+              <button type="button" class="picker-option" role="option" data-value="speaker"    data-prose="speaker"             data-article="a"  data-opps="1">Speaker / Author</button>
+              <button type="button" class="picker-option" role="option" data-value="senior"     data-prose="senior leader"       data-article="a">Senior leader</button>
             </div>
             <select class="picker-native" id="ml-role" aria-hidden="true" tabindex="-1">
               <option value="ceo">CEO / C-suite</option>
@@ -5882,7 +5895,7 @@ fbq('track', 'PageView');
               <option value="credibility">build industry credibility</option>
               <option value="legacy">leave a lasting legacy</option>
             </select>
-          </span><span class="prose-text">.</span>
+          </span>
         </div>
 
         <label class="mobile-label" for="input-linkedin">LinkedIn</label>
@@ -6089,7 +6102,7 @@ fbq('track', 'PageView');
     </div>
     <h2 class="h2" style="text-align: center; margin-bottom: 18px;">What we look at.</h2>
     <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65); max-width: 720px;">
-      Six things we check on your LinkedIn. No surveys. No forms. We just look at what's already there and add it up. You get a score out of 100.
+      No need to fill out a survey. We look at your LinkedIn profile and automatically analyse where it stands on six different measures.
     </p>
 
     <!-- 2-col grid: hexagon left, dimension detail right (stacks on mobile) -->
@@ -6187,12 +6200,12 @@ fbq('track', 'PageView');
        This compact six-row list replaces it with the same information in a scannable
        form, so the "What we look at." section keeps its credibility on phones. -->
   <ol class="method-list-mobile" aria-label="The six dimensions of the Visibility Index">
-    <li><strong>Digital Footprint</strong><span>Can people find you online — and is what they find on-brand?</span></li>
-    <li><strong>Brand Clarity</strong><span>Within ten seconds of landing on your profile, do they know what you do?</span></li>
-    <li><strong>Authority Signals</strong><span>Press, podcasts, talks — proof that other people vouch for you.</span></li>
-    <li><strong>Content Cadence</strong><span>Predictable rhythm beats sporadic volume. Are you showing up consistently?</span></li>
-    <li><strong>Visual Identity</strong><span>Photo, banner, design language — does it look like a serious operator?</span></li>
-    <li><strong>Network Recognition</strong><span>Who interacts, comments, endorses. Does the right room know your name?</span></li>
+    <li><strong>Digital Footprint</strong><span>We Google your name and check your LinkedIn. Are you on the first page?</span></li>
+    <li><strong>Brand Clarity</strong><span>If a stranger reads your headline, can they tell what you do in one sentence?</span></li>
+    <li><strong>Authority Signals</strong><span>Press mentions, speaking gigs, awards. The proof other people vouch for you.</span></li>
+    <li><strong>Content Cadence</strong><span>The most visible people don't post more often, just on a better rhythm.</span></li>
+    <li><strong>Visual Identity</strong><span>A hi-res profile picture. A real banner. Elements that feel consistent.</span></li>
+    <li><strong>Network Recognition</strong><span>Lots of followers but no engagement is just an empty number.</span></li>
   </ol>
 </section>
 
@@ -6209,34 +6222,33 @@ fbq('track', 'PageView');
         </div>
         <h2 class="h2 circle-h2">The FutureMakers Circle</h2>
         <p class="lede circle-lede">
-          A small circle of clients we work with directly. Twelve seats per quarter - not an application,
-          a conversation. Book a 30-minute call with one of the Von Peach team. Share what you're building.
-          If it's a fit, you're in.
+          Join a small circle of clients we work with directly to build their personal brand.
+          Book a 30-minute call with the Von Peach team to share what you're building. If it's a fit, you're in.
         </p>
         <div class="perks">
           <div class="perk">
             <div class="perk-icon">01</div>
             <div>
               <strong>A 90-day visibility plan, custom-built</strong>
-              <span>Designed against your gap analysis from the Index. Specific. Defendable. Yours.</span>
+              <span>Designed against your gap analysis from the Index. Tailored to the specific niche you want to own.</span>
             </div>
           </div>
           <div class="perk">
             <div class="perk-icon">02</div>
             <div>
               <strong>The Black Book</strong>
-              <span>Curated directory of the operators we trust - ghostwriters, photographers, podcast bookers, video producers. Not for sale.</span>
+              <span>Curated directory of the operators we trust — ghostwriters, photographers, podcast bookers, video producers.</span>
             </div>
           </div>
           <div class="perk">
             <div class="perk-icon">03</div>
             <div>
               <strong>Yearly off-the-record dinner</strong>
-              <span>Twelve people, one room, Chatham House rules. The conversations you can't have on a podcast.</span>
+              <span>A chance to mingle with our exclusive FutureMakers circle in a relaxed, conversation-led setting.</span>
             </div>
           </div>
         </div>
-        <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="btn btn-primary btn-arrow" id="apply-cta">Book a call</a>
+        <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="btn btn-primary btn-arrow" id="apply-cta">Get started</a>
       </div>
 
       <div class="circle-stats">
@@ -6249,11 +6261,11 @@ fbq('track', 'PageView');
           <div class="stat-label">Cohorts a year</div>
         </div>
         <div>
-          <div class="stat-num">90<span style="font-size:24px">d</span></div>
+          <div class="stat-num">90 <span style="font-size:24px">day</span></div>
           <div class="stat-label">Engagement</div>
         </div>
         <div>
-          <div class="stat-num">30<span style="font-size:24px">m</span></div>
+          <div class="stat-num">30 <span style="font-size:24px">min</span></div>
           <div class="stat-label">Intake call</div>
         </div>
       </div>
@@ -6288,8 +6300,8 @@ fbq('track', 'PageView');
       <div class="footer-col footer-col-right">
         <p class="footer-col-eyebrow">Socials</p>
         <ul>
-          <li><a href="https://www.instagram.com/vonpeach.gmbh" target="_blank" rel="noopener">Instagram</a></li>
-          <li><a href="https://www.linkedin.com/company/vonpeach" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.instagram.com/vonpeachonline/" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.linkedin.com/company/65850001/" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a href="https://www.vonpeach.com/press" target="_blank" rel="noopener">Press</a></li>
         </ul>
       </div>
@@ -6298,7 +6310,7 @@ fbq('track', 'PageView');
     <!-- Bottom legal strip -->
     <div class="footer-legal-row">
       <div>
-        <a href="https://www.vonpeach.com/terms" target="_blank" rel="noopener">Terms and conditions</a>
+        <a href="https://www.vonpeach.com/termsandconditions" target="_blank" rel="noopener">Terms and conditions</a>
         <a href="https://www.vonpeach.com/impressum" target="_blank" rel="noopener">Impressum</a>
       </div>
       <div>Von Peach GmbH 2026</div>
@@ -6968,12 +6980,50 @@ fbq('track', 'PageView');
     pick(value) {
       const opt = Array.from(this.options).find(o => o.dataset.value === value);
       if (!opt) return;
-      this.label.textContent = opt.textContent;
+
+      // For the role picker, prefer the lowercase prose-friendly label so the
+      // sentence reads naturally ("I'm an investor" instead of "I'm a Investor").
+      // The full descriptive label (e.g. "CEO / C-suite") still lives on the option.
+      const proseLabel = opt.dataset.prose;
+      this.label.textContent = (this.root.dataset.pickerName === 'role' && proseLabel)
+        ? proseLabel : opt.textContent;
+
       this.options.forEach(o => o.setAttribute('aria-selected', o.dataset.value === value ? 'true' : 'false'));
       if (this.select) {
         this.select.value = value;
         this.select.dispatchEvent(new Event('change', { bubbles: true }));
       }
+
+      // ── Role-specific UI updates: a/an article + opportunities-vs-clients swap ──
+      if (this.root.dataset.pickerName === 'role') {
+        // Swap "I'm a/an" article based on the option's data-article attribute.
+        const article = opt.dataset.article || 'a';
+        const proseArticleEl = document.getElementById('prose-article');
+        if (proseArticleEl) {
+          proseArticleEl.innerHTML = `I'm ${article}&nbsp;`;
+        }
+        // For role values flagged data-opps="1" (artist/speaker/creator), swap the
+        // "attract better clients & investors" goal copy to "attract the right
+        // opportunities" everywhere it appears (visible label + popover option +
+        // native <select>). For all other roles, restore the default.
+        const wantsOpps = opt.dataset.opps === '1';
+        const oppsText  = 'attract the right opportunities';
+        const defaultText = 'attract better clients & investors';
+        const goalRoot   = document.querySelector('.picker[data-picker-name="goal"]');
+        if (goalRoot) {
+          const clientsOpt = goalRoot.querySelector('.picker-option[data-value="clients"]');
+          const goalLabel  = goalRoot.querySelector('[data-picker-label]');
+          const nativeOpt  = goalRoot.querySelector('select option[value="clients"]');
+          const newText = wantsOpps ? oppsText : defaultText;
+          if (clientsOpt) clientsOpt.textContent = newText;
+          if (nativeOpt)  nativeOpt.textContent  = newText;
+          // Only refresh the visible goal-picker label if "clients" is currently selected
+          if (goalLabel && goalRoot.querySelector('.picker-option[aria-selected="true"]')?.dataset.value === 'clients') {
+            goalLabel.textContent = newText;
+          }
+        }
+      }
+
       this.close();
       this.trigger.focus();
       this.trigger.classList.remove('picker-just-picked');
@@ -7011,7 +7061,7 @@ fbq('track', 'PageView');
     clarity: {
       num:   '02 - Brand Clarity',
       title: "Does what you do make sense?",
-      body:  "If a stranger reads your headline, can they tell what you do in one sentence? \"Transforming the future of work\" tells them nothing. We check if your words actually mean something."
+      body:  "If a stranger reads your headline, can they tell what you do in one sentence? We'll also check that your words actually mean something, rather than generic statements."
     },
     authority: {
       num:   '03 - Authority Signals',
@@ -7021,17 +7071,17 @@ fbq('track', 'PageView');
     cadence: {
       num:   '04 - Content Cadence',
       title: "Are you actually showing up?",
-      body:  "We count your posts in the last 90 days. The best people don't post more - they post on a rhythm. Once a week beats five posts in one day."
+      body:  "We count your posts in the last 90 days. The most visible people don't post more often, just on a better rhythm. Once a week beats five posts in one day and then nothing for months."
     },
     visual: {
       num:   '05 - Visual Identity',
       title: "Does it look like you mean it?",
-      body:  "A clear photo. A real banner. Profile bits that match. Your face is the most-clicked thing on LinkedIn - we look at whether it's working hard enough."
+      body:  "A hi-res profile picture. A real banner. Elements on your profile that feel consistent. Your face is the most-clicked thing on LinkedIn - we look at whether it's working hard enough."
     },
     network: {
       num:   '06 - Network Recognition',
       title: "Do people actually care?",
-      body:  "Followers, connections, and the people who like and comment. Lots of followers but no engagement is just a number. We weigh real attention over loud silence."
+      body:  "Lots of followers but no engagement is just an empty number. We weigh real attention over loud silence."
     }
   };
 
