@@ -25,6 +25,7 @@
 import { createHash } from 'node:crypto';
 import { buildReportPDF } from '../lib/buildReport.js';
 import { notifyOps }    from '../lib/notify.js';
+import { upsertAuditOnLead } from '../lib/notion-audit.js';
 
 const RESEND_API = 'https://api.resend.com/emails';
 
@@ -426,7 +427,28 @@ export default async function handler(req, res) {
     console.warn('[CAPI] META_CAPI_ACCESS_TOKEN not set - server-side Lead event skipped (browser pixel still fires).');
   }
 
-  // ── 6) Return success - frontend uses pdf base64 for instant download ──
+  // ── 6) Upsert the Notion audit row (status: email_submitted) ──
+  // Fire-and-forget; never blocks the response. If no row exists for this
+  // LinkedIn URL (e.g. /api/score logging skipped), the helper creates one.
+  upsertAuditOnLead({
+    linkedinUrl: normalisedUrl ? `https://www.${normalisedUrl}/` : null,
+    firstName:   profile?.firstName || '',
+    lastName:    profile?.lastName  || '',
+    headline:    profile?.headline  || '',
+    company:     profile?.companyName || '',
+    score:       typeof score === 'number' ? Math.round((score / 18) * 100) : null,
+    composite:   typeof score === 'number' ? score : null,
+    tier:        tier?.name || '',
+    email:       email,
+    role:        role || '',
+    goal:        goal || '',
+    utmSource:   attribution?.utm_source   || '',
+    utmCampaign: attribution?.utm_campaign || '',
+    clickId:     attribution?.fbclid || attribution?.gclid || '',
+    notes:       intent === 'walkthrough' ? 'Picked walkthrough CTA' : ''
+  }).catch(() => {});
+
+  // ── 7) Return success - frontend uses pdf base64 for instant download ──
   return res.status(200).json({
     ok:             true,
     emailDelivered: emailDelivered,

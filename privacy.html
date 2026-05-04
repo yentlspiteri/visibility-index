@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy &amp; Terms — Visibility Index | Von Peach</title>
+<meta name="description" content="Privacy notice and terms of use for the Visibility Index audit at index.vonpeach.com." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://index.vonpeach.com/privacy" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
+<meta name="theme-color" content="#3F36B2" />
+
+<link rel="preconnect" href="https://api.fontshare.com" />
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/article-style.css" />
+</head>
+<body>
+
+<nav class="top">
+  <div class="container">
+    <a href="/" class="brand">Von Peach · Visibility Index</a>
+    <a href="/" class="cta">Run the audit →</a>
+  </div>
+</nav>
+
+<header class="hero with-divider">
+  <div class="container">
+    <p class="breadcrumb"><a href="/">Visibility Index</a> &nbsp;›&nbsp; Privacy &amp; Terms</p>
+    <div class="eyebrow">LEGAL · LAST UPDATED MAY 2026</div>
+    <h1>Privacy &amp; Terms.</h1>
+    <p class="lede">A plain-English summary of what we collect when you run the Visibility Index, what we do with it, and how to ask us to delete it.</p>
+  </div>
+</header>
+
+<main class="container">
+  <article>
+
+    <h2>The short version</h2>
+    <p>You give us your LinkedIn URL. We scrape public information about you (your LinkedIn profile, what shows up when Google is asked about you, press mentions, public posts on Instagram and X if applicable). We score that against our six-dimension framework. We email you a personalised PDF report — but only if you give us your email. We log the result of every audit (LinkedIn URL + score + tier) in our internal records so we can improve the tool and follow up if useful. We use Meta Pixel, Google Analytics, and Calendly. We don't sell your data. You can ask us to delete everything we have on you by emailing <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>.</p>
+    <p>The longer version follows.</p>
+
+    <h2>Who runs this site</h2>
+    <p>The Visibility Index at <a href="https://index.vonpeach.com">index.vonpeach.com</a> is run by <strong>Von Peach GmbH</strong>, registered in Switzerland. Our address is Beethovenstrasse 19, 8002 Zürich, Switzerland. You can reach us at <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>. We're the data controller for everything described on this page.</p>
+
+    <h2>What we collect, when, and why</h2>
+
+    <h3>1. When you run the audit</h3>
+    <p>You provide your LinkedIn URL plus two self-selected fields (your role and your goal). We use these to:</p>
+    <ul>
+      <li>Fetch your <strong>publicly-available LinkedIn profile data</strong> via Apify — name, headline, About section, photo, banner, follower count, work history, recommendations, articles, posts (where the platform's terms allow), and any other public-profile fields.</li>
+      <li>Run <strong>Google searches</strong> on your name (via SerpAPI) to find press mentions, podcast appearances, public articles, and platform footprints.</li>
+      <li>Check whether you appear on <strong>Instagram, X (Twitter), Substack, Medium, YouTube, Crunchbase, Wikipedia, and Google News</strong>, and where applicable scrape public metrics (follower count, post count, bio).</li>
+      <li>Send your profile photo and banner URLs to <strong>Anthropic's Claude API</strong> (vision model) for a qualitative read on visual identity.</li>
+      <li>Send a structured summary of the above to <strong>Anthropic's Claude API</strong> for a written executive summary, dimension commentary, and personalised moves.</li>
+    </ul>
+    <p>None of this requires your email. None of this requires you to log into anything. We only access information that's already publicly visible on the open internet.</p>
+
+    <h3>2. The audit log</h3>
+    <p>At the end of every audit run, we log a row in our internal database (Notion) containing: LinkedIn URL, first name, last name, headline, company, score (0–100), tier, role, goal, UTM source/campaign (if you arrived from an ad), and a click ID (fbclid/gclid) where present. The legal basis is <strong>legitimate interest</strong> — we use this log to improve the tool, debug failures, and identify warm leads for follow-up.</p>
+    <p>If you don't want to be in this log, email us at <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a> with your LinkedIn URL and we'll remove your row within 30 days.</p>
+
+    <h3>3. When you submit your email</h3>
+    <p>If you ask us to email you the report (or pick the walkthrough CTA), we collect your email address and use it to:</p>
+    <ul>
+      <li>Send you the personalised PDF report via <strong>Resend</strong> (our email-delivery provider).</li>
+      <li>Add you to our audience in <strong>Mailchimp</strong>, with merge tags for your tier, goal, and UTM data, so we can send you the 48-hour follow-up email and (if relevant) future Visibility-Index-related emails.</li>
+      <li>Forward the audit data to <strong>Meta's Conversions API</strong> as a server-side <code>Lead</code> event, with your email hashed (SHA-256) per Meta's specification, so paid ad campaigns can optimise against real signal.</li>
+      <li>Notify our internal team via <strong>Slack</strong> that a new lead has come through.</li>
+      <li>Update your row in our audit log to status <code>email_submitted</code>.</li>
+    </ul>
+    <p>You can unsubscribe from any of our emails at any time using the link at the bottom of every email we send.</p>
+
+    <h3>4. When you book a walkthrough</h3>
+    <p>If you book a 15-minute walkthrough via Calendly, <strong>Calendly</strong> collects your email + name + chosen time. We receive that via webhook and may use it to update your Notion audit row to status <code>walkthrough_booked</code>, fire a Meta CAPI <code>Schedule</code> event, and prepare for our call. Calendly's own privacy notice applies to the booking flow — see <a href="https://calendly.com/privacy" target="_blank" rel="noopener">calendly.com/privacy</a>.</p>
+
+    <h3>5. Cookies and tracking</h3>
+    <p>The page sets and reads the following cookies:</p>
+    <ul>
+      <li><strong>Meta Pixel cookies</strong> (<code>_fbp</code>, <code>_fbc</code>): set by Meta when you first load the page. Used to attribute your audit to a Meta ad you may have clicked. Lifespan: up to 90 days.</li>
+      <li><strong>Google Analytics cookies</strong> (<code>_ga</code>, <code>_ga_*</code>): used for usage analytics. Lifespan: up to 24 months.</li>
+      <li><strong>localStorage</strong>: we persist your UTM/click-ID attribution data and a small flag indicating which CTA you last interacted with, so attribution survives a return visit.</li>
+    </ul>
+    <p>If you'd rather we didn't track at all, use a privacy-respecting browser (Brave, Safari with ITP, Firefox with Enhanced Tracking Protection) or an ad blocker. We don't currently show a cookie consent banner because our trackers are limited to those listed above and the legal basis is legitimate interest under GDPR for ad attribution and lead generation.</p>
+
+    <h3>6. Bug reports</h3>
+    <p>If you click the "Report a bug" button on the site, we collect: your message, your email if you provided one, the page URL where the bug appeared, your browser, your viewport, and your IP address. We use this only to fix the bug. We do not use bug-report data for marketing.</p>
+
+    <h2>Where your data goes</h2>
+    <p>The third-party services that process your data on our behalf:</p>
+    <ul>
+      <li><strong>Apify</strong> — runs the LinkedIn scrapers. Data is fetched from public profiles. <a href="https://apify.com/privacy-policy" target="_blank" rel="noopener">Apify privacy</a></li>
+      <li><strong>SerpAPI</strong> — runs the Google searches. <a href="https://serpapi.com/legal/privacy-policy" target="_blank" rel="noopener">SerpAPI privacy</a></li>
+      <li><strong>Anthropic</strong> (Claude) — runs the AI analysis (vision + text). Anthropic does not retain inputs for training under our API plan. <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Anthropic privacy</a></li>
+      <li><strong>Resend</strong> — sends the report email. <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">Resend privacy</a></li>
+      <li><strong>Mailchimp</strong> (Intuit) — stores subscriber records and sends drip emails. <a href="https://www.intuit.com/privacy/" target="_blank" rel="noopener">Mailchimp privacy</a></li>
+      <li><strong>Notion</strong> — stores audit logs and bug reports. <a href="https://www.notion.so/privacy" target="_blank" rel="noopener">Notion privacy</a></li>
+      <li><strong>Slack</strong> — receives lead/bug notifications. <a href="https://slack.com/trust/privacy/privacy-policy" target="_blank" rel="noopener">Slack privacy</a></li>
+      <li><strong>Calendly</strong> — handles meeting bookings. <a href="https://calendly.com/privacy" target="_blank" rel="noopener">Calendly privacy</a></li>
+      <li><strong>Meta</strong> (Pixel + Conversions API) — for ad attribution and optimisation. <a href="https://www.facebook.com/policy.php" target="_blank" rel="noopener">Meta privacy</a></li>
+      <li><strong>Google</strong> (Analytics + Ads) — for usage analytics and ad attribution. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google privacy</a></li>
+      <li><strong>Vercel</strong> — our hosting provider. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel privacy</a></li>
+    </ul>
+    <p>None of these are paid by us to use your data for their own marketing. We do not sell your data to anyone.</p>
+
+    <h2>How long we keep things</h2>
+    <ul>
+      <li><strong>Audit log row</strong> (LinkedIn URL, score, tier, etc.): kept indefinitely unless you ask us to delete it.</li>
+      <li><strong>Email + Mailchimp subscriber record</strong>: kept until you unsubscribe or ask us to delete.</li>
+      <li><strong>Bug reports</strong>: kept indefinitely (we use them to track recurring issues).</li>
+      <li><strong>Tracking cookies</strong>: 90 days for Meta, up to 24 months for Google Analytics, controlled by your browser.</li>
+      <li><strong>Vercel logs</strong>: 30 days, then automatically deleted.</li>
+    </ul>
+
+    <h2>Your rights</h2>
+    <p>If you're an EU/UK/Swiss resident (GDPR / UK GDPR / Swiss FADP), you have the right to:</p>
+    <ul>
+      <li><strong>Access</strong> the data we hold on you</li>
+      <li><strong>Correct</strong> any inaccuracies</li>
+      <li><strong>Delete</strong> everything we have on you (the "right to be forgotten")</li>
+      <li><strong>Export</strong> your data in a portable format</li>
+      <li><strong>Object</strong> to processing based on legitimate interest</li>
+      <li><strong>Withdraw consent</strong> for any processing you previously consented to</li>
+      <li><strong>Lodge a complaint</strong> with your local data protection authority (in Switzerland: <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">EDÖB</a>; in the EU: your country's DPA)</li>
+    </ul>
+    <p>To exercise any of these, email <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a> with your LinkedIn URL or email address. We respond within 30 days.</p>
+
+    <h2>Terms of use</h2>
+    <p>By running the Visibility Index audit you agree that:</p>
+    <ul>
+      <li>The audit is provided <strong>as is</strong>. We make our best effort to score accurately, but the result is opinionated and not a substitute for professional brand strategy advice.</li>
+      <li>The personalised PDF report and any AI-generated content are for your personal use. You're free to share excerpts, but please don't redistribute the full report as your own work.</li>
+      <li>You'll only run the audit on <strong>your own LinkedIn profile</strong> or on profiles you have permission to audit. Don't run it on a third party without their knowledge.</li>
+      <li>We reserve the right to rate-limit, block, or refuse the audit to abusive or automated traffic.</li>
+      <li>Nothing in this audit constitutes legal, financial, or professional advice.</li>
+    </ul>
+
+    <h2>Children</h2>
+    <p>The Visibility Index is not intended for users under 18. We do not knowingly collect data from minors. If we learn that we have data on a minor, we will delete it.</p>
+
+    <h2>International transfers</h2>
+    <p>Some of the third-party services we use store data outside Switzerland and the EU (notably in the US). We rely on standard contractual clauses or adequacy decisions where applicable. By using the audit you consent to your data being transferred to the jurisdictions listed under "Where your data goes."</p>
+
+    <h2>Changes to this page</h2>
+    <p>We may update this page if our data practices change. Material changes will be reflected at the top under "Last updated." Continued use of the audit after changes implies acceptance of the updated terms.</p>
+
+    <h2>Contact</h2>
+    <p>For anything privacy- or terms-related: <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>.<br/>For deletion requests: same email, please include your LinkedIn URL or registered email.<br/>Postal: Von Peach GmbH, Beethovenstrasse 19, 8002 Zürich, Switzerland.</p>
+
+  </article>
+
+  <aside class="cta-card">
+    <h2>Ready to run the audit?</h2>
+    <p>Free, 60 seconds, no login. The same six dimensions, the same rubric for everyone.</p>
+    <a href="/" class="btn">Run the audit →</a>
+  </aside>
+</main>
+
+<footer class="site">
+  <div class="container">
+    <div>VON PEACH GMBH · FUTUREMAKERS · VISIBILITY INDEX</div>
+    <div>
+      <a href="https://www.vonpeach.com" target="_blank" rel="noopener">vonpeach.com</a> ·
+      <a href="/methodology">Methodology</a> ·
+      <a href="/articles">Articles</a> ·
+      <a href="/privacy">Privacy</a> ·
+      <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

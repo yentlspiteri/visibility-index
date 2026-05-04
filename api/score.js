@@ -13,6 +13,7 @@
  */
 
 import { notifyOps } from '../lib/notify.js';
+import { logAuditCompleted } from '../lib/notion-audit.js';
 
 const APIFY_API     = 'https://api.apify.com/v2/acts';
 // LinkedIn profile actor. dev_fusion is reliable but lean - if you want
@@ -259,6 +260,26 @@ export default async function handler(req, res) {
     const total = Object.values(subs).reduce((a, b) => a + b, 0);
     const tier  = tierFor(total);
     const nextTier = TIERS.find(t => t.min > tier.max) || tier;
+
+    // Persist the audit row to Notion. Fire-and-forget - never blocks the
+    // response, never throws. If NOTION_AUDITS_DATABASE_ID isn't set, it no-ops.
+    // Status starts at "audit_completed"; /api/lead and the Calendly webhook
+    // upsert the row to "email_submitted" / "walkthrough_booked" later.
+    logAuditCompleted({
+      linkedinUrl: normalised ? `https://www.${normalised}/` : null,
+      firstName:   getFirstName(profile),
+      lastName:    getLastName(profile),
+      headline:    getHeadline(profile),
+      company:     getCompany(profile),
+      score:       Math.round((total / 18) * 100),    // 0-100 display
+      composite:   total,                              // 0-18 raw
+      tier:        tier?.name || '',
+      role:        body.role || '',
+      goal:        body.goal || '',
+      utmSource:   body.attribution?.utm_source   || '',
+      utmCampaign: body.attribution?.utm_campaign || '',
+      clickId:     body.attribution?.fbclid || body.attribution?.gclid || ''
+    }).catch(() => {});
 
     return res.status(200).json({
       total, subs, tier, nextTier,

@@ -6904,7 +6904,7 @@ fbq('track', 'PageView');
     const fetchPromise = fetch('/api/score', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal })
+      body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal, attribution: ATTRIBUTION })
     }).then(r => r.json()).catch(() => ({ error: 'Network error. Please try again.' }));
 
     // After the animation hits the last step, swap the subtitle to a "still pulling data" line
@@ -7836,80 +7836,86 @@ fbq('track', 'PageView');
   // Brand-styled inline embed mounted into #calendly-mount once the user
   // commits to the walkthrough path. Calendly's widget.js loads async from
   // <head>; if it isn't ready yet, retry every 200ms up to 3s.
+  // Mount Calendly using the bare-bones declarative pattern Calendly itself
+  // documents - one div with class="calendly-inline-widget" + data-url, plus
+  // a freshly-appended widget.js <script> tag to force Calendly's loader to
+  // scan and auto-mount the new div. Avoids the manual initInlineWidget()
+  // path which was unreliable across browsers + ad-blockers.
   function mountCalendlyInline(email) {
+    const mount = document.getElementById('calendly-mount');
+    if (!mount) return;
+
     const firstName = (lastProfile?.firstName || '').trim();
     const lastName  = (lastProfile?.lastName  || '').trim();
     const fullName  = [firstName, lastName].filter(Boolean).join(' ');
-    const mount     = document.getElementById('calendly-mount');
-    if (!mount) return;
 
-    // Brand params - indigo primary, cream surface, deep black text.
-    // hide_gdpr_banner: keep the embed compact for non-EU; GDPR users can
-    // still consent via Calendly's own footer if it appears.
-    const url = CALENDLY_URL + '?' + new URLSearchParams({
-      primary_color:    '3F36B2',
-      text_color:       '0c0b09',
-      background_color: 'fafafa',
-      hide_gdpr_banner: '1'
-    }).toString();
+    // Build the URL with prefill + brand params + UTM. All passed via query
+    // string so Calendly's auto-mount picks them up natively.
+    const params = new URLSearchParams({
+      hide_event_type_details: '1',
+      hide_gdpr_banner:        '1',
+      primary_color:           '3F36B2',
+      text_color:              '0c0b09',
+      background_color:        'fafafa',
+      utm_source:              'visibility-index',
+      utm_medium:              'lead-magnet',
+      utm_campaign:            'walkthrough-cta',
+      utm_content:             lastTier?.name || ''
+    });
+    if (fullName)  params.set('name',       fullName);
+    if (firstName) params.set('first_name', firstName);
+    if (lastName)  params.set('last_name',  lastName);
+    if (email && email.trim()) params.set('email', email.trim());
 
-    function fire() {
-      if (!window.Calendly || !window.Calendly.initInlineWidget) return false;
-      // Clear any previous mount to avoid double iframes if the user retries
-      mount.innerHTML = '';
-      window.Calendly.initInlineWidget({
-        url,
-        parentElement: mount,
-        prefill: {
-          name:      fullName  || undefined,
-          firstName: firstName || undefined,
-          lastName:  lastName  || undefined,
-          email:     (email && email.trim()) || undefined
-        },
-        utm: {
-          utmSource:   'visibility-index',
-          utmMedium:   'lead-magnet',
-          utmCampaign: 'walkthrough-cta',
-          utmContent:  lastTier?.name || ''
-        }
-      });
-      if (window.track) window.track('calendly_opened', {
-        source: 'gate-walkthrough-inline',
-        tier:   lastTier?.name || '',
-        score:  Math.round((lastScore / 18) * 100)
-      });
-      console.log('[Calendly] inline widget mounted', { url, hasFullName: !!fullName, hasEmail: !!email });
-      return true;
-    }
-    // Try immediately, then retry every 200ms for up to 5s in case widget.js
-    // is still loading. After that, render a visible fallback link so the user
-    // can still book even if the inline embed never initialises.
-    if (!fire()) {
-      let tries = 0;
-      const t = setInterval(() => {
-        if (fire()) {
-          clearInterval(t);
-          return;
-        }
-        if (++tries > 25) {     // 25 × 200ms = 5 seconds
-          clearInterval(t);
-          console.warn('[Calendly] inline widget failed to mount after 5s. window.Calendly =', typeof window.Calendly);
-          // Visible fallback - the iframe never came up, so give the user a
-          // direct link they can click to open Calendly in a new tab. Better
-          // than an empty card that looks broken.
-          mount.innerHTML = `
-            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;min-height:520px;background:#fafafa;border-radius:12px;">
-              <p style="margin:0 0 18px;font-size:15px;color:#56556B;line-height:1.5;max-width:36ch;">
-                The inline calendar didn't load (your browser may be blocking it). No problem &mdash; book directly:
-              </p>
-              <a href="${url.replace(/&amp;/g, '&')}" target="_blank" rel="noopener"
-                 style="display:inline-block;background:#3F36B2;color:#fff;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;">
-                Open Calendly &rarr;
-              </a>
-            </div>`;
-        }
-      }, 200);
-    }
+    const url = CALENDLY_URL + '?' + params.toString();
+
+    // Clear the mount and inject Calendly's exact documented inline widget div.
+    // We build the element with DOM APIs (not innerHTML) so attribute escaping
+    // is bulletproof - Calendly's widget.js then picks it up on next scan.
+    mount.innerHTML = '';
+    const widgetDiv = document.createElement('div');
+    widgetDiv.className = 'calendly-inline-widget';
+    widgetDiv.setAttribute('data-url', url);
+    widgetDiv.style.minWidth = '320px';
+    widgetDiv.style.height   = '700px';
+    widgetDiv.style.width    = '100%';
+    mount.appendChild(widgetDiv);
+
+    // Force a fresh Calendly scan by removing any existing widget.js script
+    // and re-appending it. Calendly's loader is idempotent on re-load and
+    // will discover + mount the newly-inserted .calendly-inline-widget.
+    document.querySelectorAll('script[src*="calendly.com/assets/external/widget.js"]')
+      .forEach(s => s.remove());
+    const script = document.createElement('script');
+    script.src   = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    if (window.track) window.track('calendly_opened', {
+      source: 'gate-walkthrough-inline',
+      tier:   lastTier?.name || '',
+      score:  typeof lastScore === 'number' ? Math.round((lastScore / 18) * 100) : null
+    });
+    console.log('[Calendly] inline widget injected', { url, hasName: !!fullName, hasEmail: !!email });
+
+    // Safety net: if the iframe doesn't appear within 5 seconds (ad-blocker,
+    // network failure, etc.), render a fallback link so the user can still book.
+    setTimeout(() => {
+      const w = mount.querySelector('.calendly-inline-widget');
+      if (w && !w.querySelector('iframe')) {
+        console.warn('[Calendly] no iframe after 5s — rendering fallback link');
+        mount.innerHTML =
+          '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;min-height:520px;background:#fafafa;border-radius:12px;">' +
+            '<p style="margin:0 0 18px;font-size:15px;color:#56556B;line-height:1.5;max-width:36ch;">' +
+              "The inline calendar didn't load (your browser may be blocking it). No problem &mdash; book directly:" +
+            '</p>' +
+            '<a href="' + url.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" ' +
+               'style="display:inline-block;background:#3F36B2;color:#fff;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;">' +
+              'Open Calendly &rarr;' +
+            '</a>' +
+          '</div>';
+      }
+    }, 5000);
   }
 
   /* ────────── DELEGATED CALENDLY POPUP HANDLER ──────────
