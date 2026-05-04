@@ -42,7 +42,8 @@ export default async function handler(req, res) {
     profile,                                                     // { firstName, headline, companyName, pictureUrl, ... }
     executiveSummary, dimensionCommentary, moves, tierRoadmap,   // Claude analysis payload
     press, contentIdeas, pressTargets,                           // press hits + content/PR ideas (optional)
-    intent                                                       // "email" | "walkthrough" - which CTA was clicked at score reveal
+    intent,                                                      // "email" | "walkthrough" - which CTA was clicked at score reveal
+    metaCapi                                                     // { eventId, sourceUrl, userAgent, fbp, fbc } - CAPI deduplication payload
   } = body;
 
   if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -336,12 +337,99 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── 5) Return success - frontend uses pdf base64 for instant download ──
+  // ── 5) Meta Conversion API (server-side Lead event) ─────────────────
+  // Fires the same Lead event server-to-server so we catch the 30-60% of
+  // browser pixel hits that get blocked by ATT, ITP, ad-blockers, or
+  // browser-extension privacy tools. Meta dedupes against the browser
+  // fbq('track', 'Lead') call using event_id, so this never double-counts.
+  //
+  // Required env vars:
+  //   META_PIXEL_ID         (defaults to the hardcoded ID below)
+  //   META_CAPI_ACCESS_TOKEN (System User token from Events Manager →
+  //                           Settings → Conversions API → Generate access token)
+  //
+  // Optional: META_TEST_EVENT_CODE during initial setup (Events Manager
+  // → Test Events tab) so you can verify the event lands before going live.
+  let capiOk = false;
+  if (process.env.META_CAPI_ACCESS_TOKEN) {
+    try {
+      const PIXEL_ID = process.env.META_PIXEL_ID || '1714917946519921';
+      const token    = process.env.META_CAPI_ACCESS_TOKEN;
+      const ip       = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null;
+
+      // Hash all PII per Meta's spec (sha256 of lowercased + trimmed value).
+      const hash = (v) => v ? createHash('sha256').update(String(v).toLowerCase().trim()).digest('hex') : undefined;
+
+      const userData = {
+        em:           hash(email)                     ? [hash(email)]                     : undefined,
+        fn:           hash(profile?.firstName)        ? [hash(profile.firstName)]         : undefined,
+        ln:           hash(profile?.lastName)         ? [hash(profile.lastName)]          : undefined,
+        client_ip_address:  ip            || undefined,
+        client_user_agent:  metaCapi?.userAgent || req.headers['user-agent'] || undefined,
+        fbp:          metaCapi?.fbp       || undefined,
+        fbc:          metaCapi?.fbc       || undefined,
+        // Hashed external_id - lets Meta link this lead to other touchpoints
+        // for the same user (re-audits, etc.) without sharing raw email
+        external_id:  hash(email)         || undefined
+      };
+      // Strip undefined keys - Meta rejects null/undefined values
+      Object.keys(userData).forEach(k => userData[k] === undefined && delete userData[k]);
+
+      const tierName = tier?.name || '';
+      const customData = {
+        currency:     'EUR',
+        value:        intent === 'walkthrough' ? 60 : 30, // walkthrough leads worth 2× plain leads
+        content_name: 'Visibility Index audit',
+        content_category: tierName,
+        // Custom params Meta will pass through to ad campaigns
+        intent:       intent || 'email',
+        score:        typeof score === 'number' ? Math.round((score / 18) * 100) : null,
+        tier:         tierName,
+        utm_source:   String(attribution?.utm_source   || ''),
+        utm_campaign: String(attribution?.utm_campaign || ''),
+        utm_medium:   String(attribution?.utm_medium   || '')
+      };
+
+      const capiPayload = {
+        data: [{
+          event_name:    'Lead',
+          event_time:    Math.floor(Date.now() / 1000),
+          event_id:      metaCapi?.eventId || undefined,    // browser pixel uses same ID for dedup
+          event_source_url: metaCapi?.sourceUrl || normalisedUrl || undefined,
+          action_source: 'website',
+          user_data:     userData,
+          custom_data:   customData
+        }],
+        ...(process.env.META_TEST_EVENT_CODE ? { test_event_code: process.env.META_TEST_EVENT_CODE } : {})
+      };
+
+      const capiUrl = `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${encodeURIComponent(token)}`;
+      const capiRes = await fetch(capiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(capiPayload)
+      });
+      const capiJson = await capiRes.json().catch(() => ({}));
+      capiOk = capiRes.ok && (capiJson.events_received || 0) > 0;
+      if (!capiOk) {
+        console.error('[CAPI] Lead event failed:', capiRes.status, JSON.stringify(capiJson).slice(0, 400));
+      } else {
+        console.log('[CAPI] Lead received:', capiJson.events_received, 'fbtrace_id:', capiJson.fbtrace_id);
+      }
+    } catch (err) {
+      console.error('[CAPI] crash:', err?.message || err);
+    }
+  } else {
+    console.warn('[CAPI] META_CAPI_ACCESS_TOKEN not set - server-side Lead event skipped (browser pixel still fires).');
+  }
+
+  // ── 6) Return success - frontend uses pdf base64 for instant download ──
   return res.status(200).json({
     ok:             true,
     emailDelivered: emailDelivered,
     mailchimpOk:    mailchimpOk,
     slackNotified:  slackNotified,
+    capiOk:         capiOk,
     pdf:            pdfBase64,    // null if PDF build failed
     _pdfError:      pdfError,
     _emailDebug:    emailDebug,

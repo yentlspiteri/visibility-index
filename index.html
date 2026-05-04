@@ -95,24 +95,60 @@
     'cookie_domain': '.vonpeach.com',
     'cookie_flags':  'SameSite=None;Secure'
   });
+  // ── Event Match Quality helpers ──
+  // Meta scores every conversion 0-10 on how well it matched a real user.
+  // Higher EMQ = lower CPL because the optimiser has more confidence. We hash
+  // identifiable user data (email, phone) per Meta's spec — sha256 of the
+  // lowercased + trimmed value — and pass it as user_data on Lead/Schedule.
+  async function sha256Hex(input) {
+    if (!input || !crypto?.subtle) return null;
+    const data = new TextEncoder().encode(String(input).toLowerCase().trim());
+    const buf  = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  // RFC4122 v4 UUID (no external lib). Used as event_id so Meta dedupes the
+  // browser pixel + server-side CAPI calls when both fire the same conversion.
+  function uuid() {
+    if (crypto?.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0; const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+  // Default monetary values used when the caller doesn't override. Tuned so
+  // Meta optimises for the actual scarce thing (booked walkthroughs) rather
+  // than just lead count. Adjust as your unit economics improve.
+  const EVENT_VALUES = {
+    audit_completed:    { value: 10,  currency: 'EUR' },
+    lead_captured:      { value: 30,  currency: 'EUR' },
+    walkthrough_booked: { value: 150, currency: 'EUR' }
+  };
+
   // Helper used everywhere else in the page JS - never throws if either
   // analytics provider fails to load. Mirrors every event to BOTH GA4 and
   // the Meta Pixel (see below) so paid campaigns can optimize against the
   // same conversion signals we measure in GA.
-  window.track = function(name, params) {
+  // For high-value events (Lead, Schedule), it ALSO:
+  //   - Generates a shared event_id for CAPI deduplication
+  //   - Hashes email and forwards as user_data (em) for EMQ
+  //   - Adds value + currency for value-based campaign optimisation
+  window.track = async function(name, params) {
     try {
+      // Honour an externally-provided event_id (used when the browser pixel
+      // and a server-side CAPI call need to share an ID for deduplication).
+      const eventId = (params && params.event_id) || uuid();
+      const enriched = { ...(params || {}), event_id: eventId };
+
       // GA4 always gets the raw event name + all params
-      if (typeof gtag === 'function') gtag('event', name, params || {});
+      if (typeof gtag === 'function') gtag('event', name, enriched);
+
       // Meta Pixel: map our event names to Meta's standard event taxonomy
-      // where one exists (Lead, Schedule, etc.) - those are the ones the
-      // ads platform can optimise toward. Everything else fires as a
-      // trackCustom so it still shows in Events Manager.
       if (typeof fbq === 'function') {
         const META_MAP = {
           audit_started:     { event: 'InitiateCheckout',     standard: true  },
           audit_completed:   { event: 'CompleteRegistration', standard: true  },
           lead_captured:     { event: 'Lead',                 standard: true  },
-          walkthrough_booked:{ event: 'Schedule',             standard: true  }, // ← key conversion
+          walkthrough_booked:{ event: 'Schedule',             standard: true  },
           calendly_opened:   { event: 'CalendlyOpened',       standard: false },
           report_downloaded: { event: 'ReportDownloaded',     standard: false },
           share_linkedin:    { event: 'ShareLinkedIn',        standard: false },
@@ -120,12 +156,26 @@
         };
         const mapped = META_MAP[name];
         if (mapped) {
-          fbq(mapped.standard ? 'track' : 'trackCustom', mapped.event, params || {});
+          // Build the custom_data payload (value, currency, content_name, etc.)
+          const custom = { ...(params || {}) };
+          if (EVENT_VALUES[name]) Object.assign(custom, EVENT_VALUES[name]);
+          custom.content_name = name;
+          // For Lead + Schedule, also hash the email and forward as user_data
+          // so Meta can match the event to a real Facebook profile.
+          let userData;
+          const em = params?.email && await sha256Hex(params.email);
+          if (em) userData = { em };
+          fbq(
+            mapped.standard ? 'track' : 'trackCustom',
+            mapped.event,
+            custom,
+            { eventID: eventId, ...(userData ? { user_data: userData } : {}) }
+          );
         }
       }
-      // Mirror to console so you can verify in dev without opening Realtime
-      if (window.location.hostname === 'localhost') console.log('[track]', name, params);
-    } catch (_) {}
+      if (window.location.hostname === 'localhost') console.log('[track]', name, enriched);
+      return eventId;
+    } catch (_) { return null; }
   };
 </script>
 
@@ -6077,18 +6127,60 @@ fbq('track', 'PageView');
     update();
   })();
 
-  /* ────────── UTM CAPTURE (paid attribution) ────────── */
-  // Capture utm_* and gclid from URL on page load and persist for the session.
-  // Attached to lead submission so you can attribute conversions per ad / campaign.
+  /* ────────── ATTRIBUTION CAPTURE (paid + organic) ──────────
+     Captures every flavour of attribution signal we'll later need for:
+       - GA4 / Mailchimp segmentation (utm_*)
+       - Meta CAPI matching (fbclid → fbc, plus _fbp cookie)
+       - Google Ads matching (gclid)
+       - LinkedIn / TikTok / Bing CAPI parity (li_fat_id, ttclid, msclkid)
+     Click IDs are persisted to localStorage so a visitor who browses for a
+     while before submitting their email still gets credited to the original
+     ad click, not the last referrer.  */
   const ATTRIBUTION = (function() {
     const params = new URLSearchParams(window.location.search);
-    const keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid'];
-    const out = {};
-    keys.forEach(k => { if (params.get(k)) out[k] = params.get(k); });
-    out.referrer = document.referrer || null;
+    const URL_KEYS = [
+      'utm_source','utm_medium','utm_campaign','utm_content','utm_term',
+      'gclid','fbclid','li_fat_id','ttclid','msclkid'
+    ];
+    // Pull from URL if present, fall back to previously-stored value (so a
+    // user who clicked an ad yesterday and converts today still attributes correctly).
+    const STORAGE_KEY = '__vi_attr';
+    let stored = {};
+    try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (_) {}
+    const out = { ...stored };
+    URL_KEYS.forEach(k => {
+      const v = params.get(k);
+      if (v) out[k] = v;
+    });
+    out.referrer    = document.referrer || stored.referrer || null;
     out.landingPath = window.location.pathname;
+    // Persist back so the next page-load (or audit-completed step) reuses these
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(out)); } catch (_) {}
+
+    // Construct the `fbc` value Meta CAPI expects from fbclid.
+    // Format: fb.{subdomainIndex}.{timestampMs}.{fbclid}
+    if (out.fbclid && !out._fbc) {
+      out._fbc = `fb.1.${Date.now()}.${out.fbclid}`;
+    }
     return out;
   })();
+
+  // Read Meta's `_fbp` and `_fbc` cookies on demand. The Meta Pixel sets _fbp
+  // automatically; _fbc is set when fbclid is in the URL. CAPI needs both for
+  // accurate event matching - we forward them with every conversion event.
+  function getMetaCookies() {
+    function readCookie(name) {
+      const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+      return m ? decodeURIComponent(m[2]) : null;
+    }
+    return {
+      fbp: readCookie('_fbp'),
+      // _fbc cookie set by pixel beats our reconstructed one
+      fbc: readCookie('_fbc') || ATTRIBUTION._fbc || null
+    };
+  }
+  // Expose for the lead-submit handler
+  window.__getMetaCookies = getMetaCookies;
 
   /* ────────── SCORING - six dimensions, 0-3 each, total 0-18 ────────── */
   const DIMENSIONS = [
@@ -7522,6 +7614,11 @@ fbq('track', 'PageView');
     allBtns.forEach(b => { b.disabled = true; });
     submitBtn.textContent = action === 'walkthrough' ? 'Sending + opening calendar…' : 'Sending…';
 
+    // Pre-generate the event_id so the browser pixel and the server-side
+    // CAPI call can fire the SAME id and Meta dedupes them as one conversion.
+    const leadEventId = (typeof uuid === 'function') ? uuid() : null;
+    const metaCookies = (typeof window.__getMetaCookies === 'function') ? window.__getMetaCookies() : { fbp: null, fbc: null };
+
     try {
       const res = await fetch('/api/lead', {
         method: 'POST',
@@ -7537,6 +7634,15 @@ fbq('track', 'PageView');
           normalisedUrl:       lastUrl,
           attribution:         ATTRIBUTION,
           intent:              action,   // "email" or "walkthrough" - segment leads downstream
+          // Meta CAPI payload - everything the server needs to fire a deduped
+          // server-side Lead event matching the browser pixel.
+          metaCapi: {
+            eventId:    leadEventId,
+            sourceUrl:  window.location.href,
+            userAgent:  navigator.userAgent,
+            fbp:        metaCookies.fbp,
+            fbc:        metaCookies.fbc
+          },
           // Full payload that the backend uses to build the PDF
           profile:             lastProfile,
           executiveSummary:    lastExecutiveSummary,
@@ -7553,20 +7659,24 @@ fbq('track', 'PageView');
       // Diagnostic - surface delivery status so we can debug Resend issues without log-diving
       console.log('[VI] /api/lead response:', {
         ok: data.ok, emailDelivered: data.emailDelivered,
-        mailchimpOk: data.mailchimpOk, hasPdf: !!data.pdf
+        mailchimpOk: data.mailchimpOk, hasPdf: !!data.pdf, capiOk: data.capiOk
       });
       if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed.');
 
-      // Analytics: lead captured (the conversion that matters for paid ads).
-      // intent= helps measure the walkthrough vs PDF split downstream.
+      // Browser-side Lead event. Includes email so window.track() hashes it
+      // and forwards as Meta `em` user_data for higher Event Match Quality.
+      // event_id matches the CAPI call so Meta dedupes server + client into
+      // a single attributed Lead conversion.
       if (window.track) window.track('lead_captured', {
+        email,                       // hashed inside track() before fbq fires
         score:        Math.round((lastScore / 18) * 100),
         tier:         lastTier?.name || '',
         role:         lastRole,
         goal:         lastGoal,
         intent:       action,
         utm_source:   ATTRIBUTION?.utm_source   || '',
-        utm_campaign: ATTRIBUTION?.utm_campaign || ''
+        utm_campaign: ATTRIBUTION?.utm_campaign || '',
+        event_id:     leadEventId    // Meta uses this for browser-pixel dedup vs CAPI
       });
 
       // PDF returned as base64 - auto-trigger download for instant gratification
