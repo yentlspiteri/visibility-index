@@ -30,7 +30,7 @@ const TIERS = [
     blurb:'Nearly invisible - but everything is ahead of you.',
     cta:"See the roadmap" },
   { min:6,  max:10, name:'The Rising Voice',
-    tagline:'Building momentum. A few gaps holding you back.',
+    tagline:"You're currently building momentum, but a few gaps are holding you back.",
     blurb:'You have something to say. Your brand isn’t amplifying it yet.',
     cta:"See what to build first" },
   { min:11, max:15, name:'The Emerging Authority',

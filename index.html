@@ -3,8 +3,74 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>The Visibility Index - Von Peach FutureMakers</title>
-<meta name="description" content="Paste your LinkedIn URL. Get a forensic read on your executive visibility. 60 seconds. Zero forms." />
+
+<!-- ─────────── SEO + SOCIAL ───────────
+     Title is keyword-led ("free LinkedIn audit") + brand to win both branded and
+     intent searches. Description hits a clear value-prop in <160 chars with a CTA.
+     OG + Twitter tags drive richer previews when the page is shared. Canonical
+     prevents duplicate-content penalties if the page is ever embedded elsewhere.
+     JSON-LD structured data tells Google this is a free SaaS-style web app, which
+     unlocks rich result eligibility (rating, price, sameAs links).
+     ─────────────────────────────────── -->
+<title>Free LinkedIn Visibility Audit for Founders, Execs & Board Members | Von Peach</title>
+<meta name="description" content="How visible are you, really? Get a free 60-second forensic audit of your LinkedIn, Google footprint and press mentions. Personalised PDF report. No login." />
+<meta name="keywords" content="LinkedIn audit, personal brand audit, executive visibility, founder visibility, thought leadership audit, board member personal brand, free LinkedIn checker, personal branding tool, FutureMakers, Von Peach" />
+<meta name="author" content="Von Peach GmbH" />
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+<link rel="canonical" href="https://index.vonpeach.com/" />
+
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Von Peach FutureMakers" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:url" content="https://index.vonpeach.com/" />
+<meta property="og:title" content="The Visibility Index — How visible are you, really?" />
+<meta property="og:description" content="Free 60-second audit of your LinkedIn, Google footprint and press mentions. Personalised PDF report on what to fix to win clients, speaking gigs and board seats." />
+<meta property="og:image" content="https://index.vonpeach.com/img/01.png" />
+<meta property="og:image:width" content="1696" />
+<meta property="og:image:height" content="960" />
+<meta property="og:image:alt" content="The Visibility Index by Von Peach FutureMakers — free LinkedIn audit" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="The Visibility Index — How visible are you, really?" />
+<meta name="twitter:description" content="Free 60-second audit of your LinkedIn, Google footprint and press mentions. Get a personalised PDF report." />
+<meta name="twitter:image" content="https://index.vonpeach.com/img/01.png" />
+<meta name="twitter:image:alt" content="The Visibility Index — free LinkedIn audit" />
+
+<!-- JSON-LD: WebApplication schema unlocks rich-result eligibility in Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "The Visibility Index",
+  "alternateName": "FutureMakers Visibility Index",
+  "description": "A free 60-second forensic audit of your executive personal brand across LinkedIn, Google search and press mentions. Returns a personalised PDF report.",
+  "url": "https://index.vonpeach.com/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "browserRequirements": "Requires JavaScript and a modern browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "availability": "https://schema.org/InStock"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Von Peach GmbH",
+    "url": "https://www.vonpeach.com",
+    "logo": "https://www.vonpeach.com/favicon.ico",
+    "sameAs": [
+      "https://www.linkedin.com/company/von-peach/"
+    ]
+  },
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Founders, Executives, Board Members, Consultants, Investors"
+  }
+}
+</script>
 
 <!-- Purple circle favicon - inline SVG, FutureMakers indigo gradient. No extra file required. -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
@@ -4940,6 +5006,25 @@
   </div>
   </div>
 </nav>
+
+<!-- BULLETPROOF NAV GUARD - inline JS that runs before paint to physically remove
+     the .nav-link-desktop links from the DOM on mobile, regardless of any cached
+     CSS that might be lingering. CSS hides them; this is the belt to that braces. -->
+<script>
+(function() {
+  function syncMobileNav() {
+    var isMobile = window.matchMedia('(max-width: 768px)').matches;
+    document.querySelectorAll('nav.top .nav-link-desktop').forEach(function(el) {
+      // Inline display:none beats any !important rule we missed (and survives cached CSS)
+      el.style.setProperty('display', isMobile ? 'none' : '', 'important');
+      el.setAttribute('aria-hidden', isMobile ? 'true' : 'false');
+    });
+  }
+  syncMobileNav();
+  window.addEventListener('resize', syncMobileNav);
+  window.addEventListener('orientationchange', syncMobileNav);
+})();
+</script>
 
 <!-- ─────────── HERO (FIN-inspired wide 2-col layout) ─────────── -->
 <section class="hero">

@@ -1,0 +1,9 @@
+# Visibility Index - index.vonpeach.com
+# We want everything indexed except API endpoints (no value to crawlers).
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap (lets crawlers find all pages without guessing)
+Sitemap: https://index.vonpeach.com/sitemap.xml
