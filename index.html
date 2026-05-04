@@ -3632,6 +3632,99 @@
   }
   .gate-success-cta:active { transform: scale(0.97); }
   .gate-success-cta.hidden { display: none; }
+
+  /* ── Inline Calendly embed (walkthrough variant) ────────────────────────
+     The gate-calendly block is hidden by default. When the user picks the
+     walkthrough CTA and /api/lead succeeds, we:
+       1. Add `body.walkthrough-mode` to break the sticky-bar styling
+       2. Show #gate-calendly with the embedded calendar
+       3. Mount Calendly's inline widget into #calendly-mount with brand params
+     The embed sits inside the gate-standalone, but expands to a full card
+     centered on the page (rather than docked at the bottom). */
+  .gate-calendly {
+    display: none;
+    background: var(--vp-cream, #fafafa);
+    border-radius: 20px;
+    padding: 28px 28px 18px;
+    box-shadow: 0 24px 64px rgba(11,3,89,0.20);
+    text-align: center;
+  }
+  .gate-calendly:not(.hidden) { display: block; }
+  .gate-calendly-eyebrow {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--vp-indigo, #3F36B2);
+    margin: 0 0 14px;
+  }
+  .gate-calendly-heading {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    color: var(--vp-deep-black, #0c0b09);
+    margin: 0 0 10px;
+  }
+  .gate-calendly-sub {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(15,15,15,0.65);
+    margin: 0 auto 22px;
+    max-width: 520px;
+  }
+  /* The actual Calendly iframe holder. Calendly's widget.js sizes the iframe
+     within this container; we just need to give it enough vertical room. */
+  #calendly-mount {
+    width: 100%;
+    min-width: 0;
+    min-height: 680px;
+    border-radius: 12px;
+    overflow: hidden;
+    /* Trim Calendly's default top padding by overlapping the container */
+    margin-top: -8px;
+  }
+  @media (max-width: 600px) {
+    #calendly-mount { min-height: 720px; }
+    .gate-calendly { padding: 22px 16px 14px; }
+  }
+
+  /* ── Walkthrough mode: break out of the sticky-bar treatment ─────────
+     When body.walkthrough-mode is set:
+       - gate-standalone stops being a fixed bottom bar and becomes a
+         scrollable in-flow block centered on the page.
+       - The compact success card sits above the inline calendar.
+       - Sticky chrome (start-over, sticky CTAs, etc.) keeps working. */
+  body.audit-complete.walkthrough-mode .gate-standalone {
+    position: static !important;
+    transform: none !important;
+    visibility: visible !important;
+    z-index: auto !important;
+    pointer-events: auto !important;
+    margin: 24px auto 80px !important;
+    padding: 0 16px !important;
+    max-width: 760px !important;
+  }
+  body.audit-complete.walkthrough-mode .gate-standalone .gate-success {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 12px 0 18px !important;
+    margin: 0 auto 8px !important;
+    max-width: 520px;
+  }
+  /* Compact success state in walkthrough mode - show the tick, name, email,
+     but hide the verbose hint (the inline calendar makes the next step obvious). */
+  body.audit-complete.walkthrough-mode .gate-success-check {
+    width: 38px; height: 38px; margin-bottom: 10px !important;
+  }
+  body.audit-complete.walkthrough-mode .gate-success-title {
+    font-size: 18px !important;
+  }
+  body.audit-complete.walkthrough-mode #gate-success-hint { display: none; }
+  /* Body padding tweak so the inline embed doesn't get scrunched at the bottom */
+  body.audit-complete.walkthrough-mode { padding-bottom: 24px; }
   /* Add bottom padding to the body so the sticky bar never sits on top of footer content */
   body.audit-complete { padding-bottom: 92px; }
   /* Mobile bar — slightly shorter, no max-width corners (full-bleed) */
@@ -5320,9 +5413,11 @@
       </div>
 
       <!-- Success state - replaces the form once /api/lead returns ok.
-           Two variants controlled by data-variant attribute:
-             - "email"       : standard "Report on its way" success message
-             - "walkthrough" : same message + a "pick a time" CTA that opened Calendly -->
+           Two variants:
+             - "email"       : compact success message in the sticky bar
+             - "walkthrough" : success message + brand-styled inline Calendly embed
+                               (700px tall - breaks out of the sticky bar via
+                               body.walkthrough-mode CSS class) -->
       <div class="gate-success hidden" id="gate-success" role="status" aria-live="polite">
         <div class="gate-success-check" aria-hidden="true">
           <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
@@ -5333,12 +5428,15 @@
         <h3 class="gate-success-title" id="gate-success-title">Report on its way.</h3>
         <p class="gate-success-line">We sent it to <strong id="gate-success-email">your inbox</strong>.</p>
         <p class="gate-success-hint" id="gate-success-hint">Also downloaded to your device · check spam if it doesn’t land in 60 seconds</p>
-        <!-- Walkthrough-only re-open button. Hidden by default, shown if Calendly
-             popup got dismissed before booking - so the user can retry without
-             refreshing. -->
-        <button type="button" class="gate-success-cta hidden" id="gate-success-cta">
-          Pick a time → 15-min walkthrough
-        </button>
+      </div>
+      <!-- Inline Calendly embed - brand-coloured, mounted via Calendly.initInlineWidget()
+           when the user picks the walkthrough CTA. Stays on-domain so we capture
+           the booking moment without losing them to a new tab. -->
+      <div class="gate-calendly hidden" id="gate-calendly">
+        <div class="gate-calendly-eyebrow">PICK A TIME · 15-MIN WALKTHROUGH</div>
+        <h3 class="gate-calendly-heading">Let's walk through your report together.</h3>
+        <p class="gate-calendly-sub">No pitch. We unpack what we saw and you leave with one thing to fix this week.</p>
+        <div class="calendly-inline-widget" id="calendly-mount" data-resize="true"></div>
       </div>
     </div>
   </div>
@@ -7252,29 +7350,47 @@
      Two submit buttons share this handler. `e.submitter.dataset.action` tells
      us which one was clicked:
        - "email"       : just send the report (current behaviour)
-       - "walkthrough" : send the report AND open Calendly's popup widget so
-                         the user can pick a slot inline. Calendly is prefilled
-                         with the user's first name + email so it's a 2-click
-                         booking (pick day → pick time → confirm).
-     Calendly URL is configurable via CALENDLY_URL below; switch to a 15-min
-     event type once that's created in your Calendly dashboard. */
-  const CALENDLY_URL = 'https://calendly.com/yentl-spiteri/30min';
+       - "walkthrough" : send the report AND mount the inline Calendly widget,
+                         brand-coloured, prefilled with name + email - so the
+                         user picks a slot in-page rather than bouncing to
+                         calendly.com (which costs ~25% of intent).
+     Booking confirmations come back via window.postMessage from Calendly's
+     iframe; we listen for `calendly.event_scheduled` to fire the conversion
+     event without polling. */
+  const CALENDLY_URL = 'https://calendly.com/yentl-spiteri/15-min-intro';
 
-  function openCalendlyWalkthrough(email) {
+  // Brand-styled inline embed mounted into #calendly-mount once the user
+  // commits to the walkthrough path. Calendly's widget.js loads async from
+  // <head>; if it isn't ready yet, retry every 200ms up to 3s.
+  function mountCalendlyInline(email) {
     const firstName = (lastProfile?.firstName || '').trim();
     const lastName  = (lastProfile?.lastName  || '').trim();
     const fullName  = [firstName, lastName].filter(Boolean).join(' ');
-    // Calendly object lives on window once widget.js loads (async).
-    // Defensive check + retry in case the user clicked before the script loaded.
+    const mount     = document.getElementById('calendly-mount');
+    if (!mount) return;
+
+    // Brand params - indigo primary, cream surface, deep black text.
+    // hide_gdpr_banner: keep the embed compact for non-EU; GDPR users can
+    // still consent via Calendly's own footer if it appears.
+    const url = CALENDLY_URL + '?' + new URLSearchParams({
+      primary_color:    '3F36B2',
+      text_color:       '0c0b09',
+      background_color: 'fafafa',
+      hide_gdpr_banner: '1'
+    }).toString();
+
     function fire() {
-      if (!window.Calendly || !window.Calendly.initPopupWidget) return false;
-      window.Calendly.initPopupWidget({
-        url: `${CALENDLY_URL}?hide_event_type_details=0&hide_gdpr_banner=1&primary_color=3F36B2`,
+      if (!window.Calendly || !window.Calendly.initInlineWidget) return false;
+      // Clear any previous mount to avoid double iframes if the user retries
+      mount.innerHTML = '';
+      window.Calendly.initInlineWidget({
+        url,
+        parentElement: mount,
         prefill: {
-          name:       fullName || undefined,
-          firstName:  firstName || undefined,
-          lastName:   lastName  || undefined,
-          email:      email
+          name:      fullName || undefined,
+          firstName: firstName || undefined,
+          lastName:  lastName  || undefined,
+          email
         },
         utm: {
           utmSource:   'visibility-index',
@@ -7284,20 +7400,38 @@
         }
       });
       if (window.track) window.track('calendly_opened', {
-        source: 'gate-walkthrough',
+        source: 'gate-walkthrough-inline',
         tier:   lastTier?.name || '',
         score:  Math.round((lastScore / 18) * 100)
       });
       return true;
     }
     if (!fire()) {
-      // Calendly script still loading - retry every 200ms up to 3s
       let tries = 0;
       const t = setInterval(() => {
         if (fire() || ++tries > 15) clearInterval(t);
       }, 200);
     }
   }
+
+  // Listen for Calendly's booking confirmation event - fires when the user
+  // actually completes a booking in the embedded iframe. This is the conversion
+  // event we care about (much more meaningful than just "Calendly opened").
+  window.addEventListener('message', (e) => {
+    const data = e?.data || {};
+    if (typeof data !== 'object' || !data.event) return;
+    if (data.event === 'calendly.event_scheduled') {
+      if (window.track) window.track('walkthrough_booked', {
+        tier:   lastTier?.name || '',
+        score:  typeof lastScore === 'number' ? Math.round((lastScore / 18) * 100) : null,
+        utm_source:   ATTRIBUTION?.utm_source   || '',
+        utm_campaign: ATTRIBUTION?.utm_campaign || ''
+      });
+      // Tweak the success copy after a confirmed booking
+      const t = document.getElementById('gate-success-title');
+      if (t) t.textContent = "You're booked. See you soon.";
+    }
+  });
 
   $('#gate-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -7372,25 +7506,27 @@
       // Swap the gate-card for the success state - clear visual signal the report is on its way
       const gateCard      = document.getElementById('gate-card');
       const gateSuccess   = document.getElementById('gate-success');
+      const gateCalendly  = document.getElementById('gate-calendly');
       const successEmail  = document.getElementById('gate-success-email');
       const successTitle  = document.getElementById('gate-success-title');
-      const successHint   = document.getElementById('gate-success-hint');
-      const successCta    = document.getElementById('gate-success-cta');
       if (successEmail) successEmail.textContent = email;
       if (gateCard)    gateCard.classList.add('hidden');
       if (gateSuccess) gateSuccess.classList.remove('hidden');
 
-      // Walkthrough variant: tweak success copy + show the persistent "pick a time"
-      // button in case the popup is dismissed without booking.
+      // Walkthrough variant: switch out of sticky-bar mode and mount the inline
+      // Calendly embed with brand colours + the user's prefilled details.
       if (action === 'walkthrough') {
-        if (successTitle) successTitle.textContent = 'Report sent. Now pick a time.';
-        if (successHint)  successHint.textContent  = "Calendar opening in a moment - if it doesn't, hit the button below.";
-        if (successCta) {
-          successCta.classList.remove('hidden');
-          successCta.onclick = () => openCalendlyWalkthrough(email);
-        }
-        // Fire Calendly with a small delay so the success state renders first
-        setTimeout(() => openCalendlyWalkthrough(email), 350);
+        document.body.classList.add('walkthrough-mode');
+        if (successTitle) successTitle.textContent = 'Report sent.';
+        if (gateCalendly) gateCalendly.classList.remove('hidden');
+        // Small delay so the layout transition lands before the iframe mounts
+        setTimeout(() => {
+          mountCalendlyInline(email);
+          // Scroll the embed into view smoothly so it's the next thing they see
+          if (gateCalendly && typeof gateCalendly.scrollIntoView === 'function') {
+            gateCalendly.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 200);
       }
 
       revealNextMoves();
