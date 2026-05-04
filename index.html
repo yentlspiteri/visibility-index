@@ -5773,7 +5773,7 @@ fbq('track', 'PageView');
       <span class="dot"></span>
       <span class="eyebrow">This quarter</span>
     </div>
-    <h2 class="h2" style="text-align: center; margin: 18px auto;">Three tips to apply now.</h2>
+    <h2 class="h2" id="next-moves-title" style="text-align: center; margin: 18px auto;">Three tips to apply now.</h2>
     <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(252,252,252,0.72); max-width: 540px;">
       Pulled from your audit. Specific to you.
     </p>
@@ -7701,6 +7701,15 @@ fbq('track', 'PageView');
     const section = $('#next-moves');
     if (!section) return;
 
+    // Personalise the heading with the user's first name when we have it
+    const titleEl = document.getElementById('next-moves-title');
+    if (titleEl) {
+      const fn = (lastProfile?.firstName || '').trim();
+      titleEl.textContent = fn
+        ? `${fn}, three tips to apply now.`
+        : 'Three tips to apply now.';
+    }
+
     // Render move cards (sample-pill audits use lastMoves which may be empty if no API call ran)
     const grid = $('#moves-grid');
     if (grid) {
@@ -7743,17 +7752,20 @@ fbq('track', 'PageView');
 
         // Time-investment + success-metric meta line — small, low-prominence,
         // signals "this is doable + measurable" without crowding the card
+        // The move card sits on a navy background — every meta token has to use
+        // light text colours (lavender for the time-invest highlight, off-white
+        // for the secondary lines). Previously these were black and invisible.
         const metaLines = [];
-        if (m.timeInvest)    metaLines.push(`<span style="color:var(--vp-indigo);font-weight:600;">⏱ ${m.timeInvest}</span>`);
-        if (m.successMetric) metaLines.push(`<span style="opacity:0.75;">✓ ${m.successMetric}</span>`);
+        if (m.timeInvest)    metaLines.push(`<span style="color:var(--vp-lavender,#8683E5);font-weight:600;">⏱ ${m.timeInvest}</span>`);
+        if (m.successMetric) metaLines.push(`<span style="color:rgba(252,252,252,0.78);">✓ ${m.successMetric}</span>`);
         if (m.outreach && m.outreach.body) {
-          metaLines.push(`<span style="opacity:0.75;">✉ Draft email in your PDF</span>`);
+          metaLines.push(`<span style="color:rgba(252,252,252,0.78);">✉ Draft email in your PDF</span>`);
         }
         if (metaLines.length) {
           const meta = document.createElement('div');
           meta.className = 'move-meta';
-          meta.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12px;line-height:1.5;color:var(--vp-deep-black,#0c0b09);';
-          meta.innerHTML = metaLines.join('<span style="opacity:0.3;">·</span>');
+          meta.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12px;line-height:1.5;color:rgba(252,252,252,0.78);';
+          meta.innerHTML = metaLines.join('<span style="color:rgba(252,252,252,0.3);">·</span>');
           card.appendChild(meta);
         }
 
@@ -8121,13 +8133,19 @@ fbq('track', 'PageView');
         document.body.classList.add('walkthrough-mode');
         if (successTitle) successTitle.textContent = 'Report sent.';
         if (gateCalendly) gateCalendly.classList.remove('hidden');
-        // Small delay so the layout transition lands before the iframe mounts
+        // Small delay so the layout transition lands before the iframe mounts.
+        // Scroll with a header-height offset so the calendar's top edge isn't
+        // hidden behind the sticky nav (which is 60-80px tall).
         setTimeout(() => {
           mountCalendlyInline(email);
-          // Scroll the embed into view smoothly so it's the next thing they see
-          if (gateCalendly && typeof gateCalendly.scrollIntoView === 'function') {
-            gateCalendly.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (gateCalendly) {
+            const headerOffset = 80;
+            const top = gateCalendly.getBoundingClientRect().top + window.scrollY - headerOffset;
+            window.scrollTo({ top, behavior: 'smooth' });
           }
+          // Arm the scroll-past detector so the email fallback bar shows up
+          // if the user scrolls past the calendar without booking.
+          if (typeof armWalkthroughFallback === 'function') armWalkthroughFallback();
         }, 200);
       }
 
