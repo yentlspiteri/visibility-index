@@ -26,16 +26,16 @@
 <meta property="og:url" content="https://index.vonpeach.com/" />
 <meta property="og:title" content="The Visibility Index — How visible are you, really?" />
 <meta property="og:description" content="Free 60-second audit of your LinkedIn, Google footprint and press mentions. Personalised PDF report on what to fix to win clients, speaking gigs and board seats." />
-<meta property="og:image" content="https://index.vonpeach.com/img/01.png" />
-<meta property="og:image:width" content="1696" />
-<meta property="og:image:height" content="960" />
+<meta property="og:image" content="https://index.vonpeach.com/img/og.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="The Visibility Index by Von Peach FutureMakers — free LinkedIn audit" />
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="The Visibility Index — How visible are you, really?" />
 <meta name="twitter:description" content="Free 60-second audit of your LinkedIn, Google footprint and press mentions. Get a personalised PDF report." />
-<meta name="twitter:image" content="https://index.vonpeach.com/img/01.png" />
+<meta name="twitter:image" content="https://index.vonpeach.com/img/og.jpg" />
 <meta name="twitter:image:alt" content="The Visibility Index — free LinkedIn audit" />
 
 <!-- ─── STRUCTURED DATA / JSON-LD ───
@@ -419,21 +419,26 @@ fbq('track', 'PageView');
   alt="" /></noscript>
 <!-- End Meta Pixel Code -->
 
-<!-- General Sans (body). Aileron should be self-hosted from brand assets in v1. -->
+<!-- ─── PERFORMANCE: resource hints ───
+     dns-prefetch: cheap, fires before connection setup so DNS resolution is done
+     by the time we actually need the host. preconnect: more aggressive, also
+     warms the TLS handshake. We use preconnect for hosts we WILL hit on every
+     page (fonts), dns-prefetch for hosts we MIGHT hit (Calendly). -->
 <link rel="preconnect" href="https://api.fontshare.com" />
-<link href="https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+<link rel="dns-prefetch" href="https://assets.calendly.com" />
+<link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+<link rel="dns-prefetch" href="https://connect.facebook.net" />
 
-<!-- Calendly popup widget - loaded async, only used when the user picks the
-     "Walk me through it" CTA at score reveal. Resources are <30KB combined; we
-     don't gate on them - the email-only path never triggers them. -->
-<link rel="preconnect" href="https://assets.calendly.com" />
-<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet" />
-<!-- Calendly's CDN doesn't return CORS headers for widget.js, so we DON'T set
-     crossorigin="anonymous" - doing so caused the browser to silently refuse to
-     execute the script, leaving the inline widget mount empty. The trade-off is
-     that any uncaught exception from the script gets redacted to "Script error."
-     in the auto bug-report handler, but that's already filtered out as noise. -->
-<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+<!-- General Sans — dropped weights 200 and 300 (unused). The four remaining
+     weights cover body text (400), medium emphasis (500), and headlines (600/700).
+     Saves ~30KB on first font fetch. -->
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet" />
+
+<!-- Calendly assets are LAZY-LOADED on demand by mountCalendlyInline() once the
+     user picks the walkthrough CTA. Removed from the critical path because ~80%
+     of audit-runners never reach the calendar, and these resources were costing
+     ~30KB on first paint for everyone. The mount path injects them only when needed. -->
 
 <style>
   /* ──────────────────────────────────────────────────────────
@@ -8856,6 +8861,15 @@ fbq('track', 'PageView');
     widgetDiv.style.height   = '700px';
     widgetDiv.style.width    = '100%';
     mount.appendChild(widgetDiv);
+
+    // Lazy-load Calendly widget.css if it isn't already on the page (it isn't
+    // by default any more — moved off the critical path for speed).
+    if (!document.querySelector('link[href*="calendly.com/assets/external/widget.css"]')) {
+      const link = document.createElement('link');
+      link.rel  = 'stylesheet';
+      link.href = 'https://assets.calendly.com/assets/external/widget.css';
+      document.head.appendChild(link);
+    }
 
     // Force a fresh Calendly scan by removing any existing widget.js script
     // and re-appending it. Calendly's loader is idempotent on re-load and
