@@ -397,11 +397,12 @@ fbq('track', 'PageView');
      don't gate on them - the email-only path never triggers them. -->
 <link rel="preconnect" href="https://assets.calendly.com" />
 <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet" />
-<!-- crossorigin="anonymous" - if the CDN returns CORS headers (Calendly does),
-     uncaught exceptions from the widget surface with a real message + stack
-     instead of being redacted to "Script error.". Makes the auto bug-report
-     handler actually useful when something is wrong. -->
-<script src="https://assets.calendly.com/assets/external/widget.js" async crossorigin="anonymous"></script>
+<!-- Calendly's CDN doesn't return CORS headers for widget.js, so we DON'T set
+     crossorigin="anonymous" - doing so caused the browser to silently refuse to
+     execute the script, leaving the inline widget mount empty. The trade-off is
+     that any uncaught exception from the script gets redacted to "Script error."
+     in the auto bug-report handler, but that's already filtered out as noise. -->
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 
 <style>
   /* ──────────────────────────────────────────────────────────
@@ -7863,8 +7864,6 @@ fbq('track', 'PageView');
           name:      fullName  || undefined,
           firstName: firstName || undefined,
           lastName:  lastName  || undefined,
-          // Pass undefined (not empty string) when no email - Calendly leaves
-          // its email field blank for the user to fill in at booking time.
           email:     (email && email.trim()) || undefined
         },
         utm: {
@@ -7879,12 +7878,36 @@ fbq('track', 'PageView');
         tier:   lastTier?.name || '',
         score:  Math.round((lastScore / 18) * 100)
       });
+      console.log('[Calendly] inline widget mounted', { url, hasFullName: !!fullName, hasEmail: !!email });
       return true;
     }
+    // Try immediately, then retry every 200ms for up to 5s in case widget.js
+    // is still loading. After that, render a visible fallback link so the user
+    // can still book even if the inline embed never initialises.
     if (!fire()) {
       let tries = 0;
       const t = setInterval(() => {
-        if (fire() || ++tries > 15) clearInterval(t);
+        if (fire()) {
+          clearInterval(t);
+          return;
+        }
+        if (++tries > 25) {     // 25 × 200ms = 5 seconds
+          clearInterval(t);
+          console.warn('[Calendly] inline widget failed to mount after 5s. window.Calendly =', typeof window.Calendly);
+          // Visible fallback - the iframe never came up, so give the user a
+          // direct link they can click to open Calendly in a new tab. Better
+          // than an empty card that looks broken.
+          mount.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;min-height:520px;background:#fafafa;border-radius:12px;">
+              <p style="margin:0 0 18px;font-size:15px;color:#56556B;line-height:1.5;max-width:36ch;">
+                The inline calendar didn't load (your browser may be blocking it). No problem &mdash; book directly:
+              </p>
+              <a href="${url.replace(/&amp;/g, '&')}" target="_blank" rel="noopener"
+                 style="display:inline-block;background:#3F36B2;color:#fff;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;">
+                Open Calendly &rarr;
+              </a>
+            </div>`;
+        }
       }, 200);
     }
   }
