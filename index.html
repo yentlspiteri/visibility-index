@@ -5732,7 +5732,7 @@ fbq('track', 'PageView');
                     class="gate-btn gate-btn--primary">Walk me through it · 15 min</button>
           </div>
         </form>
-        <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime.</div>
+        <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime. <span style="opacity:0.75;">Walkthrough doesn't require it &mdash; Calendly will ask at booking.</span></div>
       </div>
 
       <!-- Success state - replaces the form once /api/lead returns ok.
@@ -7860,10 +7860,12 @@ fbq('track', 'PageView');
         url,
         parentElement: mount,
         prefill: {
-          name:      fullName || undefined,
+          name:      fullName  || undefined,
           firstName: firstName || undefined,
           lastName:  lastName  || undefined,
-          email
+          // Pass undefined (not empty string) when no email - Calendly leaves
+          // its email field blank for the user to fill in at booking time.
+          email:     (email && email.trim()) || undefined
         },
         utm: {
           utmSource:   'visibility-index',
@@ -7941,14 +7943,59 @@ fbq('track', 'PageView');
   $('#gate-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('#gate-email').value.trim();
-    if (!email || !email.includes('@')) { $('#gate-email').focus(); return; }
 
     // Which button submitted? Fall back to "email" if not present.
     const action = (e.submitter && e.submitter.dataset && e.submitter.dataset.action) || 'email';
     const submitBtn = e.submitter || e.target.querySelector('button[type="submit"]');
     const origText = submitBtn.textContent;
-    // Disable BOTH buttons during submit so the user can't double-fire
     const allBtns = e.target.querySelectorAll('button[type="submit"]');
+
+    // Email validation rules differ by intent:
+    //   - "email" path: email IS the deliverable, so we require it.
+    //   - "walkthrough" path: email is optional. Calendly captures it at booking
+    //     time; the (Phase B) Calendly webhook then fires /api/lead retroactively
+    //     to deliver the PDF + Mailchimp + Meta CAPI Lead event. This way the
+    //     highest-intent CTA has zero friction.
+    const emailValid = email && email.includes('@');
+    if (action === 'email' && !emailValid) {
+      $('#gate-email').focus();
+      return;
+    }
+
+    // ── Walkthrough WITHOUT email: shortcut path ──────────────────────────
+    // Skip /api/lead entirely, just transition into the inline-Calendly view.
+    // The webhook will pick up the lead from Calendly's booking event later.
+    if (action === 'walkthrough' && !emailValid) {
+      allBtns.forEach(b => { b.disabled = true; });
+      submitBtn.textContent = 'Opening calendar…';
+      const gateCard      = document.getElementById('gate-card');
+      const gateSuccess   = document.getElementById('gate-success');
+      const gateCalendly  = document.getElementById('gate-calendly');
+      if (gateCard)     gateCard.classList.add('hidden');
+      // We deliberately do NOT show the success card - there's no email to
+      // confirm "sent to". Just slide straight into the calendar.
+      if (gateSuccess)  gateSuccess.classList.add('hidden');
+      document.body.classList.add('walkthrough-mode');
+      if (gateCalendly) gateCalendly.classList.remove('hidden');
+      // Lightweight tracking - this person didn't give email but did commit
+      // to the walkthrough flow. Useful for funnel analytics.
+      if (window.track) window.track('walkthrough_started_no_email', {
+        score: typeof lastScore === 'number' ? Math.round((lastScore / 18) * 100) : null,
+        tier:  lastTier?.name || ''
+      });
+      // Mount the inline Calendly widget without an email - Calendly will
+      // collect it during booking. We still prefill name from LinkedIn data.
+      setTimeout(() => {
+        mountCalendlyInline('');     // empty-string email - widget shows the field blank
+        if (gateCalendly && typeof gateCalendly.scrollIntoView === 'function') {
+          gateCalendly.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 200);
+      revealNextMoves();
+      return;
+    }
+
+    // ── Standard path: email-required (either button, with email present) ──
     allBtns.forEach(b => { b.disabled = true; });
     submitBtn.textContent = action === 'walkthrough' ? 'Sending + opening calendar…' : 'Sending…';
 
