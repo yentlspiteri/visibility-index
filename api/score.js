@@ -139,30 +139,55 @@ export default async function handler(req, res) {
       lastName:    getLastName(profile),
       companyName: getCompany(profile)
     };
-    // Three parallel scans: all-time press, recent press, personal domain probe.
-    const [serpAllRes, serpRecentRes, personalSiteRes] = await Promise.allSettled([
+    // Parallel scans: all-time press, recent press, personal domain probe, and
+    // multi-platform presence (Instagram/X/Substack/YouTube/Crunchbase/Wikipedia).
+    // All derived from the LinkedIn name + company - no extra user input required.
+    const [serpAllRes, serpRecentRes, personalSiteRes, presenceRes] = await Promise.allSettled([
       fetchSerpFootprint(normalised, queryArgs, false),
       fetchSerpFootprint(normalised, queryArgs, true),
-      checkPersonalDomain(queryArgs.firstName, queryArgs.lastName)
+      checkPersonalDomain(queryArgs.firstName, queryArgs.lastName),
+      fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
     const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
     const personalSite = personalSiteRes.status === 'fulfilled' ? personalSiteRes.value : null;
+    const presence     = presenceRes.status   === 'fulfilled' ? presenceRes.value   : {};
     const serp = serpAll;     // alias for older usage in scoreFootprint
     const press = mergePressResults(serpAll, serpRecent);
+    // Google name-position scoring - uses the serpAll we already have, no extra API call.
+    const googleRanking = scoreGoogleNamePosition(queryArgs.firstName, queryArgs.lastName, serpAll);
 
     // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
+    //    Footprint, authority, network now also factor in cross-platform presence.
     const heuristic = {
-      footprint: scoreFootprint(profile, serp),
-      authority: scoreAuthority(profile, press),  // boosted by tier-1 hits
+      footprint: scoreFootprint(profile, serp, presence, googleRanking, personalSite),
+      authority: scoreAuthority(profile, press, presence),
       cadence:   scoreCadence(profile),
       visual:    scoreVisual(profile, { score: 1 }),
-      network:   scoreNetwork(profile)
+      network:   scoreNetwork(profile, presence)
     };
 
-    // 3) Run Claude analysis with profile + heuristic scores. Returns clarity + rich content payload.
-    const analysis = await analyzeProfile(profile, heuristic).catch(err => {
+    // Provisional tier - sum the heuristic scores to give Claude a tier hint for
+    // tier-aware move templates (Hidden Gem moves should look very different from
+    // Recognised Leader moves).
+    const provisionalTotal = (heuristic.footprint || 0) + (heuristic.authority || 0)
+                           + (heuristic.cadence   || 0) + (heuristic.visual    || 0)
+                           + (heuristic.network   || 0) + 1;     // +1 for placeholder clarity
+    const provisionalTier  = tierFor(provisionalTotal);
+
+    // 3) Run Claude analysis with profile + heuristic + rich context.
+    //    Context unlocks goal-aware, role-aware, tier-aware move generation.
+    const analysisCtx = {
+      role:           body.role  || '',
+      goal:           body.goal  || '',
+      tier:           provisionalTier,
+      platforms:      presence,
+      press:          press,
+      personalSite:   personalSite,
+      googleRanking:  googleRanking
+    };
+    const analysis = await analyzeProfile(profile, heuristic, analysisCtx).catch(err => {
       console.error('Claude analysis failed:', err);
       return {
         clarityScore: 1, clarityRationale: 'Fallback heuristic - LLM unavailable.',
@@ -209,6 +234,11 @@ export default async function handler(req, res) {
       personalSite:        personalSite,                // { url, found } or null
       // Tier-1 press hits - surfaced for both the landing page and the PDF
       press:               press,
+      // Multi-platform presence map: { instagram: {hits, label, ...}, x: {...}, ... }
+      // Surfaced in the report under "Where you show up across the web."
+      platforms:           presence,
+      // Where the user lands in vanilla Google search for their own name
+      googleRanking:       googleRanking,
       // Backward-compat: keep older field names mapped from the new payload
       personalSummary:     analysis.executiveSummary,
       reportTeasers:       (analysis.moves || []).map(m => m.title),
@@ -327,6 +357,124 @@ function outletNameFromDomain(domain) {
   return map[domain] || domain.replace(/\.com$|\.org$|\.co$/, '').replace(/^./, c => c.toUpperCase());
 }
 
+// ─────────── MULTI-PLATFORM PRESENCE DETECTION ───────────
+// Each platform we check is a site-targeted SerpAPI search using only the
+// user's LinkedIn-supplied name + company. Detection on each platform
+// becomes a citeable signal in the final report and feeds Footprint /
+// Authority / Network scoring.
+//
+//   - social channels (Instagram, X)        → Network Recognition boost
+//   - owned channels  (Substack, Medium)    → Digital Footprint boost
+//   - authority sites (YouTube, Wikipedia,
+//     Crunchbase)                            → Authority Signals boost
+//
+// Cost: ~6 SerpAPI calls per audit, run in parallel (~$0.03/audit).
+const PLATFORMS = [
+  { key: 'instagram',  domain: 'instagram.com',  type: 'social',    boost: 'network',    label: 'Instagram' },
+  { key: 'x',          domain: 'x.com',          type: 'social',    boost: 'network',    label: 'X / Twitter' },
+  { key: 'substack',   domain: 'substack.com',   type: 'owned',     boost: 'footprint',  label: 'Substack' },
+  { key: 'medium',     domain: 'medium.com',     type: 'owned',     boost: 'footprint',  label: 'Medium' },
+  { key: 'youtube',    domain: 'youtube.com',    type: 'authority', boost: 'authority',  label: 'YouTube' },
+  { key: 'crunchbase', domain: 'crunchbase.com', type: 'authority', boost: 'authority',  label: 'Crunchbase' },
+  { key: 'wikipedia',  domain: 'wikipedia.org',  type: 'authority', boost: 'authority',  label: 'Wikipedia' }
+];
+
+async function fetchPlatformPresence(firstName, lastName, companyName) {
+  if (!firstName || !lastName || !process.env.SERPAPI_API_KEY) return {};
+  const fullName = `"${firstName} ${lastName}"`;
+  const company = companyName ? ` ${companyName}` : '';
+
+  // Site-targeted searches for each platform on the PLATFORMS list
+  const platformCalls = PLATFORMS.map(p => {
+    const params = new URLSearchParams({
+      engine: 'google',
+      q: `${fullName}${company} site:${p.domain}`,
+      num: '5',
+      api_key: process.env.SERPAPI_API_KEY
+    });
+    return fetch(`${SERPAPI_API}?${params}`)
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null);
+  });
+
+  // Google News engine - dedicated news-index search, catches mentions across
+  // every news source Google indexes (Reuters, AP, BBC, NYT, Bloomberg, FT, plus
+  // local/regional outlets the standard tier-1 allowlist would miss).
+  const newsCall = fetch(`${SERPAPI_API}?` + new URLSearchParams({
+    engine: 'google_news',
+    q: `${fullName}${company}`,
+    api_key: process.env.SERPAPI_API_KEY
+  })).then(r => r.ok ? r.json() : null).catch(() => null);
+
+  const [platformResults, newsResult] = await Promise.all([
+    Promise.allSettled(platformCalls),
+    newsCall
+  ]);
+
+  const presence = {};
+  PLATFORMS.forEach((p, i) => {
+    const r = platformResults[i];
+    if (r.status !== 'fulfilled' || !r.value) return;
+    const hits = (r.value.organic_results || [])
+      .filter(h => h.link && h.link.toLowerCase().includes(p.domain))
+      .slice(0, 2)
+      .map(h => ({ url: h.link, title: (h.title || '').slice(0, 120) }));
+    if (hits.length) {
+      presence[p.key] = {
+        domain: p.domain,
+        type:   p.type,
+        boost:  p.boost,
+        label:  p.label,
+        hits
+      };
+    }
+  });
+
+  // Google News results - aggregate across news sources, surface the top 3
+  if (newsResult?.news_results?.length) {
+    const newsHits = newsResult.news_results
+      .filter(n => n.link)
+      .slice(0, 3)
+      .map(n => ({
+        url:    n.link,
+        title:  (n.title || '').slice(0, 140),
+        source: (n.source?.name || n.source || '').toString().slice(0, 80),
+        date:   n.date || null
+      }));
+    if (newsHits.length) {
+      presence.googleNews = {
+        domain: 'news.google.com',
+        type:   'authority',
+        boost:  'authority',
+        label:  'Google News',
+        hits:   newsHits
+      };
+    }
+  }
+
+  return presence;
+}
+
+// Score where the user's name lands in vanilla Google search results.
+// Uses the all-time serp we already pulled - no extra API call.
+//   - topPosition: rank (1-10) of the FIRST result mentioning the user's name
+//   - ownedTop10:  count of top-10 results that appear to be about the user
+function scoreGoogleNamePosition(firstName, lastName, serp) {
+  const orgResults = serp?.organic_results || [];
+  const fullName = `${firstName || ''} ${lastName || ''}`.toLowerCase().trim();
+  if (!fullName || !orgResults.length) return { topPosition: null, ownedTop10: 0 };
+  let topPosition = null;
+  let ownedTop10  = 0;
+  orgResults.slice(0, 10).forEach((r, idx) => {
+    const haystack = `${r.title || ''} ${r.snippet || ''}`.toLowerCase();
+    if (haystack.includes(fullName)) {
+      if (topPosition === null) topPosition = idx + 1;
+      ownedTop10++;
+    }
+  });
+  return { topPosition, ownedTop10 };
+}
+
 // Personal-domain detection — tries common firstname/lastname URL patterns with a fast HEAD request.
 // Returns { url, found } if any resolve, null on miss/timeout. Fire-and-forget; never blocks the audit.
 async function checkPersonalDomain(firstName, lastName) {
@@ -335,11 +483,18 @@ async function checkPersonalDomain(firstName, lastName) {
   const l = String(lastName).toLowerCase().replace(/[^a-z]/g, '');
   if (!f || !l || f.length < 2 || l.length < 2) return null;
   // Patterns ordered by likelihood. firstnamelastname.com is the most common executive personal site.
+  // Expanded TLD set: .me / .io / .co are increasingly common for personal sites.
   const candidates = [
     `https://${f}${l}.com`,
     `https://${f}-${l}.com`,
     `https://${f}.${l}.com`,
-    `https://www.${f}${l}.com`
+    `https://www.${f}${l}.com`,
+    `https://${f}${l}.me`,
+    `https://${f}${l}.io`,
+    `https://${f}${l}.co`,
+    `https://${f}-${l}.me`,
+    `https://${f}-${l}.io`,
+    `https://${l}.com`     // surname-only domains (less common but happens for senior execs)
   ];
   for (const url of candidates) {
     try {
@@ -437,8 +592,41 @@ async function fetchSerpFootprint(normalisedUrl, profileForQuery, recentOnly = f
   return r.json();
 }
 
-async function analyzeProfile(profile, heuristic) {
+// Role-specific framing - what each archetype actually cares about.
+// Used to bias move generation toward the audience that matters for THIS user.
+const ROLE_FRAMING = {
+  ceo:        { audience: 'shareholders, journalists, customer execs', priority: 'credibility + thought leadership',                    tone: 'measured, sharp, considered' },
+  founder:    { audience: 'investors, customer founders, journalists', priority: 'authority signals + clarity on what you build',       tone: 'opinionated, direct, generous with insight' },
+  investor:   { audience: 'founders, LPs, fellow investors',           priority: 'thesis + portfolio visibility + named takes',         tone: 'confident, contrarian, evidence-led' },
+  board:      { audience: 'CEOs, governance committees, headhunters',  priority: 'governance authority + named directorships',          tone: 'institutional, measured, low-frequency' },
+  consultant: { audience: 'prospect buyers, hiring committees',        priority: 'specific expertise + named outcomes',                 tone: 'specific, results-led, anti-jargon' },
+  marketer:   { audience: 'CMOs, agency heads, brand teams',           priority: 'taste + craft + named campaigns',                     tone: 'voice-driven, opinionated, current' },
+  creative:   { audience: 'art directors, agency partners, founders',  priority: 'taste + portfolio + cultural takes',                  tone: 'curated, aesthetic, specific' },
+  artist:     { audience: 'collectors, galleries, curators',           priority: 'body of work + reasons + reviews',                    tone: 'authentic, considered, art-world appropriate' },
+  creator:    { audience: 'audience members, sponsors, collaborators', priority: 'cadence + craft + community',                         tone: 'warm, consistent, audience-aware' },
+  speaker:    { audience: 'conference programmers, agencies, hosts',   priority: 'talks + speaker reel + topic ownership',              tone: 'showmanship + substance, hookable' },
+  senior:     { audience: 'peers, recruiters, board nomination cttees',priority: 'industry recognition + sustained POV',                tone: 'measured, precise, low-flash' }
+};
+
+// Goal-specific tactical priorities - what moves matter most for THIS goal.
+const GOAL_FRAMING = {
+  clients:     { priority: 'Brand Clarity + Content Cadence',                directive: 'Moves should make it OBVIOUSLY easy for an ideal client to identify themselves in your positioning, then to see proof you can deliver.' },
+  speaking:    { priority: 'Authority Signals + Speaker Reel',                directive: 'Moves should focus on visible speaker credentials - past stages, named talks, a discoverable speaker reel, outbound pitching.' },
+  credibility: { priority: 'Authority Signals + Network Recognition',         directive: 'Moves should focus on third-party validation - press mentions, named board roles, awards, Wikipedia eligibility, peer endorsements.' },
+  legacy:      { priority: 'Brand Clarity + Authority + Sustained POV',       directive: 'Moves should focus on inheritable assets - a book, a named framework, an annual letter, a community that survives platforms.' }
+};
+
+// Tier-specific move templates - completely different prescriptions per tier.
+const TIER_DIRECTIVES = {
+  'The Hidden Gem':         'Moves are FOUNDATIONAL. Headline rewrite, banner upload, first weekly post commitment, claim a personal domain, take a real photo. Twenty-minute moves, not twelve-week commitments. Aim for the +6pt jump to Rising Voice in three weeks.',
+  'The Rising Voice':       'Moves are HABIT-FORMING. Lock cadence (one post/week, same day, three pillars). One outbound press or podcast pitch. Rewrite headline if not already crisp. The bottleneck is sustained outbound, not foundational fixes.',
+  'The Emerging Authority': 'Moves are SCALING. One tier-1 press mention per quarter (specific journalist + outlet + angle). Speaker pitch to a named conference. Sharpen the signature - one signature post format used weekly. Stop fixing basics, start owning a corner.',
+  'The Recognised Leader':  'Moves are SHARPENING. Inheritable assets - a book, a named framework, an annual letter. Edit OUT diluters (decline 80% of advisory invites, drop the 4th topic pillar). Build the asset that compounds without you posting daily.'
+};
+
+async function analyzeProfile(profile, heuristic, ctx = {}) {
   const firstName    = getFirstName(profile) || 'there';
+  const lastName     = getLastName(profile) || '';
   const headline     = (getHeadline(profile) || '').slice(0, 400);
   const about        = (getAbout(profile)    || '').slice(0, 2000);
   const followers    = getFollowers(profile);
@@ -447,10 +635,45 @@ async function analyzeProfile(profile, heuristic) {
   const isCreator    = !!profile.creator;
   const isVerified   = !!profile.isVerified;
 
+  // Resolve role + goal context with sensible defaults
+  const role        = ctx.role || '';
+  const goal        = ctx.goal || '';
+  const tierName    = ctx.tier?.name || '';
+  const roleFrame   = ROLE_FRAMING[role] || null;
+  const goalFrame   = GOAL_FRAMING[goal] || null;
+  const tierDirective = TIER_DIRECTIVES[tierName] || '';
+
+  // Cross-platform presence summary - feed Claude the actual evidence so it can
+  // reference specific channels in moves ("your Substack at X has 3 posts...")
+  const platforms = ctx.platforms || {};
+  const detectedPlatforms = Object.entries(platforms).map(([k, p]) => {
+    const firstUrl = p.hits?.[0]?.url || '';
+    const firstTitle = p.hits?.[0]?.title || '';
+    return `  - ${p.label || k}: ${firstUrl}${firstTitle ? ` ("${firstTitle.slice(0, 80)}")` : ''}`;
+  }).join('\n') || '  - none detected beyond LinkedIn';
+
+  // Press hits summary
+  const press = ctx.press || {};
+  const pressHits = (press.hits || []).slice(0, 3).map(h =>
+    `  - ${h.outlet || 'unknown'}${h.recent ? ' (recent, last 90 days)' : ''}: "${(h.title || '').slice(0, 100)}"`
+  ).join('\n') || '  - no tier-1 press detected';
+
+  // Personal site
+  const personalSiteLine = ctx.personalSite?.found
+    ? `OWNS personal domain: ${ctx.personalSite.url}`
+    : `does NOT own a firstname-lastname personal domain`;
+
+  // Google ranking
+  const ranking = ctx.googleRanking || {};
+  const rankingLine = ranking.topPosition
+    ? `Position #${ranking.topPosition} for own name; ${ranking.ownedTop10 || 0} of top-10 are about them`
+    : 'Does not appear in top 10 for own name';
+
   const prompt = `You are a brand strategist running a personalised visibility audit for an executive based on their LinkedIn profile. The audit scores six dimensions on 0-3 each, summed to 0-18.
 
 PROFILE DATA:
 - First name: ${firstName}
+- Last name: ${lastName}
 - Headline: "${headline}"
 - About: "${about}"
 - Followers: ${followers.toLocaleString()}
@@ -459,6 +682,19 @@ PROFILE DATA:
 - LinkedIn Creator profile: ${isCreator ? 'yes' : 'no'}
 - LinkedIn verified: ${isVerified ? 'yes' : 'no'}
 
+USER CONTEXT (they self-selected on the audit form):
+- Role: ${role || '(not specified)'}${roleFrame ? `\n  → Their audience: ${roleFrame.audience}\n  → What matters most for this role: ${roleFrame.priority}\n  → Voice/tone fit: ${roleFrame.tone}` : ''}
+- Goal: ${goal || '(not specified)'}${goalFrame ? `\n  → Tactical priority for this goal: ${goalFrame.priority}\n  → ${goalFrame.directive}` : ''}
+
+OBSERVED CROSS-CHANNEL EVIDENCE (use this to write SPECIFIC moves, not generic ones):
+- Tier: ${tierName || 'unknown'}
+- ${personalSiteLine}
+- Google name search: ${rankingLine}
+- Tier-1 press hits:
+${pressHits}
+- Other public channels detected:
+${detectedPlatforms}
+
 PROVISIONAL SCORES (already computed from public signals - you fill in Brand Clarity):
 - Digital Footprint: ${heuristic.footprint}/3
 - Brand Clarity: TBD - you score this
@@ -466,6 +702,9 @@ PROVISIONAL SCORES (already computed from public signals - you fill in Brand Cla
 - Content Cadence: ${heuristic.cadence}/3
 - Visual Identity: ${heuristic.visual}/3
 - Network Recognition: ${heuristic.network}/3
+
+TIER-SPECIFIC MOVE DIRECTIVE (read carefully — moves MUST match this tier's stage):
+${tierDirective || 'Pick three concrete moves that fit the user\'s evident stage.'}
 
 YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose around it:
 
@@ -482,7 +721,7 @@ YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose arou
     "network":    "<max 14 words. Quote their follower or connection number.>"
   },
   "moves": [
-    {"title":"<imperative, 3-6 words>","why":"<ONE sentence, max 14 words. Specific to THIS profile.>","firstStep":"<max 10 words. Concrete first action.>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
+    {"title":"<imperative, 3-6 words>","why":"<ONE sentence, max 18 words. MUST reference SOMETHING specific from this user: a phrase from their headline/About in quotes, a follower count, a detected platform (e.g. their Substack at X), a press outlet they were featured in, or their company name. Do NOT generate generic advice that could apply to anyone.>","firstStep":"<max 12 words. Concrete first action they can take TODAY.>","service":"<one of: strategy|content|video|photo|linkedin|speaker|pr>"},
     {"title":"...","why":"...","firstStep":"...","service":"..."},
     {"title":"...","why":"...","firstStep":"...","service":"..."}
   ],
@@ -505,6 +744,18 @@ VOICE NOTES - match the FutureMakers brand:
 - Confident, aspirational, action-oriented.
 - Specific over generic. Quote profile content, don't generalise.
 - No chatbot tone. No "great work!" affirmations.
+
+SPECIFICITY MANDATE for moves (very important):
+- Every move's "why" MUST anchor on something observable about THIS user. Examples of good anchors:
+  - A literal phrase from their headline in quotes
+  - A specific follower count
+  - A detected platform with its URL ("Your Substack at substack.com/...")
+  - A press hit ("Your Sifted feature mentions [X], pitch a follow-up to that journalist")
+  - Their company name + tenure
+  - The fact they DON'T own firstname-lastname.com (or DO)
+- If a move's "why" could be copy-pasted onto any other audit, REWRITE IT.
+- Reference detected platforms by name. If they have a YouTube interview, the move is "clip your YouTube interview into 5 LinkedIn posts" - not "go on more podcasts".
+- If they have NO press, do NOT pretend they do. If they HAVE press, build moves that compound it.
 
 PLAIN-ENGLISH RULES (very important):
 - Write at a 6th-grade reading level. Imagine explaining it to a smart 10-year-old.
@@ -667,94 +918,139 @@ function getHonors(p) {
 
 /* ═══════════════════════════ SCORING ═══════════════════════════ */
 
-function scoreFootprint(profile, serp) {
+// Digital Footprint scoring (tightened May 2026 to fix score inflation).
+// Profile completeness is now a baseline (max 0.5pt) - photo/banner/About are
+// the bare minimum, not a differentiator. Real signal comes from external
+// channels: Google density, ranking position, owned platforms, news mentions.
+function scoreFootprint(profile, serp, presence, ranking, personalSite) {
   let pts = 0;
-  if (getPhotoUrl(profile))        pts += 0.5;
-  if (getBannerUrl(profile))       pts += 0.5;
+
+  // Profile completeness - basics only, max 0.5pt total
+  if (getPhotoUrl(profile))        pts += 0.2;
+  if (getBannerUrl(profile))       pts += 0.15;
   const about = getAbout(profile);
-  if (about && about.length > 200) pts += 0.5;
+  if (about && about.length > 200) pts += 0.15;
 
+  // Google name-search density - real footprint signal
   const results = serp?.organic_results || [];
-  if (results.length >= 8)      pts += 1.5;
-  else if (results.length >= 4) pts += 1;
-  else if (results.length >= 1) pts += 0.5;
+  if (results.length >= 8)      pts += 0.6;
+  else if (results.length >= 5) pts += 0.3;
 
+  // Google name-search position - if YOU appear in top 3 for your name, that's strong
+  if (ranking?.topPosition && ranking.topPosition <= 3) pts += 0.5;
+  if (ranking?.ownedTop10 >= 3) pts += 0.3;
+
+  // Owned-channel breadth: Substack, Medium, GitHub, personal site
+  const ownedCount = Object.values(presence || {}).filter(p => p.boost === 'footprint').length
+                   + (personalSite?.found ? 1 : 0);
+  if (ownedCount >= 2)      pts += 1.0;
+  else if (ownedCount >= 1) pts += 0.5;
+
+  // Tier-1 press in result URLs (fallback signal even if our press scan missed)
   if (results.some(r => /forbes|bloomberg|wsj|techcrunch|reuters|tedx|news|press/i.test(r.link || ''))) {
-    pts += 0.5;
+    pts += 0.3;
   }
+
   return clamp03(Math.round(pts));
 }
 
-function scoreAuthority(profile, press) {
+// Authority Signals scoring (tightened May 2026). Self-claimed authority via
+// keywords in About is now worth zero - if we can't observe it, it doesn't count.
+// LinkedIn profile signals (recs, honors, articles) get partial credit but are
+// no longer a path to a high score on their own.
+function scoreAuthority(profile, press, presence) {
   let pts = 0;
   const recsCount     = getRecommendations(profile).length;
   const honorsCount   = getHonors(profile).length;
   const articlesCount = getArticles(profile).length;
 
-  if (recsCount >= 5)      pts += 1;
-  else if (recsCount >= 2) pts += 0.5;
+  // LinkedIn-only signals - capped low because anyone can earn them internally
+  if (recsCount >= 5)      pts += 0.4;
+  else if (recsCount >= 2) pts += 0.2;
 
-  if (articlesCount >= 3)  pts += 1;
-  else if (articlesCount >= 1) pts += 0.5;
+  if (articlesCount >= 5)  pts += 0.4;
+  else if (articlesCount >= 2) pts += 0.2;
 
-  if (honorsCount >= 1) pts += 0.5;
+  if (honorsCount >= 2) pts += 0.2;
 
-  // Real Tier-1 press hits - by far the strongest authority signal we can detect.
-  // 3+ unique outlets = automatic full points on this leg.
+  // Real Tier-1 press hits - the strongest signal we can detect
   const tier1Count = press?.count || 0;
-  if (tier1Count >= 3)      pts += 1.5;
-  else if (tier1Count >= 1) pts += 0.5 * tier1Count;   // 0.5 per outlet up to 1.5
+  if (tier1Count >= 3)      pts += 1.4;
+  else if (tier1Count >= 1) pts += 0.4 * tier1Count;
 
-  // Self-claimed press keywords in headline/about - weakest signal, only if no real hits found
-  if (tier1Count === 0) {
-    const text = (getHeadline(profile) + ' ' + getAbout(profile)).toLowerCase();
-    if (/featured|forbes|bloomberg|wsj|techcrunch|tedx|keynote|speaker|awarded|recognised|recognized/i.test(text)) {
-      pts += 0.5;
-    }
-  }
+  // Cross-platform authority signals (observed, not claimed)
+  if (presence?.wikipedia)  pts += 1.0;   // Wikipedia entry is huge
+  if (presence?.youtube)    pts += 0.5;   // talks, interviews, podcast clips
+  if (presence?.crunchbase) pts += 0.3;   // founder/exec credibility marker
+  if (presence?.googleNews) pts += 0.6;   // dedicated news index hit
+
+  // NOTE: We deliberately DO NOT award points for self-claimed press keywords
+  // ("featured in Forbes", "TEDx speaker") in About text. If we can't verify
+  // it via the actual press scan, it doesn't count. Removing this prevented
+  // ~0.3pt of inflation per audit on profiles with bio-padding.
+
   return clamp03(Math.round(pts));
 }
 
 function scoreCadence(profile) {
-  // KNOWN LIMITATION: supreme_coder/linkedin-profile-scraper does NOT return posts in the
-  // basic profile call - we'd need a separate post-scraper actor (parallel call, +cost).
-  // For now: if we have NO activity field at all, return 1 (neutral) so we don't falsely
-  // claim "no posts in 90 days" when we simply couldn't see them. Scoring 0 reserved for
-  // profiles where we DO have visibility into activities AND found nothing.
+  // KNOWN LIMITATION: supreme_coder/linkedin-profile-scraper does NOT return
+  // posts in the basic profile call. Previously we returned 1 (neutral) when
+  // the activity field was missing - this inflated scores by ~5pt average.
+  // Tightened May 2026: missing activity = 0. If users have a real cadence,
+  // it's because they're verified/creator (proxy), or the scraper returned data.
   const hasActivityField =
     'activities' in profile || 'posts' in profile ||
     'recentActivities' in profile || 'recent_posts' in profile || 'updates' in profile;
-  if (!hasActivityField) return 1;     // we can't measure - neutral default
+
+  // No activity data → score 0 unless we have other signals suggesting cadence
+  if (!hasActivityField) {
+    // Creator/verified status implies sustained content - give partial credit
+    if (profile.creator || profile.isVerified) return 1;
+    return 0;
+  }
   const activities = getActivities(profile);
-  if (activities.length >= 11) return 3;
-  if (activities.length >= 4)  return 2;
-  if (activities.length >= 1)  return 1;
+  if (activities.length >= 12) return 3;
+  if (activities.length >= 6)  return 2;
+  if (activities.length >= 2)  return 1;
   return 0;
 }
 
+// Visual Identity (tightened May 2026). Photo alone is the LinkedIn default -
+// not a signal. Banner alone matters more (it requires intent). Both together
+// plus a clarity signal earns max.
 function scoreVisual(profile, clarity) {
   let pts = 0;
-  if (getPhotoUrl(profile))  pts += 1;
-  if (getBannerUrl(profile)) pts += 1;
+  if (getPhotoUrl(profile))  pts += 0.6;
+  if (getBannerUrl(profile)) pts += 1.2;   // banner takes intent - weighted higher
   const about = getAbout(profile);
-  if (about && about.length > 300) pts += 0.75;
-  if (clarity?.score >= 2) pts += 0.25;
+  if (about && about.length > 400) pts += 0.5;
+  if (clarity?.score >= 2) pts += 0.4;
   return clamp03(Math.round(pts));
 }
 
-function scoreNetwork(profile) {
+// Network Recognition scoring (tightened May 2026). 500 followers is the LinkedIn
+// median - it's not a signal. Bar bumped to 1k/5k/10k/50k. Cross-platform social
+// presence remains a small boost.
+function scoreNetwork(profile, presence) {
   const followers   = getFollowers(profile);
   const connections = getConnections(profile);
   const recsCount   = getRecommendations(profile).length;
 
   let pts = 0;
-  if (followers >= 50_000)      pts += 2;
-  else if (followers >= 10_000) pts += 1.5;
-  else if (followers >= 2_000)  pts += 1;
-  else if (followers >= 500)    pts += 0.5;
+  if (followers >= 50_000)      pts += 1.6;
+  else if (followers >= 10_000) pts += 1.1;
+  else if (followers >= 5_000)  pts += 0.7;
+  else if (followers >= 1_000)  pts += 0.3;
+  // < 1k followers earns nothing here - that's the LinkedIn median, not a signal
 
-  if (connections >= 500) pts += 0.5;
-  if (recsCount >= 5)     pts += 0.5;
+  if (connections >= 1_000) pts += 0.3;
+  if (recsCount >= 8)       pts += 0.3;
+
+  // Cross-platform social presence: detected on Instagram + X = active across
+  // multiple channels, which is a stronger network signal than LinkedIn alone.
+  const socialCount = Object.values(presence || {}).filter(p => p.type === 'social').length;
+  if (socialCount >= 2)      pts += 0.6;
+  else if (socialCount >= 1) pts += 0.3;
 
   return clamp03(Math.round(pts));
 }
