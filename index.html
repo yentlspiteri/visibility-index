@@ -114,7 +114,11 @@
      don't gate on them - the email-only path never triggers them. -->
 <link rel="preconnect" href="https://assets.calendly.com" />
 <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet" />
-<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+<!-- crossorigin="anonymous" - if the CDN returns CORS headers (Calendly does),
+     uncaught exceptions from the widget surface with a real message + stack
+     instead of being redacted to "Script error.". Makes the auto bug-report
+     handler actually useful when something is wrong. -->
+<script src="https://assets.calendly.com/assets/external/widget.js" async crossorigin="anonymous"></script>
 
 <style>
   /* ──────────────────────────────────────────────────────────
@@ -5816,7 +5820,29 @@
      per session so a tight loop can't spam the inbox. */
   (function () {
     const seen = new Set();
+
+    // Errors we suppress to avoid noisy auto-reports. The browser strips error
+    // detail from cross-origin scripts (Calendly, Mailchimp, GA, Facebook
+    // pixel, ad-blocker injections, browser extensions) and surfaces them as
+    // bare "Script error." or generic ResizeObserver loops - none of these
+    // are actionable for us, so they shouldn't page Yentl.
+    const NOISE = [
+      /^Script error\.?$/i,                              // cross-origin (cors) script error
+      /ResizeObserver loop/i,                            // benign Chrome warning
+      /Non-Error promise rejection captured/i,           // Sentry-style noise
+      /chrome-extension:\/\//i,                          // browser-extension exceptions
+      /^Object Not Found Matching Id/i,                  // Outlook safelink scanner
+      /\[Calendly\]/i,                                   // Calendly's own console warnings (not actionable)
+      /widget\.calendly\.com/i,
+      /assets\.calendly\.com/i
+    ];
+    function isNoise(label, info) {
+      const blob = (label || '') + ' ' + (info || '');
+      return NOISE.some(rx => rx.test(blob));
+    }
+
     function report(label, info) {
+      if (isNoise(label, info)) return;
       if (seen.has(label) || seen.size > 5) return;
       seen.add(label);
       try {
@@ -5837,6 +5863,9 @@
     window.addEventListener('error', (e) => {
       const msg = e.message || 'unknown error';
       const where = e.filename ? `${e.filename}:${e.lineno}:${e.colno}` : '';
+      // Cross-origin scripts often have no filename and a generic "Script error.".
+      // Both signals together are a strong indicator of noise we should suppress.
+      if (!e.filename && /^Script error\.?$/i.test(msg)) return;
       report(msg, where + (e.error?.stack ? '\n' + e.error.stack.slice(0, 1500) : ''));
     });
     window.addEventListener('unhandledrejection', (e) => {
