@@ -14,19 +14,25 @@ nav.top {
   -webkit-backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid rgba(15, 15, 15, 0.08);
 }
-nav.top .container {
+/* Match BOTH `.container` and `.container-wide` so nav layout works on every
+   page regardless of which container variant the page uses. Without this the
+   flex rule was missing on lander/article pages and items stacked vertically. */
+nav.top .container,
+nav.top .container-wide {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 110px;
+  flex-wrap: nowrap;
+  height: 64px;
   max-width: 1080px;
   padding: 0 24px;
   margin: 0 auto;
+  gap: 18px;
 }
-/* The SVG viewBox has built-in padding so the visible wordmark renders at
-   ~50% of the container height. 144px height → ~70-80px visible wordmark. */
+/* Thinner, more proportional logo. The SVG viewBox has built-in padding so
+   visible wordmark height is ~55% of the height value. 64px → ~36px wordmark. */
 .logo {
-  height: 144px;
+  height: 64px;
   width: auto;
   display: flex;
   align-items: center;

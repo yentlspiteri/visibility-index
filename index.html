@@ -8941,15 +8941,54 @@ fbq('track', 'PageView');
       document.head.appendChild(link);
     }
 
-    // Force a fresh Calendly scan by removing any existing widget.js script
-    // and re-appending it. Calendly's loader is idempotent on re-load and
-    // will discover + mount the newly-inserted .calendly-inline-widget.
-    document.querySelectorAll('script[src*="calendly.com/assets/external/widget.js"]')
-      .forEach(s => s.remove());
-    const script = document.createElement('script');
-    script.src   = 'https://assets.calendly.com/assets/external/widget.js';
-    script.async = true;
-    document.body.appendChild(script);
+    // ── Bulletproof initialization. After defer-loading widget.js, Calendly's
+    // auto-discovery is unreliable on dynamically-injected widgets. Explicitly
+    // call initInlineWidget() once the script is available so the iframe always
+    // mounts, even with strict CSP / ad-blockers / late script load. ──
+    function initInline() {
+      if (window.Calendly && typeof window.Calendly.initInlineWidget === 'function') {
+        try {
+          window.Calendly.initInlineWidget({
+            url: url,
+            parentElement: widgetDiv,
+            prefill: {
+              name:      fullName || undefined,
+              firstName: firstName || undefined,
+              lastName:  lastName  || undefined,
+              email:     (email && email.trim()) || undefined
+            }
+          });
+          return true;
+        } catch (e) {
+          console.warn('[Calendly] initInlineWidget threw, falling back to auto-discovery', e);
+        }
+      }
+      return false;
+    }
+
+    if (window.Calendly) {
+      // widget.js already loaded (e.g. from a previous walkthrough open) — init now
+      initInline();
+    } else {
+      // Load widget.js fresh, then init when ready
+      document.querySelectorAll('script[src*="calendly.com/assets/external/widget.js"]')
+        .forEach(s => s.remove());
+      const script = document.createElement('script');
+      script.src   = 'https://assets.calendly.com/assets/external/widget.js';
+      script.async = true;
+      script.onload = function(){
+        // Try explicit init first; Calendly's auto-scan also runs but this is the
+        // bulletproof path (ad-blockers and CSP that mangle auto-scan still let
+        // initInlineWidget through because we control the call site).
+        if (!initInline()) {
+          console.warn('[Calendly] widget.js loaded but Calendly object missing — auto-scan may still mount');
+        }
+      };
+      script.onerror = function(){
+        console.error('[Calendly] widget.js failed to load (likely ad-blocker or network). Fallback link will appear.');
+      };
+      document.body.appendChild(script);
+    }
 
     if (window.track) window.track('calendly_opened', {
       source: 'gate-walkthrough-inline',
@@ -8958,7 +8997,7 @@ fbq('track', 'PageView');
     });
     console.log('[Calendly] inline widget injected', { url, hasName: !!fullName, hasEmail: !!email });
 
-    // Safety net: if the iframe doesn't appear within 5 seconds (ad-blocker,
+    // Safety net: if the iframe doesn't appear within 8 seconds (ad-blocker,
     // network failure, etc.), render a fallback link so the user can still book.
     setTimeout(() => {
       const w = mount.querySelector('.calendly-inline-widget');
@@ -8975,7 +9014,7 @@ fbq('track', 'PageView');
             '</a>' +
           '</div>';
       }
-    }, 5000);
+    }, 8000);
   }
 
   /* ────────── DELEGATED CALENDLY POPUP HANDLER ──────────
