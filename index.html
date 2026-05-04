@@ -5450,7 +5450,7 @@ fbq('track', 'PageView');
     <div class="nav-right">
       <a href="#methodology" class="nav-link nav-link-desktop">Methodology</a>
       <a href="#circle"      class="nav-link nav-link-desktop">The Circle</a>
-      <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
+      <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
       <button type="button" class="nav-burger" id="nav-burger"
               aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-panel">
         <span></span><span></span><span></span>
@@ -5461,7 +5461,7 @@ fbq('track', 'PageView');
   <div class="nav-mobile-panel" id="nav-mobile-panel" aria-hidden="true">
     <a href="#methodology" class="nav-mobile-link">Methodology</a>
     <a href="#circle"      class="nav-mobile-link">The Circle</a>
-    <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="nav-mobile-cta">Book a call</a>
+    <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-mobile-cta">Book a call</a>
   </div>
   </div>
 </nav>
@@ -5746,7 +5746,7 @@ fbq('track', 'PageView');
     <!-- "Path to the next tier" block removed per request - moves above are enough -->
 
     <div class="next-cta-row next-cta-row--single">
-      <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="help-cta">
+      <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="help-cta">
         LET US HELP YOU
       </a>
     </div>
@@ -5891,12 +5891,12 @@ fbq('track', 'PageView');
           <div class="perk">
             <div class="perk-icon">03</div>
             <div>
-              <strong>Quarterly off-the-record dinner</strong>
+              <strong>Yearly off-the-record dinner</strong>
               <span>Twelve people, one room, Chatham House rules. The conversations you can't have on a podcast.</span>
             </div>
           </div>
         </div>
-        <a href="https://calendly.com/yentl-spiteri/30min" target="_blank" rel="noopener" class="btn btn-primary btn-arrow" id="apply-cta">Book a call</a>
+        <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="btn btn-primary btn-arrow" id="apply-cta">Book a call</a>
       </div>
 
       <div class="circle-stats">
@@ -7768,6 +7768,38 @@ fbq('track', 'PageView');
       }, 200);
     }
   }
+
+  /* ────────── DELEGATED CALENDLY POPUP HANDLER ──────────
+     Catches every anchor on the page whose href points at calendly.com/yentl-spiteri
+     and converts it to a brand-styled popup modal instead of opening a new tab.
+     Single handler covers nav CTAs, footer CTAs, in-content CTAs - anything past
+     or future. Falls back to default href navigation if Calendly's widget.js
+     hasn't loaded yet (rare network case). */
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest && e.target.closest('a[href*="calendly.com/yentl-spiteri"]');
+    if (!link) return;
+    if (typeof window.Calendly === 'undefined' || !window.Calendly.initPopupWidget) return;
+    e.preventDefault();
+    const firstName = (lastProfile?.firstName || '').trim();
+    const lastName  = (lastProfile?.lastName  || '').trim();
+    const fullName  = [firstName, lastName].filter(Boolean).join(' ');
+    window.Calendly.initPopupWidget({
+      url: 'https://calendly.com/yentl-spiteri/15-min-intro?primary_color=3F36B2&text_color=0c0b09&background_color=fafafa&hide_gdpr_banner=1',
+      prefill: {
+        name:      fullName    || undefined,
+        firstName: firstName   || undefined,
+        lastName:  lastName    || undefined,
+        email:     undefined   // populated only after lead capture
+      },
+      utm: {
+        utmSource:   'visibility-index',
+        utmMedium:   'page-cta',
+        utmCampaign: 'book-a-call',
+        utmContent:  link.className || ''
+      }
+    });
+    if (window.track) window.track('cta_calendly', { source: link.className || 'unknown' });
+  });
 
   // Listen for Calendly's booking confirmation event - fires when the user
   // actually completes a booking in the embedded iframe. This is the conversion
