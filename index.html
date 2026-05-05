@@ -2954,7 +2954,7 @@ fbq('track', 'PageView');
   .content-ideas-wrap {
     background: linear-gradient(180deg, var(--vp-navy) 0%, #06022e 100%);
     color: var(--vp-cream, #fafafa);
-    padding: 100px 0;
+    padding: 72px 0;
     position: relative;
     overflow: hidden;
   }
@@ -2976,106 +2976,79 @@ fbq('track', 'PageView');
     .content-split { grid-template-columns: 1fr; gap: 24px; }
     .content-ideas-wrap { padding: 56px 0; }
   }
+  /* Looser container — less border, more whitespace, lower visual weight. */
   .content-col {
-    background: rgba(252,252,252,0.03);
-    border: 1px solid rgba(134,131,229,0.20);
-    border-radius: 20px;
-    padding: 28px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
   }
   .content-col-eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    color: var(--vp-lavender, #8683E5);
-    margin-bottom: 22px;
+    display: block;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--vp-cream, #fafafa);
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(252,252,252,0.10);
   }
-  .content-col-eyebrow span { font-size: 20px; }
-  .content-list { display: flex; flex-direction: column; gap: 18px; }
+  .content-list { display: flex; flex-direction: column; gap: 10px; }
+  /* Slim card — number + title + meta. No paragraphs, no quote blocks.
+     Density cut from ~7 lines per card to ~3. */
   .content-card {
-    background: rgba(252,252,252,0.05);
-    border: 1px solid rgba(252,252,252,0.08);
-    border-radius: 14px;
-    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(252,252,252,0.07);
+    border-radius: 12px;
+    padding: 16px 18px;
     transition: transform .2s ease, border-color .2s ease, background .2s ease;
   }
   .content-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(134,131,229,0.40);
-    background: rgba(252,252,252,0.07);
+    border-color: rgba(134,131,229,0.32);
+    background: rgba(252,252,252,0.06);
   }
   .content-card-num {
-    display: inline-block;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
     font-family: var(--font-body);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.10em;
     color: var(--vp-lavender);
-    background: rgba(134,131,229,0.12);
-    padding: 4px 10px;
-    border-radius: 999px;
-    margin-bottom: 12px;
+    line-height: 1.4;
+    padding-top: 2px;
   }
   .content-card-title {
+    flex: 1;
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.4;
     letter-spacing: -0.012em;
     color: var(--vp-cream, #fafafa);
-    margin: 0 0 12px;
+    margin: 0 0 6px;
   }
-  .content-card-hook {
-    position: relative;
-    padding-left: 14px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: rgba(252,252,252,0.90);
-    font-style: italic;
-    margin-bottom: 12px;
-  }
-  .content-card-hook::before {
-    content: "";
-    position: absolute;
-    left: 0; top: 4px; bottom: 4px;
-    width: 3px;
-    background: var(--vp-lavender, #8683E5);
-    border-radius: 2px;
-  }
-  .content-card-angle {
-    font-size: 13px;
-    line-height: 1.55;
-    color: rgba(252,252,252,0.62);
-    margin: 0 0 14px;
-  }
-  .content-card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  .content-card-meta-line {
+    display: block;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.06em;
-    text-transform: uppercase;
+    color: rgba(252,252,252,0.50);
+    text-transform: lowercase;
   }
-  .content-card-meta .pill {
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(134,131,229,0.10);
-    color: var(--vp-lavender);
-    border: 1px solid rgba(134,131,229,0.25);
-  }
-  .content-card-meta .pill.is-shotin {
-    background: rgba(252,252,252,0.04);
-    color: rgba(252,252,252,0.70);
-    border-color: rgba(252,252,252,0.10);
-  }
+  /* Right-hand column wraps title + meta vertically. */
+  .content-card-body { flex: 1; min-width: 0; }
+  .content-card-body .content-card-title { margin: 0 0 4px; }
   @media (max-width: 600px) {
-    .content-col { padding: 22px 18px; }
-    .content-card { padding: 16px 16px; }
-    .content-card-title { font-size: 16px; }
+    .content-col { padding: 20px 16px; }
+    .content-card { padding: 14px 14px; gap: 10px; }
+    .content-card-title { font-size: 15px; }
   }
 
   .next-moves-wrap {
@@ -6475,22 +6448,15 @@ fbq('track', 'PageView');
      the JS in revealNextMoves() reveals it once Claude returns the arrays. -->
 <section class="content-ideas-wrap hidden" id="content-ideas">
   <div class="container" style="max-width: 1080px;">
-    <div class="eyebrow-row" style="justify-content: center;">
-      <span class="dot"></span>
-      <span class="eyebrow">Content to make</span>
-    </div>
-    <h2 class="h2" id="content-ideas-title" style="text-align: center; margin: 18px auto;">What to write. What to film.</h2>
-    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(252,252,252,0.72); max-width: 540px;">
-      Six prompts pulled from your audit. Pick the ones that fit your week.
-    </p>
+    <h2 class="h2" id="content-ideas-title" style="text-align: center; margin: 0 auto 36px;">What to make.</h2>
 
     <div class="content-split">
       <div class="content-col" id="writing-col">
-        <div class="content-col-eyebrow"><span>📝</span> WHAT TO WRITE</div>
+        <div class="content-col-eyebrow">Write</div>
         <div class="content-list" id="writing-list"><!-- populated by JS --></div>
       </div>
       <div class="content-col" id="video-col">
-        <div class="content-col-eyebrow"><span>🎥</span> WHAT TO FILM</div>
+        <div class="content-col-eyebrow">Film</div>
         <div class="content-list" id="video-list"><!-- populated by JS --></div>
       </div>
     </div>
@@ -8790,24 +8756,26 @@ fbq('track', 'PageView');
       return;
     }
 
+    // Slimmed card layout: number + title + ONE meta pill. Dropped the hook
+    // quote and angle paragraph that were making the section read text-heavy.
+    // Format + shotIn collapsed into a single dot-separated meta line.
     function cardHTML(idea, idx, kind) {
       const num    = '0' + (idx + 1);
       const title  = escapeHtmlPage(idea.title  || '');
-      const hook   = escapeHtmlPage(idea.hook   || '');
-      const angle  = escapeHtmlPage(idea.angle  || '');
       const format = escapeHtmlPage(idea.format || '');
       const shotIn = escapeHtmlPage(idea.shotIn || '');
-      const meta = [
-        format ? `<span class="pill">${format}</span>` : '',
-        (kind === 'video' && shotIn) ? `<span class="pill is-shotin">${shotIn}</span>` : ''
-      ].filter(Boolean).join('');
+      const metaParts = [
+        format,
+        (kind === 'video' && shotIn) ? shotIn : ''
+      ].filter(Boolean);
+      const meta = metaParts.length ? metaParts.join(' · ') : '';
       return `
         <article class="content-card">
           <span class="content-card-num">${num}</span>
-          <h3 class="content-card-title">${title}</h3>
-          ${hook  ? `<p class="content-card-hook">"${hook}"</p>` : ''}
-          ${angle ? `<p class="content-card-angle">${angle}</p>` : ''}
-          ${meta  ? `<div class="content-card-meta">${meta}</div>` : ''}
+          <div class="content-card-body">
+            <h3 class="content-card-title">${title}</h3>
+            ${meta ? `<span class="content-card-meta-line">${meta}</span>` : ''}
+          </div>
         </article>`;
     }
 
