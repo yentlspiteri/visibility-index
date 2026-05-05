@@ -3059,6 +3059,69 @@ fbq('track', 'PageView');
     overflow: hidden;
   }
   .next-moves-wrap.hidden { display: none; }
+  /* Blur lock — shown before email gate is submitted */
+  .next-moves-wrap.moves-locked .moves-grid,
+  .next-moves-wrap.moves-locked .next-cta-row {
+    filter: blur(7px);
+    user-select: none;
+    pointer-events: none;
+    transition: filter .4s ease;
+  }
+  .moves-lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    padding: 20px;
+  }
+  .moves-lock-inner {
+    background: rgba(11,3,89,0.90);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(134,131,229,0.30);
+    border-radius: 22px;
+    padding: 36px 40px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 28px 72px rgba(11,3,89,0.55);
+  }
+  .moves-lock-title {
+    font-family: var(--font-display);
+    font-size: clamp(18px, 4vw, 22px);
+    font-weight: 700;
+    color: var(--vp-cream, #fafafa);
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+  .moves-lock-sub {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: rgba(252,252,252,0.65);
+    margin: 0 0 22px;
+    line-height: 1.55;
+  }
+  .moves-lock-cta {
+    display: inline-block;
+    padding: 13px 26px;
+    background: var(--vp-cream, #fafafa);
+    color: var(--vp-deep-black, #0c0b09);
+    border: 0;
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .12s ease;
+    text-decoration: none;
+  }
+  .moves-lock-cta:hover { transform: translateY(-1px); }
+  .moves-lock-cta:active { transform: scale(0.97); }
+  @media (max-width: 600px) {
+    .moves-lock-inner { padding: 28px 22px; }
+    .moves-lock-title { font-size: 18px; }
+  }
   .next-moves-wrap::before {
     content: ""; position: absolute; inset: 0;
     background:
@@ -4972,6 +5035,104 @@ fbq('track', 'PageView');
     .vi-error-icon { width: 32px; height: 32px; font-size: 20px; }
     .vi-error-title { font-size: 15px; }
     .vi-error-msg { font-size: 13.5px; }
+  }
+
+  /* ── Demand / waitlist card ─────────────────────────────────────────────
+     Shown instead of the red error card when the failure is a system-level
+     capacity issue. Positive framing: "we're busy" not "something broke". */
+  .demand-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(63,54,178,0.05);
+    border: 1.5px solid rgba(63,54,178,0.20);
+    border-radius: 16px;
+    padding: 22px 24px 20px;
+    margin-top: 16px;
+    animation: vi-error-in .25s ease both;
+  }
+  .demand-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .demand-pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--vp-indigo, #3F36B2);
+    flex-shrink: 0;
+    animation: demand-blink 1.4s ease-in-out infinite;
+  }
+  @keyframes demand-blink {
+    0%, 100% { opacity: 1;   transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.8); }
+  }
+  .demand-eyebrow {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--vp-indigo, #3F36B2);
+  }
+  .demand-title {
+    font-family: var(--font-display);
+    font-size: clamp(17px, 4vw, 20px);
+    font-weight: 700;
+    color: var(--vp-deep-black, #0c0b09);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .demand-sub {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: rgba(15,15,15,0.58);
+    margin: 2px 0 12px;
+    line-height: 1.5;
+  }
+  .demand-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .demand-form input[type="email"] {
+    flex: 1;
+    min-width: 180px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1.5px solid rgba(63,54,178,0.22);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: var(--font-body);
+    background: #fff;
+    color: var(--vp-deep-black);
+    outline: none;
+    transition: border-color .15s ease;
+  }
+  .demand-form input[type="email"]:focus { border-color: var(--vp-indigo, #3F36B2); }
+  .demand-form button[type="submit"] {
+    height: 44px;
+    padding: 0 20px;
+    background: var(--vp-indigo, #3F36B2);
+    color: #fff;
+    border: 0;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .demand-form button[type="submit"]:hover { transform: translateY(-1px); background: #352db5; }
+  .demand-form button[type="submit"]:active { transform: scale(0.97); }
+  .demand-form button:disabled { opacity: 0.6; cursor: wait; transform: none !important; }
+  @media (max-width: 420px) {
+    .demand-card { padding: 18px 16px; }
+    .demand-form { flex-direction: column; }
+    .demand-form input[type="email"],
+    .demand-form button[type="submit"] { width: 100%; }
   }
 
   /* Mobile dimension list — hidden on desktop, visible only on mobile where the
@@ -7713,13 +7874,13 @@ fbq('track', 'PageView');
     finishLastLoadingStep();
 
     if (!data || data.error) {
-      showError((data && data.error) || 'Audit failed. Please try again.');
+      showError((data && data.error) || 'Audit failed. Please try again.', !!(data && data._waitlist));
       return;
     }
     revealResults(data.total, data.subs, data.normalisedUrl || normalised, data);
   }
 
-  function showError(msg) {
+  function showError(msg, waitlist = false) {
     // Bring the form back so the user can retry
     loadingPanel.classList.add('hidden');
     actionCard.classList.remove('is-loading');
@@ -7727,6 +7888,9 @@ fbq('track', 'PageView');
     document.body.classList.remove('audit-locked');
     document.documentElement.classList.remove('audit-locked');
     $$('.loading-row').forEach(r => { r.classList.remove('running'); r.classList.remove('done'); });
+
+    // Capacity / system errors → show demand card instead of red error
+    if (waitlist) { showDemandCard(msg); return; }
 
     // Map raw API errors to friendly, actionable copy. Most common cases:
     //   - LinkedIn fetch fail (private profile, bad URL, scraper down)
@@ -7776,6 +7940,58 @@ fbq('track', 'PageView');
 
     // Scroll it into view on mobile so the user actually sees it
     errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function showDemandCard(serverMsg) {
+    // Remove any stale demand card so we start fresh
+    const old = document.getElementById('demand-card');
+    if (old) old.remove();
+
+    const card = document.createElement('div');
+    card.id = 'demand-card';
+    card.className = 'demand-card';
+    card.setAttribute('role', 'status');
+    card.setAttribute('aria-live', 'polite');
+    card.innerHTML = `
+      <div class="demand-header">
+        <span class="demand-pulse"></span>
+        <span class="demand-eyebrow">High demand</span>
+      </div>
+      <p class="demand-title">We're running a lot of audits right now.</p>
+      <p class="demand-sub">Leave your email — we'll ping you as soon as a slot opens.</p>
+      <form class="demand-form" novalidate>
+        <input type="email" placeholder="you@company.com" required autocomplete="email" inputmode="email" />
+        <button type="submit">Ping me when it's up →</button>
+      </form>
+    `;
+    actionCard.parentNode.insertBefore(card, actionCard.nextSibling);
+
+    card.querySelector('.demand-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = card.querySelector('input[type="email"]');
+      const email = input.value.trim();
+      if (!email || !email.includes('@')) { input.focus(); return; }
+      const btn = card.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+      } catch (_) {}
+      card.innerHTML = `
+        <div class="demand-header">
+          <span class="demand-pulse" style="background:#22c55e;animation:none"></span>
+          <span class="demand-eyebrow">You're on the list</span>
+        </div>
+        <p class="demand-title">We'll ping you as soon as a slot opens.</p>
+        <p class="demand-sub">Usually within the hour — check spam if you don't hear from us.</p>
+      `;
+    });
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   /* Loading sequence: marches through the 8 steps, then PAUSES on the last one
@@ -7961,6 +8177,10 @@ fbq('track', 'PageView');
       const gate = document.getElementById('gate-standalone');
       if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
+
+    // Show tips blurred immediately so the user sees what's waiting for them.
+    // Only for real audits (lastMoves populated by Claude) — skip for sample pills.
+    if (lastMoves.length) revealNextMoves(true);
 
     // Smartest scroll-to-results: hide everything ABOVE the score reveal entirely.
     // The result section becomes the first thing in the viewport - no scrolling needed,
@@ -8548,9 +8768,21 @@ fbq('track', 'PageView');
   }
 
   /* ────────── Reveal the post-submit "Three moves" section + tier roadmap + CTAs ────────── */
-  function revealNextMoves() {
+  // preview=true → render cards but blur them behind a "submit email to unlock" overlay.
+  // preview=false (default, called on email submit) → remove blur, reveal content ideas.
+  function revealNextMoves(preview = false) {
     const section = $('#next-moves');
     if (!section) return;
+
+    // On email submit, just unlock what's already rendered
+    if (!preview && section.classList.contains('moves-locked')) {
+      section.classList.remove('moves-locked');
+      const overlay = document.getElementById('moves-lock-overlay');
+      if (overlay) overlay.remove();
+      renderContentIdeas();
+      setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+      return;
+    }
 
     // Personalise the heading with the user's first name when we have it
     const titleEl = document.getElementById('next-moves-title');
@@ -8627,12 +8859,40 @@ fbq('track', 'PageView');
 
     // (Roadmap section removed per request - moves above are the takeaway)
 
-    // Render content ideas (writing + video) below the moves
-    renderContentIdeas();
-
-    // Reveal + scroll
     section.classList.remove('hidden');
-    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+
+    if (preview) {
+      // Lock: blur the grid and show the "enter email to unlock" overlay
+      section.classList.add('moves-locked');
+      if (!document.getElementById('moves-lock-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'moves-lock-overlay';
+        overlay.className = 'moves-lock-overlay';
+        overlay.innerHTML = `
+          <div class="moves-lock-inner">
+            <p class="moves-lock-title">Your 3 personalised tips are ready.</p>
+            <p class="moves-lock-sub">Enter your email above to unlock them — plus a full PDF to keep.</p>
+            <button class="moves-lock-cta" type="button">Unlock my tips →</button>
+          </div>
+        `;
+        const container = section.querySelector('.container');
+        if (container) container.appendChild(overlay);
+        overlay.querySelector('.moves-lock-cta').addEventListener('click', () => {
+          const gateEmail = document.getElementById('gate-email');
+          const results   = document.getElementById('results');
+          const target    = gateEmail || results;
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (gateEmail) setTimeout(() => gateEmail.focus(), 420);
+        });
+      }
+    } else {
+      // Full reveal: remove lock, render content ideas, scroll into view
+      section.classList.remove('moves-locked');
+      const overlay = document.getElementById('moves-lock-overlay');
+      if (overlay) overlay.remove();
+      renderContentIdeas();
+      setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    }
   }
 
   /* ────────── armWalkthroughFallback — re-show the sticky email gate when the user

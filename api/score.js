@@ -118,33 +118,39 @@ export default async function handler(req, res) {
       console.error('Apify failed:', errMsg, 'actor=', APIFY_ACTOR);
 
       // Categorise the failure → user-facing message + ops alert category
-      let userError, alertCategory, alertSubject;
+      // _waitlist=true → frontend shows "we’re busy, leave your email" card
+      // _waitlist=false → user-input error (wrong handle, private profile) — no waitlist
+      let userError, alertCategory, alertSubject, waitlist = false;
       if (/hard limit|subscribe to a paid|free user|usage limit/i.test(errMsg)) {
-        userError     = 'Our profile scanner is at capacity for the day. Please try again in a few hours, or reach out at hello@vonpeach.com to get your audit by hand.';
-        alertCategory = 'apify-hard-limit';
-        alertSubject  = '🚨 Apify scraper hit hard limit - audit is OFFLINE for users';
+        userError     = ‘Our scanner is at capacity right now.’;
+        alertCategory = ‘apify-hard-limit’;
+        alertSubject  = ‘🚨 Apify scraper hit hard limit - audit is OFFLINE for users’;
+        waitlist      = true;
       } else if (/rate.?limit|blocked|empty profile/i.test(errMsg)) {
-        userError     = 'LinkedIn is rate-limiting the scraper right now. Please wait 60 seconds and try again.';
-        alertCategory = 'apify-rate-limit';
-        alertSubject  = '⚠️ Apify scraper rate-limited by LinkedIn';
+        userError     = ‘We\’re seeing a lot of audits right now and LinkedIn is pushing back.’;
+        alertCategory = ‘apify-rate-limit’;
+        alertSubject  = ‘⚠️ Apify scraper rate-limited by LinkedIn’;
+        waitlist      = true;
       } else if (/401|403|unauthor/i.test(errMsg)) {
-        userError     = 'Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.';
-        alertCategory = 'apify-auth';
-        alertSubject  = '🚨 Apify auth failure - APIFY_API_TOKEN missing or invalid';
+        userError     = ‘Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.’;
+        alertCategory = ‘apify-auth’;
+        alertSubject  = ‘🚨 Apify auth failure - APIFY_API_TOKEN missing or invalid’;
       } else if (/404|not.?found/i.test(errMsg)) {
-        userError     = 'That LinkedIn profile doesn’t exist. Check the handle in the URL.';
-        alertCategory = null; // Don't alert on user-input errors
+        userError     = ‘That LinkedIn profile doesn’t exist. Check the handle in the URL.’;
+        alertCategory = null; // Don’t alert on user-input errors
       } else if (/private/i.test(errMsg)) {
         userError     = ‘That profile is private - the audit needs a public LinkedIn URL.’;
         alertCategory = null;
       } else if (/abort|timed?\s?out/i.test(errMsg) || profileRes.reason?.name === ‘AbortError’) {
-        userError     = ‘The LinkedIn scan took too long to respond. Please try again in a moment.’;
+        userError     = ‘We\’re getting hammered with audits right now and the scanner timed out.’;
         alertCategory = ‘apify-timeout’;
         alertSubject  = ‘⚠️ Apify scraper timed out (>25s)’;
+        waitlist      = true;
       } else {
-        userError     = ‘We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.’;
+        userError     = ‘We\’re seeing unusually high demand right now and hit a snag.’;
         alertCategory = ‘apify-unknown’;
         alertSubject  = ‘⚠️ Apify scraper failed (unknown error)’;
+        waitlist      = true;
       }
 
       // Fire ops alert (throttled to 1/30min per category) - only for system-level failures
@@ -156,17 +162,18 @@ export default async function handler(req, res) {
           context:  {
             actor:     APIFY_ACTOR,
             url:       normalised,
-            role:      body.role || '(none)',
-            goal:      body.goal || '(none)',
+            role:      body.role || ‘(none)’,
+            goal:      body.goal || ‘(none)’,
             ip:        ip
           }
         }).catch(() => {}); // fire-and-forget
       }
 
       return res.status(502).json({
-        error: userError,
-        _debug: errMsg.slice(0, 400),
-        _actor: APIFY_ACTOR
+        error:     userError,
+        _waitlist: waitlist || undefined,
+        _debug:    errMsg.slice(0, 400),
+        _actor:    APIFY_ACTOR
       });
     }
     const profile = profileRes.value;
@@ -390,7 +397,7 @@ export default async function handler(req, res) {
       body:     `Uncaught error in the score handler.\n\n${err?.stack || err?.message || String(err)}`,
       context:  { url: normalised, ip, actor: APIFY_ACTOR }
     }).catch(() => {});
-    return res.status(500).json({ error: 'Audit failed. Please try again in a minute.' });
+    return res.status(500).json({ error: 'Something went wrong on our end.', _waitlist: true });
   }
 }
 
