@@ -135,12 +135,16 @@ export default async function handler(req, res) {
         userError     = 'That LinkedIn profile doesn’t exist. Check the handle in the URL.';
         alertCategory = null; // Don't alert on user-input errors
       } else if (/private/i.test(errMsg)) {
-        userError     = 'That profile is private - the audit needs a public LinkedIn URL.';
+        userError     = ‘That profile is private - the audit needs a public LinkedIn URL.’;
         alertCategory = null;
+      } else if (/abort|timed?\s?out/i.test(errMsg) || profileRes.reason?.name === ‘AbortError’) {
+        userError     = ‘The LinkedIn scan took too long to respond. Please try again in a moment.’;
+        alertCategory = ‘apify-timeout’;
+        alertSubject  = ‘⚠️ Apify scraper timed out (>25s)’;
       } else {
-        userError     = 'We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.';
-        alertCategory = 'apify-unknown';
-        alertSubject  = '⚠️ Apify scraper failed (unknown error)';
+        userError     = ‘We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.’;
+        alertCategory = ‘apify-unknown’;
+        alertSubject  = ‘⚠️ Apify scraper failed (unknown error)’;
       }
 
       // Fire ops alert (throttled to 1/30min per category) - only for system-level failures
@@ -624,7 +628,7 @@ async function fetchApifyPosts(linkedinUrl) {
 async function fetchApify(linkedinUrl) {
   // Apify "run-sync-get-dataset-items" runs the actor and returns the dataset rows directly.
   const url = `${APIFY_API}/${APIFY_ACTOR}/run-sync-get-dataset-items`;
-  const r = await fetch(url, {
+  const r = await fetchWithTimeout(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -649,7 +653,7 @@ async function fetchApify(linkedinUrl) {
       linkedInProfileUrls: [linkedinUrl],
       linkedinProfileUrl:  linkedinUrl
     })
-  });
+  }, 25000);
   if (!r.ok) {
     const text = await r.text().catch(() => '');
     throw new Error(`Apify ${r.status}: ${text.slice(0, 200)}`);
@@ -815,7 +819,7 @@ async function fetchPlatformPresence(firstName, lastName, companyName) {
       num: '5',
       api_key: process.env.SERPAPI_API_KEY
     });
-    return fetch(`${SERPAPI_API}?${params}`)
+    return fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 8000)
       .then(r => r.ok ? r.json() : null)
       .catch(() => null);
   });
@@ -823,11 +827,11 @@ async function fetchPlatformPresence(firstName, lastName, companyName) {
   // Google News engine - dedicated news-index search, catches mentions across
   // every news source Google indexes (Reuters, AP, BBC, NYT, Bloomberg, FT, plus
   // local/regional outlets the standard tier-1 allowlist would miss).
-  const newsCall = fetch(`${SERPAPI_API}?` + new URLSearchParams({
+  const newsCall = fetchWithTimeout(`${SERPAPI_API}?` + new URLSearchParams({
     engine: 'google_news',
     q: `${fullName}${company}`,
     api_key: process.env.SERPAPI_API_KEY
-  })).then(r => r.ok ? r.json() : null).catch(() => null);
+  }), {}, 8000).then(r => r.ok ? r.json() : null).catch(() => null);
 
   const [platformResults, newsResult] = await Promise.all([
     Promise.allSettled(platformCalls),
@@ -894,7 +898,7 @@ async function fetchGoogleTrends(firstName, lastName) {
     api_key: process.env.SERPAPI_API_KEY
   });
   try {
-    const r = await fetch(`${SERPAPI_API}?${params}`);
+    const r = await fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 8000);
     if (!r.ok) return null;
     const j = await r.json();
     const timeline = j?.interest_over_time?.timeline_data || [];
@@ -1051,7 +1055,7 @@ async function fetchSerpFootprint(normalisedUrl, profileForQuery, recentOnly = f
     api_key: process.env.SERPAPI_API_KEY
   });
   if (recentOnly) params.append('tbs', 'qdr:m3');     // last 3 months
-  const r = await fetch(`${SERPAPI_API}?${params}`);
+  const r = await fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 10000);
   if (!r.ok) throw new Error(`SerpAPI ${r.status}`);
   return r.json();
 }
@@ -1418,7 +1422,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 - speaker  = Keynote speaking kit + public-speaking coaching
 - pr       = PR advisory`;
 
-  const r = await fetch(ANTHROPIC_API, {
+  const r = await fetchWithTimeout(ANTHROPIC_API, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1434,7 +1438,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
       max_tokens: 2800,
       messages: [{ role: 'user', content: prompt }]
     })
-  });
+  }, 20000);
   if (!r.ok) throw new Error(`Anthropic ${r.status}`);
   const data = await r.json();
   const text = data.content?.[0]?.text || '';
