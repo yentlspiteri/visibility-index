@@ -6405,18 +6405,16 @@ fbq('track', 'PageView');
         <form class="gate-form" id="gate-form" novalidate>
           <span class="gate-label">Work email</span>
           <input type="email" id="gate-email" placeholder="you@company.com" required />
-          <!-- Two CTAs, both POST the same payload to /api/lead.
-               The walkthrough button additionally fires Calendly's popup widget
-               on success - prefilled with name + email, so the user is 2 clicks
-               from a booked slot rather than re-typing details on a new domain. -->
+          <!-- Single email CTA. The walkthrough button + on-page Calendly embed
+               were removed (per user request) — the Calendly link is still in the
+               PDF report and the closing CTA, so users who want a walkthrough
+               can book from the report. -->
           <div class="gate-btn-row">
             <button type="submit" data-action="email"
-                    class="gate-btn gate-btn--secondary">Email me the report</button>
-            <button type="submit" data-action="walkthrough"
-                    class="gate-btn gate-btn--primary">Walk me through it · 15 min</button>
+                    class="gate-btn gate-btn--primary">Email me the report</button>
           </div>
         </form>
-        <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime. <span style="opacity:0.75;">Walkthrough doesn't require it &mdash; Calendly will ask at booking.</span></div>
+        <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime.</div>
       </div>
 
       <!-- Success state - replaces the form once /api/lead returns ok.
@@ -6439,12 +6437,9 @@ fbq('track', 'PageView');
       <!-- Inline Calendly embed - brand-coloured, mounted via Calendly.initInlineWidget()
            when the user picks the walkthrough CTA. Stays on-domain so we capture
            the booking moment without losing them to a new tab. -->
-      <div class="gate-calendly hidden" id="gate-calendly">
-        <div class="gate-calendly-eyebrow">PICK A TIME · 15-MIN WALKTHROUGH</div>
-        <h3 class="gate-calendly-heading">Let's walk through your report together.</h3>
-        <p class="gate-calendly-sub">No pitch. We unpack what we saw and you leave with one thing to fix this week.</p>
-        <div class="calendly-inline-widget" id="calendly-mount" data-resize="true"></div>
-      </div>
+      <!-- Inline Calendly mount removed per user request. Walkthrough flow is
+           still available via the Calendly link in the PDF report's closing CTA
+           and in the next-moves section's "LET US HELP YOU" button. -->
     </div>
   </div>
 </section>
@@ -9090,42 +9085,9 @@ fbq('track', 'PageView');
       return;
     }
 
-    // ── Walkthrough WITHOUT email: shortcut path ──────────────────────────
-    // Skip /api/lead entirely, just transition into the inline-Calendly view.
-    // The webhook will pick up the lead from Calendly's booking event later.
-    if (action === 'walkthrough' && !emailValid) {
-      allBtns.forEach(b => { b.disabled = true; });
-      submitBtn.textContent = 'Opening calendar…';
-      const gateCard      = document.getElementById('gate-card');
-      const gateSuccess   = document.getElementById('gate-success');
-      const gateCalendly  = document.getElementById('gate-calendly');
-      if (gateCard)     gateCard.classList.add('hidden');
-      // We deliberately do NOT show the success card - there's no email to
-      // confirm "sent to". Just slide straight into the calendar.
-      if (gateSuccess)  gateSuccess.classList.add('hidden');
-      document.body.classList.add('walkthrough-mode');
-      if (gateCalendly) gateCalendly.classList.remove('hidden');
-      // Lightweight tracking - this person didn't give email but did commit
-      // to the walkthrough flow. Useful for funnel analytics.
-      if (window.track) window.track('walkthrough_started_no_email', {
-        score: typeof lastScore === 'number' ? Math.round((lastScore / 18) * 100) : null,
-        tier:  lastTier?.name || ''
-      });
-      // Mount the inline Calendly widget without an email - Calendly will
-      // collect it during booking. We still prefill name from LinkedIn data.
-      setTimeout(() => {
-        mountCalendlyInline('');     // empty-string email - widget shows the field blank
-        if (gateCalendly && typeof gateCalendly.scrollIntoView === 'function') {
-          gateCalendly.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 200);
-      revealNextMoves();
-      return;
-    }
-
-    // ── Standard path: email-required (either button, with email present) ──
+    // ── Email-only path (walkthrough button removed) ──
     allBtns.forEach(b => { b.disabled = true; });
-    submitBtn.textContent = action === 'walkthrough' ? 'Sending + opening calendar…' : 'Sending…';
+    submitBtn.textContent = 'Sending…';
 
     // Pre-generate the event_id so the browser pixel and the server-side
     // CAPI call can fire the SAME id and Meta dedupes them as one conversion.
@@ -9216,27 +9178,9 @@ fbq('track', 'PageView');
       if (gateCard)    gateCard.classList.add('hidden');
       if (gateSuccess) gateSuccess.classList.remove('hidden');
 
-      // Walkthrough variant: switch out of sticky-bar mode and mount the inline
-      // Calendly embed with brand colours + the user's prefilled details.
-      if (action === 'walkthrough') {
-        document.body.classList.add('walkthrough-mode');
-        if (successTitle) successTitle.textContent = 'Report sent.';
-        if (gateCalendly) gateCalendly.classList.remove('hidden');
-        // Small delay so the layout transition lands before the iframe mounts.
-        // Scroll with a header-height offset so the calendar's top edge isn't
-        // hidden behind the sticky nav (which is 60-80px tall).
-        setTimeout(() => {
-          mountCalendlyInline(email);
-          if (gateCalendly) {
-            const headerOffset = 80;
-            const top = gateCalendly.getBoundingClientRect().top + window.scrollY - headerOffset;
-            window.scrollTo({ top, behavior: 'smooth' });
-          }
-          // Arm the scroll-past detector so the email fallback bar shows up
-          // if the user scrolls past the calendar without booking.
-          if (typeof armWalkthroughFallback === 'function') armWalkthroughFallback();
-        }, 200);
-      }
+      // Walkthrough variant removed per user request — the Calendly link is
+      // still in the PDF closing CTA and the next-moves section "LET US HELP YOU"
+      // button. No on-page Calendly mount, no walkthrough-mode layout swap.
 
       revealNextMoves();
     } catch (err) {
