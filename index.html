@@ -3154,55 +3154,86 @@ fbq('track', 'PageView');
   }
   .next-cta-row--single { display: flex; justify-content: center; }
 
-  /* - Inbox-sent success state (replaces the gate-card form on submit) - */
+  /* ─────────── Inbox-sent success TOAST ───────────
+     A true overlay/toast — fixed top-right, compact, dismissible. Replaces
+     the previous full-width sticky-bottom panel which was visually colliding
+     with the "What to make." section header as the user scrolled into the
+     revealed next-moves / content-ideas areas. The toast floats above all
+     content with its own z-index, so nothing under it can ever bleed through.
+     ─────────────────────────────────────────────────── */
   .gate-success {
-    background: var(--vp-cream, #fafafa);
-    border-radius: 20px;
-    padding: 28px 28px 24px;
-    text-align: center;
-    box-shadow: 0 24px 64px rgba(11,3,89,0.18);
+    position: fixed;
+    top: max(20px, env(safe-area-inset-top, 20px));
+    right: 20px;
+    z-index: 9999;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    background: rgba(252, 252, 252, 0.98);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 16px;
+    padding: 18px 44px 16px 20px;   /* extra right padding for the close button */
+    box-shadow: 0 24px 64px rgba(11,3,89,0.32), 0 4px 12px rgba(11,3,89,0.12);
+    text-align: left;
     animation: gate-success-in .45s cubic-bezier(.34,1.56,.64,1);
   }
   .gate-success.hidden { display: none; }
-  /* Pin the success card to the bottom of the viewport so it stays visible
-     while the user scrolls through the rest of the report. Same horizontal
-     position the email gate had (sticky-bottom-bar layout). The next-moves
-     section below adds bottom padding so content can still scroll past it. */
-  body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) {
-    position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
-    width: calc(100% - 32px) !important;
-    max-width: 560px !important;
-    z-index: 60 !important;
-    margin: 0 !important;
-    background: rgba(252, 252, 252, 0.98) !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-  /* Reserve room at the bottom of the page so footer/circle don't sit behind it */
-  body.audit-complete:not(.walkthrough-mode):has(.gate-success:not(.hidden)) footer { padding-bottom: 140px !important; }
-  /* Compact the contents on mobile so the floating bar stays one row tall-ish */
+  /* Mobile: full-width minus margin, still top-anchored */
   @media (max-width: 600px) {
-    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) {
-      padding: 18px 18px 16px !important;
+    .gate-success {
+      width: auto;
+      left: 16px;
+      right: 16px;
+      padding: 14px 40px 12px 16px;
     }
-    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-check {
-      width: 36px; height: 36px; margin: 0 auto 8px;
-    }
-    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-title { font-size: 18px; margin: 0 0 4px; }
-    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-line  { font-size: 13px; margin: 0 0 6px; }
-    body.audit-complete:not(.walkthrough-mode) .gate-success:not(.hidden) .gate-success-hint  { font-size: 11px; }
+  }
+  /* Fade-out animation triggered by JS when the toast auto-dismisses or the
+     user clicks the close button. Adds a graceful exit instead of a snap. */
+  .gate-success.is-leaving {
+    animation: gate-success-out .35s ease-out forwards;
+    pointer-events: none;
   }
   @keyframes gate-success-in {
-    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    from { opacity: 0; transform: translateY(-12px) scale(0.96); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
+  @keyframes gate-success-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  }
+  /* Close button — top-right of the toast, hover state for affordance */
+  .gate-success-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: rgba(15,15,15,0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease, color .15s ease;
+    padding: 0;
+  }
+  .gate-success-close:hover {
+    background: rgba(11,3,89,0.06);
+    color: rgba(15,15,15,0.85);
+  }
+  .gate-success-close:focus-visible {
+    outline: 2px solid var(--vp-indigo);
+    outline-offset: 2px;
+  }
+  .gate-success-close svg { width: 14px; height: 14px; }
+  /* Tighter check icon — toast format, not a hero card */
   .gate-success-check {
     color: var(--vp-indigo);
-    width: 56px; height: 56px;
-    margin: 0 auto 18px;
+    width: 32px; height: 32px;
+    margin: 0 0 8px;
+    flex-shrink: 0;
   }
   .gate-success-check svg { width: 100%; height: 100%; display: block; }
   .gate-success-check .gs-circle {
@@ -3217,17 +3248,19 @@ fbq('track', 'PageView');
   @keyframes gs-tick-draw   { to { stroke-dashoffset: 0; } }
   .gate-success-title {
     font-family: var(--font-display);
-    font-size: 26px;
+    font-size: 17px;
     font-weight: 700;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
     color: var(--vp-deep-black, #0c0b09);
-    margin: 0 0 10px;
+    margin: 0 0 4px;
+    line-height: 1.25;
   }
   .gate-success-line {
     font-family: var(--font-body);
-    font-size: 16px;
+    font-size: 13px;
     color: rgba(15,15,15,0.7);
-    margin: 0 0 14px;
+    margin: 0 0 6px;
+    line-height: 1.4;
   }
   .gate-success-line strong {
     color: var(--vp-deep-black, #0c0b09);
@@ -3235,9 +3268,10 @@ fbq('track', 'PageView');
   }
   .gate-success-hint {
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 11px;
     color: rgba(15,15,15,0.5);
     margin: 0;
+    line-height: 1.4;
   }
 
   .roadmap-card {
@@ -4367,11 +4401,10 @@ fbq('track', 'PageView');
       font-size: 13px;
     }
   }
-  /* Once the user has submitted (gate-card hidden), keep the success card centered, not pinned */
-  body.audit-complete #gate-card.hidden + #gate-success {
-    background: transparent !important;
-    padding: 18px 14px !important;
-  }
+  /* (Old centred-success-card override removed. The success state is now a
+     fixed top-right toast — see .gate-success above. Overriding background
+     to transparent here would defeat the toast styling.) */
+
 
   /* Temporary bug-report button - bottom-left, removable for prod once testing settles */
   .bug-report {
@@ -6397,6 +6430,11 @@ fbq('track', 'PageView');
                                (700px tall - breaks out of the sticky bar via
                                body.walkthrough-mode CSS class) -->
       <div class="gate-success hidden" id="gate-success" role="status" aria-live="polite">
+        <button type="button" class="gate-success-close" id="gate-success-close" aria-label="Dismiss notification">
+          <svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
         <div class="gate-success-check" aria-hidden="true">
           <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
             <circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5" class="gs-circle"/>
@@ -6405,7 +6443,7 @@ fbq('track', 'PageView');
         </div>
         <h3 class="gate-success-title" id="gate-success-title">Report on its way.</h3>
         <p class="gate-success-line">We sent it to <strong id="gate-success-email">your inbox</strong>.</p>
-        <p class="gate-success-hint" id="gate-success-hint">Also downloaded to your device · check spam if it doesn’t land in 60 seconds</p>
+        <p class="gate-success-hint" id="gate-success-hint">Check spam if it doesn’t land in 60 seconds.</p>
       </div>
       <!-- Inline Calendly embed - brand-coloured, mounted via Calendly.initInlineWidget()
            when the user picks the walkthrough CTA. Stays on-domain so we capture
@@ -9199,7 +9237,26 @@ fbq('track', 'PageView');
       const successTitle  = document.getElementById('gate-success-title');
       if (successEmail) successEmail.textContent = email;
       if (gateCard)    gateCard.classList.add('hidden');
-      if (gateSuccess) gateSuccess.classList.remove('hidden');
+      if (gateSuccess) {
+        gateSuccess.classList.remove('hidden', 'is-leaving');
+        // Wire the close button (idempotent — re-binding is safe but we guard
+        // anyway in case the toast is shown more than once per session)
+        const closeBtn = document.getElementById('gate-success-close');
+        const dismiss = () => {
+          gateSuccess.classList.add('is-leaving');
+          // Remove the node after the fade-out animation finishes (350ms CSS)
+          setTimeout(() => gateSuccess.classList.add('hidden'), 360);
+        };
+        if (closeBtn && !closeBtn.dataset.bound) {
+          closeBtn.addEventListener('click', dismiss);
+          closeBtn.dataset.bound = '1';
+        }
+        // Auto-dismiss after 8s — long enough to read, short enough that it
+        // doesn't linger over the revealed next-moves / content-ideas sections
+        // (which was the original "What to make." overlap bug).
+        clearTimeout(window.__gateSuccessAutoDismiss);
+        window.__gateSuccessAutoDismiss = setTimeout(dismiss, 8000);
+      }
 
       // Walkthrough variant removed per user request — the Calendly link is
       // still in the PDF closing CTA and the next-moves section "LET US HELP YOU"
