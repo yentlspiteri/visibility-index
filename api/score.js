@@ -188,14 +188,16 @@ export default async function handler(req, res) {
       personalSiteRes,
       presenceRes,
       postsRes,
-      visionRes
+      visionRes,
+      trendsRes
     ] = await Promise.allSettled([
       fetchSerpFootprint(normalised, queryArgs, false),
       fetchSerpFootprint(normalised, queryArgs, true),
       checkPersonalDomain(queryArgs.firstName, queryArgs.lastName),
       fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
       fetchApifyPosts(normalised),
-      analyzeVisualIdentity(profile)         // moved up — runs in parallel with SerpAPI
+      analyzeVisualIdentity(profile),         // moved up — runs in parallel with SerpAPI
+      fetchGoogleTrends(queryArgs.firstName, queryArgs.lastName)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
     const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
@@ -203,6 +205,7 @@ export default async function handler(req, res) {
     const presence     = presenceRes.status   === 'fulfilled' ? presenceRes.value   : {};
     const rawPosts     = postsRes.status      === 'fulfilled' ? postsRes.value      : [];
     const visionAnalysis = visionRes.status === 'fulfilled' ? visionRes.value : null;
+    const googleTrends  = trendsRes.status  === 'fulfilled' ? trendsRes.value  : null;
     const postsData    = analyzePostsData(rawPosts);     // null if empty
     const serp = serpAll;     // alias for older usage in scoreFootprint
     const press = mergePressResults(serpAll, serpRecent);
@@ -284,7 +287,12 @@ export default async function handler(req, res) {
       network:   heuristic.network
     };
 
-    const total = Object.values(subs).reduce((a, b) => a + b, 0);
+    // Composite = sum of sub-scores + trends modifier (capped at 18).
+    // Trends rescues public figures whose LinkedIn signal under-states them
+    // (Bill Gates problem) without overruling the LinkedIn-derived dimensions.
+    const subTotal     = Object.values(subs).reduce((a, b) => a + b, 0);
+    const trendsModifier = trendsBonus(googleTrends);
+    const total = Math.min(18, subTotal + trendsModifier);
     const tier  = tierFor(total);
     const nextTier = TIERS.find(t => t.min > tier.max) || tier;
 
@@ -339,6 +347,11 @@ export default async function handler(req, res) {
       platforms:           presence,
       // Where the user lands in vanilla Google search for their own name
       googleRanking:       googleRanking,
+      // Search-interest signal (0-100 average over last 12 months) +
+      // composite-score bump it produced. Surfaced for transparency on the
+      // results page and in the audit log.
+      googleTrends:        googleTrends,
+      _trendsBonus:        trendsModifier,
       // Top-performing recent post (text + likes + comments + url) for the
       // "Your best post" finding card on the results page.
       topPost: postsData && postsData.topPostText ? {
@@ -670,24 +683,84 @@ async function fetchApify(linkedinUrl) {
   return raw;
 }
 
-// Tier-1 press domain allowlist - each hit is a strong Authority signal.
-// Order roughly reflects perceived prestige; the actual scoring counts unique outlets.
-const TIER_1_PRESS = [
-  'forbes.com', 'bloomberg.com', 'wsj.com', 'nytimes.com', 'ft.com', 'reuters.com',
-  'economist.com', 'theatlantic.com', 'newyorker.com', 'wired.com',
-  'techcrunch.com', 'fastcompany.com', 'hbr.org', 'inc.com', 'fortune.com',
-  'businessinsider.com', 'theguardian.com', 'cnbc.com', 'cnn.com', 'bbc.com',
-  'theinformation.com', 'axios.com',
-  // Tier-2: smaller-but-real press, podcasts, industry outlets. Surfaces mentions for
-  // creators / founders who haven't made Forbes yet but have legit coverage.
-  'sifted.eu', 'eu-startups.com', 'tech.eu', 'protocol.com', 'thenextweb.com',
-  'venturebeat.com', 'theverge.com', 'arstechnica.com', 'engadget.com',
-  'medium.com', 'substack.com',
+// Three-tier press classification. Hit weights compound with recency in
+// pressScore(): a Tier-1 NYT mention from last week is worth 6× a Tier-3
+// year-old podcast hit. Solves the Bill-Gates problem (a public figure with
+// 100 NYT pieces should not score the same as someone with 3 trade-press
+// mentions, which the old flat allowlist allowed).
+const PRESS_TIER_1 = [
+  'nytimes.com', 'ft.com', 'bloomberg.com', 'wsj.com', 'reuters.com',
+  'economist.com', 'forbes.com', 'bbc.com', 'theatlantic.com',
+  'newyorker.com', 'wired.com', 'hbr.org', 'techcrunch.com'
+];
+const PRESS_TIER_2 = [
+  'inc.com', 'fastcompany.com', 'fortune.com', 'axios.com',
+  'theinformation.com', 'businessinsider.com', 'theguardian.com',
+  'cnbc.com', 'cnn.com', 'theverge.com', 'venturebeat.com', 'arstechnica.com'
+];
+const PRESS_TIER_3 = [
+  'sifted.eu', 'eu-startups.com', 'tech.eu', 'protocol.com',
+  'thenextweb.com', 'engadget.com', 'medium.com', 'substack.com',
   'podcasts.apple.com', 'spotify.com', 'youtube.com',
   'linkedin.com/pulse', 'linkedin.com/posts',
   'ted.com', 'tedx.com', 'tedxtalks.ted.com',
   'crunchbase.com', 'producthunt.com'
 ];
+// Union list — kept as TIER_1_PRESS for backward-compat with extractTier1Press's
+// "is this a recognised press domain at all?" matching. Renamed mentally to
+// "any tier" but the const name stays so unrelated call sites don't break.
+const TIER_1_PRESS = [...PRESS_TIER_1, ...PRESS_TIER_2, ...PRESS_TIER_3];
+
+function tierForUrl(url) {
+  if (!url) return null;
+  if (PRESS_TIER_1.some(d => url.includes(d))) return 1;
+  if (PRESS_TIER_2.some(d => url.includes(d))) return 2;
+  if (PRESS_TIER_3.some(d => url.includes(d))) return 3;
+  return null;
+}
+
+// Recency multiplier for a press hit. Prefers a real date (Google News results
+// include one); falls back to the merged "recent" flag (which means the hit
+// came from the last-90-days SerpAPI search).
+function recencyMultiplier(dateStr, recentFlag) {
+  if (dateStr) {
+    const t = Date.parse(dateStr);
+    if (!isNaN(t)) {
+      const days = (Date.now() - t) / 86400000;
+      if (days <= 30)  return 2.0;
+      if (days <= 90)  return 1.5;
+      if (days <= 365) return 1.0;
+      return 0.5;
+    }
+  }
+  return recentFlag ? 1.5 : 1.0;
+}
+
+// Sum (tier × recency) across press hits + Google News hits. Up to 3 hits per
+// outlet count, so "10 NYT mentions" beats "1 NYT mention" without unbounded
+// inflation. Returns a raw weight (0 to ~30 typical max) — scoreAuthority
+// thresholds it into the 0-3 sub-score band.
+function pressScore(press, presence) {
+  const seen = new Map();   // domainKey → count
+  const candidates = [
+    ...((press?.hits) || []).map(h => ({ url: h.link, date: null, recent: !!h.recent })),
+    ...((presence?.googleNews?.hits) || []).map(n => ({ url: n.url, date: n.date, recent: false }))
+  ];
+  let total = 0;
+  for (const c of candidates) {
+    if (!c.url) continue;
+    const tier = tierForUrl(c.url);
+    if (!tier) continue;
+    const domain = (c.url.match(/^https?:\/\/([^/]+)/) || [])[1] || c.url;
+    const key = domain.replace(/^www\./, '');
+    const count = seen.get(key) || 0;
+    if (count >= 3) continue;
+    seen.set(key, count + 1);
+    const tierW = { 1: 3, 2: 2, 3: 1 }[tier];
+    total += tierW * recencyMultiplier(c.date, c.recent);
+  }
+  return total;
+}
 
 // Friendly outlet name from a domain (forbes.com → Forbes)
 function outletNameFromDomain(domain) {
@@ -801,6 +874,47 @@ async function fetchPlatformPresence(firstName, lastName, companyName) {
   }
 
   return presence;
+}
+
+// SerpAPI Google Trends — interest-over-time for the user's name. Returns a
+// summary { avg, peak, points } where avg/peak are 0-100 (Google's normalised
+// search-interest scale, peak = 100 within the queried window). Used as a
+// composite-score modifier: a public figure with thin LinkedIn signal still
+// scores above zero on Visibility because their name carries search demand.
+async function fetchGoogleTrends(firstName, lastName) {
+  if (!firstName || !lastName || !process.env.SERPAPI_API_KEY) return null;
+  const fullName = `${firstName} ${lastName}`.trim();
+  const params = new URLSearchParams({
+    engine: 'google_trends',
+    q: fullName,
+    data_type: 'TIMESERIES',
+    date: 'today 12-m',
+    api_key: process.env.SERPAPI_API_KEY
+  });
+  try {
+    const r = await fetch(`${SERPAPI_API}?${params}`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const timeline = j?.interest_over_time?.timeline_data || [];
+    const values = timeline
+      .map(t => t?.values?.[0]?.extracted_value)
+      .filter(v => typeof v === 'number');
+    if (!values.length) return { avg: 0, peak: 0, points: 0 };
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    return { avg: Math.round(avg), peak: Math.max(...values), points: values.length };
+  } catch (_) {
+    return null;
+  }
+}
+
+// Composite-score bump from search-interest signal. Conservative: 0/+1/+2 on
+// the 0-18 scale so it doesn't dominate the LinkedIn-driven sub-scores, just
+// rescues people whose Google footprint outsizes their LinkedIn presence.
+function trendsBonus(trends) {
+  if (!trends || typeof trends.avg !== 'number') return 0;
+  if (trends.avg > 50)  return 2;
+  if (trends.avg >= 10) return 1;
+  return 0;
 }
 
 // Score where the user's name lands in vanilla Google search results.
@@ -1611,16 +1725,24 @@ function scoreAuthority(profile, press, presence) {
 
   if (honorsCount >= 2) pts += 0.2;
 
-  // Real Tier-1 press hits - the strongest signal we can detect
-  const tier1Count = press?.count || 0;
-  if (tier1Count >= 3)      pts += 1.4;
-  else if (tier1Count >= 1) pts += 0.4 * tier1Count;
+  // Press scoring: tier × recency weighted (replaces flat tier1Count).
+  // pressScore() folds in Google News hits (with real dates) plus the merged
+  // SerpAPI organic press hits (with a recent flag from the last-90-days
+  // search). Thresholds calibrated so:
+  //   • Bill Gates / Tier-1 with recency stacking → max bracket (1.6pt)
+  //   • A solid Tier-1 hit + supporting trade press     → middle (1.0pt)
+  //   • Any recognised press at all                     → minimum (0.5pt)
+  // googleNews boost is now part of pressScore — removing the standalone
+  // +0.6 here avoids double-counting.
+  const pressW = pressScore(press, presence);
+  if (pressW >= 8)       pts += 1.6;
+  else if (pressW >= 4)  pts += 1.0;
+  else if (pressW >= 1)  pts += 0.5;
 
   // Cross-platform authority signals (observed, not claimed)
   if (presence?.wikipedia)  pts += 1.0;   // Wikipedia entry is huge
   if (presence?.youtube)    pts += 0.5;   // talks, interviews, podcast clips
   if (presence?.crunchbase) pts += 0.3;   // founder/exec credibility marker
-  if (presence?.googleNews) pts += 0.6;   // dedicated news index hit
 
   // NOTE: We deliberately DO NOT award points for self-claimed press keywords
   // ("featured in Forbes", "TEDx speaker") in About text. If we can't verify
