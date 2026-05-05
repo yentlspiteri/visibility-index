@@ -262,8 +262,10 @@ export default async function handler(req, res) {
       tier:           provisionalTier,
       platforms:      presence,         // includes .metrics on instagram/x when enriched
       press:          press,
+      pressW:         pressScore(press, presence),   // tier×recency weighted total
       personalSite:   personalSite,
       googleRanking:  googleRanking,
+      googleTrends:   googleTrends,                  // { avg, peak, points } | null
       careerStage:    careerStage,
       postsData:      postsData,
       visionAnalysis: visionAnalysis    // null OR { photo: {score, notes}, banner: {score, notes} }
@@ -1079,6 +1081,36 @@ const GOAL_FRAMING = {
 };
 
 // Tier-specific move templates - completely different prescriptions per tier.
+// Override directive used when the user is a globally recognised public figure
+// (Trends avg > 50 AND pressScore > 8). Without this branch, the prompt was
+// generating "post one signature piece monthly" advice for people like Bill
+// Gates — useless for someone who already has a global publishing platform.
+const GLOBAL_FIGURE_DIRECTIVE = `
+The user is a globally recognised public figure (Google search interest >50/100
+and multiple Tier-1 press mentions). They already have media leverage.
+
+NEVER suggest:
+  ✗ "post more on LinkedIn" or any cadence-increase move
+  ✗ "build a personal brand" — they already have one
+  ✗ generic "thought leadership" / "share your expertise" advice
+  ✗ "be more active on social media"
+
+Instead, every move MUST do ONE of these:
+  1. Convert an existing earned-media moment into a compounding owned asset —
+     a book chapter, an essay collection, a framework named after them, a
+     signature annual letter, a private mailing list. Reference the SPECIFIC
+     press hit or platform you're converting from.
+  2. Edit OUT a specific diluter — name the board seat, partnership, topic
+     pillar, or recurring obligation that should be dropped to sharpen focus.
+     Be concrete about WHAT to drop and WHY it dilutes their signature.
+  3. Build something that compounds without their daily attention — a
+     podcast they host quarterly (not weekly), a newsletter run by a paid
+     editor, a signature event they convene once a year, a fellowship or
+     prize that bears their name.
+
+Their bottleneck is NOT visibility. It is signal-to-noise and inheritability.
+Moves should sharpen what they're already known for, not multiply outputs.`;
+
 const TIER_DIRECTIVES = {
   'The Hidden Gem':         'Moves are FOUNDATIONAL. Headline rewrite, banner upload, first weekly post commitment, claim a personal domain, take a real photo. Twenty-minute moves, not twelve-week commitments. Aim for the +6pt jump to Rising Voice in three weeks.',
   'The Rising Voice':       'Moves are HABIT-FORMING. Lock cadence (one post/week, same day, three pillars). One outbound press or podcast pitch. Rewrite headline if not already crisp. The bottleneck is sustained outbound, not foundational fixes.',
@@ -1103,7 +1135,16 @@ async function analyzeProfile(profile, heuristic, ctx = {}) {
   const tierName    = ctx.tier?.name || '';
   const roleFrame   = ROLE_FRAMING[role] || null;
   const goalFrame   = GOAL_FRAMING[goal] || null;
-  const tierDirective = TIER_DIRECTIVES[tierName] || '';
+  // Detect global-figure status from the new Trends + press signals. When
+  // both are high the standard tier directive (even Recognised Leader) is
+  // too generic — override it with rules tuned for people who already have
+  // a global publishing platform.
+  const trendsAvg     = ctx.googleTrends?.avg ?? 0;
+  const pressW        = ctx.pressW ?? 0;
+  const isGlobalFigure = trendsAvg > 50 && pressW > 8;
+  const tierDirective = isGlobalFigure
+    ? GLOBAL_FIGURE_DIRECTIVE
+    : (TIER_DIRECTIVES[tierName] || '');
 
   // Career-stage line - tenure context for moves
   const cs = ctx.careerStage || {};
@@ -1314,6 +1355,27 @@ SPECIFICITY MANDATE for moves (very important):
 - If a move's "why" could be copy-pasted onto any other audit, REWRITE IT.
 - Reference detected platforms by name. If they have a YouTube interview, the move is "clip your YouTube interview into 5 LinkedIn posts" - not "go on more podcasts".
 - If they have NO press, do NOT pretend they do. If they HAVE press, build moves that compound it.
+
+NO-HEDGE RULE (zero tolerance):
+- Each move commits to ONE thing. NEVER write "A OR B" or "X OR Y or both".
+  Hedging signals you didn't choose. Pick the option with stronger evidence
+  in their profile and write the why for that one.
+- NEVER write "on a single theme" without naming the theme. Pick the theme
+  yourself based on their headline / experience / press / detected platforms.
+  Wrong: "post on a single theme — climate OR global health OR both"
+  Right: "post monthly on cap-table mechanics for first-time founders"
+
+BAD move phrasings to NEVER use (these are corporate-speak tells):
+  ✗ "moves your clients to act" / "unlocks value" / "positions you as a thought leader"
+  ✗ "so journalists / executives / decision-makers instantly know what to expect"
+  ✗ "post one signature piece monthly" — what to post about?
+  ✗ "sharpen the signature" — sharpen WHAT, specifically?
+  ✗ "amplify your voice" / "elevate your presence" / "establish credibility"
+  ✗ "build a personal brand" — anyone reading this has one already
+GOOD move phrasings (concrete and falsifiable):
+  ✓ "Drop the third bullet from your About section — 'transforming the future' tells nothing"
+  ✓ "Pitch a 600-word op-ed to FT Adviser citing the data from your Q2 report"
+  ✓ "Convert your TEDx talk into a five-post LinkedIn carousel this week"
 
 CONTENT IDEAS — same specificity rule, even harder:
 - Each writingIdeas[].title and videoIdeas[].title MUST be a real post/video idea this person could actually make this week. NOT a generic topic header.
