@@ -7,8 +7,7 @@
   "trailingSlash": false,
   "functions": {
     "api/*.js": {
-      "maxDuration": 60,
-      "includeFiles": "Fonts/**"
+      "maxDuration": 60
     }
   }
 }
