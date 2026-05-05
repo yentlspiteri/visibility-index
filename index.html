@@ -8695,26 +8695,81 @@ fbq('track', 'PageView');
     }
   }
 
-  /* ────────── GLOBAL CALENDLY-ANCHOR HANDLER ──────────
-     Catches every click on a calendly.com link site-wide. If the inline calendar
-     mount is on this page AND visible (walkthrough mode), scroll to it on-page
-     instead of opening Calendly in a new tab. Falls through to the default link
-     behaviour otherwise. Single handler covers help-cta, bottom-bar CTA, nav-cta,
-     in-content links, etc. so no future Calendly link can ever miss this. ────── */
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href*="calendly.com/yentl-spiteri"], a[href="#calendly-mount"], a[href="#gate-calendly"], a[href="#gate-walkthrough"]');
-    if (!a) return;
-    const mount = document.getElementById('calendly-mount');
-    const wrap  = document.getElementById('gate-walkthrough') || document.getElementById('gate-calendly');
-    const target = mount || wrap;
-    if (target && target.offsetParent !== null) {
-      e.preventDefault();
-      const headerOffset = 80;
-      const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
-      window.scrollTo({ top, behavior: 'smooth' });
-      if (window.track) window.track('cta_calendly', { source: 'global-anchor', via: a.id || a.className || 'unknown' });
+  /* ────────── GLOBAL CALENDLY POPUP HANDLER ──────────
+     Catches every click on a calendly.com/yentl-spiteri link site-wide. Instead
+     of opening in a new tab, fires Calendly's popup widget — a centred modal
+     overlay with the calendar inside. User books without leaving the page;
+     when they confirm, Calendly fires `calendly.event_scheduled` postMessage
+     and we track the conversion.
+
+     Lazy-loads widget.js + widget.css on first click (kept off the critical
+     path for speed). Falls back to opening the link in a new tab if Calendly
+     is blocked by an ad-blocker. ────── */
+  (function(){
+    let assetsLoading = false;
+
+    function ensureCalendlyAssets(then) {
+      // CSS — needed for popup overlay styling
+      if (!document.querySelector('link[href*="calendly.com/assets/external/widget.css"]')) {
+        const link = document.createElement('link');
+        link.rel  = 'stylesheet';
+        link.href = 'https://assets.calendly.com/assets/external/widget.css';
+        document.head.appendChild(link);
+      }
+      // JS — initPopupWidget lives on window.Calendly after this loads
+      if (window.Calendly && Calendly.initPopupWidget) { then(true); return; }
+      if (assetsLoading) {
+        // Already loading — poll for window.Calendly readiness
+        const t0 = Date.now();
+        const id = setInterval(() => {
+          if (window.Calendly && Calendly.initPopupWidget) {
+            clearInterval(id); then(true);
+          } else if (Date.now() - t0 > 5000) {
+            clearInterval(id); then(false);
+          }
+        }, 80);
+        return;
+      }
+      assetsLoading = true;
+      const s = document.createElement('script');
+      s.src = 'https://assets.calendly.com/assets/external/widget.js';
+      s.async = true;
+      s.onload  = () => then(!!(window.Calendly && Calendly.initPopupWidget));
+      s.onerror = () => then(false);
+      document.body.appendChild(s);
     }
-  }, true);  // capture phase — runs before any other handler
+
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href*="calendly.com/yentl-spiteri"]');
+      if (!a) return;
+      e.preventDefault();
+      const url = a.href;
+      const source = a.id || a.className || a.closest('section')?.id || 'unknown';
+      if (window.track) window.track('cta_calendly', { source: 'popup-modal', via: source });
+      ensureCalendlyAssets((ok) => {
+        if (ok && window.Calendly && Calendly.initPopupWidget) {
+          Calendly.initPopupWidget({ url });
+        } else {
+          // Ad-blocker / network failure — fall back to a new tab so the user
+          // still gets to a booking page.
+          window.open(url, '_blank', 'noopener');
+        }
+      });
+    }, true);
+
+    // Listen for booking completion so we can track the conversion. Calendly
+    // posts `calendly.event_scheduled` with the event details when a slot is
+    // confirmed. We forward to GA4 + Meta as a high-value conversion.
+    window.addEventListener('message', (e) => {
+      if (!e?.data || typeof e.data !== 'object') return;
+      if (e.data.event === 'calendly.event_scheduled') {
+        if (window.track) window.track('walkthrough_booked', {
+          tier:  (window.lastTier && window.lastTier.name) || '',
+          score: (typeof window.lastScore === 'number') ? Math.round((window.lastScore / 18) * 100) : null
+        });
+      }
+    });
+  })();
 
   /* ────────── Render the "What to write / What to film" panels ──────────
      Driven by lastWritingIdeas + lastVideoIdeas arrays from /api/score.
