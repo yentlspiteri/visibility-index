@@ -105,6 +105,11 @@ export default async function handler(req, res) {
     // (e.g. supreme_coder) reject URLs without it as "not valid".
     const fullUrl = `https://www.${normalised}/`;
 
+    // Start the posts scraper immediately — it only needs the URL, not the profile.
+    // Running in parallel with Stage 1 (fetchApify) removes it from the critical path
+    // entirely (~8-12s saved vs. running it in Stage 2 after the profile returns).
+    const postsPromise = fetchApifyPosts(normalised);
+
     // 1) Fetch the LinkedIn profile FIRST so we can use the real name + company
     //    in the press search. The handle alone produces noisy/wrong results.
     //    +1-2s of latency in exchange for dramatically more relevant Tier-1 detection.
@@ -118,29 +123,39 @@ export default async function handler(req, res) {
       console.error('Apify failed:', errMsg, 'actor=', APIFY_ACTOR);
 
       // Categorise the failure → user-facing message + ops alert category
-      let userError, alertCategory, alertSubject;
+      // _waitlist=true → frontend shows "we’re busy, leave your email" card
+      // _waitlist=false → user-input error (wrong handle, private profile) — no waitlist
+      let userError, alertCategory, alertSubject, waitlist = false;
       if (/hard limit|subscribe to a paid|free user|usage limit/i.test(errMsg)) {
-        userError     = 'Our profile scanner is at capacity for the day. Please try again in a few hours, or reach out at hello@vonpeach.com to get your audit by hand.';
-        alertCategory = 'apify-hard-limit';
-        alertSubject  = '🚨 Apify scraper hit hard limit - audit is OFFLINE for users';
+        userError     = ‘Our scanner is at capacity right now.’;
+        alertCategory = ‘apify-hard-limit’;
+        alertSubject  = ‘🚨 Apify scraper hit hard limit - audit is OFFLINE for users’;
+        waitlist      = true;
       } else if (/rate.?limit|blocked|empty profile/i.test(errMsg)) {
-        userError     = 'LinkedIn is rate-limiting the scraper right now. Please wait 60 seconds and try again.';
-        alertCategory = 'apify-rate-limit';
-        alertSubject  = '⚠️ Apify scraper rate-limited by LinkedIn';
+        userError     = ‘We\’re seeing a lot of audits right now and LinkedIn is pushing back.’;
+        alertCategory = ‘apify-rate-limit’;
+        alertSubject  = ‘⚠️ Apify scraper rate-limited by LinkedIn’;
+        waitlist      = true;
       } else if (/401|403|unauthor/i.test(errMsg)) {
-        userError     = 'Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.';
-        alertCategory = 'apify-auth';
-        alertSubject  = '🚨 Apify auth failure - APIFY_API_TOKEN missing or invalid';
+        userError     = ‘Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.’;
+        alertCategory = ‘apify-auth’;
+        alertSubject  = ‘🚨 Apify auth failure - APIFY_API_TOKEN missing or invalid’;
       } else if (/404|not.?found/i.test(errMsg)) {
-        userError     = 'That LinkedIn profile doesn’t exist. Check the handle in the URL.';
-        alertCategory = null; // Don't alert on user-input errors
+        userError     = ‘That LinkedIn profile doesn’t exist. Check the handle in the URL.’;
+        alertCategory = null; // Don’t alert on user-input errors
       } else if (/private/i.test(errMsg)) {
-        userError     = 'That profile is private - the audit needs a public LinkedIn URL.';
+        userError     = ‘That profile is private - the audit needs a public LinkedIn URL.’;
         alertCategory = null;
+      } else if (/abort|timed?\s?out/i.test(errMsg) || profileRes.reason?.name === ‘AbortError’) {
+        userError     = ‘We\’re getting hammered with audits right now and the scanner timed out.’;
+        alertCategory = ‘apify-timeout’;
+        alertSubject  = ‘⚠️ Apify scraper timed out (>25s)’;
+        waitlist      = true;
       } else {
-        userError     = 'We couldn’t fetch that LinkedIn profile. The URL may be wrong, the profile is private, or the scraper is temporarily down.';
-        alertCategory = 'apify-unknown';
-        alertSubject  = '⚠️ Apify scraper failed (unknown error)';
+        userError     = ‘We\’re seeing unusually high demand right now and hit a snag.’;
+        alertCategory = ‘apify-unknown’;
+        alertSubject  = ‘⚠️ Apify scraper failed (unknown error)’;
+        waitlist      = true;
       }
 
       // Fire ops alert (throttled to 1/30min per category) - only for system-level failures
@@ -152,17 +167,18 @@ export default async function handler(req, res) {
           context:  {
             actor:     APIFY_ACTOR,
             url:       normalised,
-            role:      body.role || '(none)',
-            goal:      body.goal || '(none)',
+            role:      body.role || ‘(none)’,
+            goal:      body.goal || ‘(none)’,
             ip:        ip
           }
         }).catch(() => {}); // fire-and-forget
       }
 
       return res.status(502).json({
-        error: userError,
-        _debug: errMsg.slice(0, 400),
-        _actor: APIFY_ACTOR
+        error:     userError,
+        _waitlist: waitlist || undefined,
+        _debug:    errMsg.slice(0, 400),
+        _actor:    APIFY_ACTOR
       });
     }
     const profile = profileRes.value;
@@ -195,8 +211,8 @@ export default async function handler(req, res) {
       fetchSerpFootprint(normalised, queryArgs, true),
       checkPersonalDomain(queryArgs.firstName, queryArgs.lastName),
       fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
-      fetchApifyPosts(normalised),
-      analyzeVisualIdentity(profile),         // moved up — runs in parallel with SerpAPI
+      postsPromise,                            // already running since before Stage 1 — likely done
+      analyzeVisualIdentity(profile),          // moved up — runs in parallel with SerpAPI
       fetchGoogleTrends(queryArgs.firstName, queryArgs.lastName)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
@@ -214,30 +230,15 @@ export default async function handler(req, res) {
     // Career stage from the experience array - feeds Claude for tenure-aware moves
     const careerStage = analyzeCareerStage(profile);
 
-    // ─── Stage 3: handle-dependent enrichment (IG/X metrics) ───
-    // These need handles parsed from Stage 2's presence map, so they can't move up.
-    // Both run in parallel; failure in one doesn't block the other.
+    // ─── Stage 3 + Claude: run in parallel ───────────────────────────────────
+    // IG/X enrichment needs handles from Stage 2's presence map (can't move earlier).
+    // Claude only needs heuristic scores + profile, which are already available.
+    // Running them together saves 5–8s vs. the old sequential order.
     const igHandle = extractHandle(presence.instagram?.hits?.[0]?.url, 'instagram.com');
     const xHandle  = extractHandle(presence.x?.hits?.[0]?.url, 'x.com');
-    const [igRes, xRes] = await Promise.allSettled([
-      igHandle ? fetchInstagramData(igHandle) : Promise.resolve(null),
-      xHandle  ? fetchXData(xHandle)         : Promise.resolve(null)
-    ]);
-    const igData = igRes.status === 'fulfilled' ? igRes.value : null;
-    const xData  = xRes.status  === 'fulfilled' ? xRes.value  : null;
 
-    // Merge Instagram/X enriched data INTO the presence map - the page + PDF
-    // can now show "Instagram: 4.2k followers" instead of just "Detected".
-    if (igData && presence.instagram) {
-      presence.instagram.metrics = igData;
-    }
-    if (xData && presence.x) {
-      presence.x.metrics = xData;
-    }
-
-    // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
+    // 2) Compute heuristic sub-scores so we can kick off Claude immediately.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
-    //    Footprint, authority, network now also factor in cross-platform presence.
     const heuristic = {
       footprint: scoreFootprint(profile, serp, presence, googleRanking, personalSite),
       authority: scoreAuthority(profile, press, presence),
@@ -246,9 +247,7 @@ export default async function handler(req, res) {
       network:   scoreNetwork(profile, presence)
     };
 
-    // Provisional tier - sum the heuristic scores to give Claude a tier hint for
-    // tier-aware move templates (Hidden Gem moves should look very different from
-    // Recognised Leader moves).
+    // Provisional tier - gives Claude a tier hint for tier-aware move templates.
     const provisionalTotal = (heuristic.footprint || 0) + (heuristic.authority || 0)
                            + (heuristic.cadence   || 0) + (heuristic.visual    || 0)
                            + (heuristic.network   || 0) + 1;     // +1 for placeholder clarity
@@ -270,13 +269,33 @@ export default async function handler(req, res) {
       postsData:      postsData,
       visionAnalysis: visionAnalysis    // null OR { photo: {score, notes}, banner: {score, notes} }
     };
-    const analysis = await analyzeProfile(profile, heuristic, analysisCtx).catch(err => {
-      console.error('Claude analysis failed:', err);
-      return {
-        clarityScore: 1, clarityRationale: 'Fallback heuristic - LLM unavailable.',
-        executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: []
-      };
-    });
+
+    // Fire Claude + IG/X enrichment at the same time — neither depends on the other.
+    const [[igRes, xRes], analysis] = await Promise.all([
+      Promise.allSettled([
+        igHandle ? fetchInstagramData(igHandle) : Promise.resolve(null),
+        xHandle  ? fetchXData(xHandle)         : Promise.resolve(null)
+      ]),
+      analyzeProfile(profile, heuristic, analysisCtx).catch(err => {
+        console.error('Claude analysis failed:', err);
+        return {
+          clarityScore: 1, clarityRationale: 'Fallback heuristic - LLM unavailable.',
+          executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: []
+        };
+      })
+    ]);
+
+    const igData = igRes.status === 'fulfilled' ? igRes.value : null;
+    const xData  = xRes.status  === 'fulfilled' ? xRes.value  : null;
+
+    // Merge Instagram/X enriched data INTO the presence map - the page + PDF
+    // can now show "Instagram: 4.2k followers" instead of just "Detected".
+    if (igData && presence.instagram) {
+      presence.instagram.metrics = igData;
+    }
+    if (xData && presence.x) {
+      presence.x.metrics = xData;
+    }
     const clarity = { score: analysis.clarityScore, rationale: analysis.clarityRationale };
 
     // 4) Final sub-scores - re-compute visual with the real clarity now
@@ -302,10 +321,17 @@ export default async function handler(req, res) {
     // response, never throws. If NOTION_AUDITS_DATABASE_ID isn't set, it no-ops.
     // Status starts at "audit_completed"; /api/lead and the Calendly webhook
     // upsert the row to "email_submitted" / "walkthrough_booked" later.
+    const _notionFirst = getFirstName(profile);
+    const _notionLast  = getLastName(profile);
+    if (!_notionFirst && !_notionLast) {
+      // Diagnostic: if names are blank, log the available keys so we can see
+      // which key the actor used (check Vercel function logs for "[Notion names blank]").
+      console.warn('[Notion names blank] profile keys:', Object.keys(profile || {}).slice(0, 30).join(', '));
+    }
     logAuditCompleted({
       linkedinUrl: normalised ? `https://www.${normalised}/` : null,
-      firstName:   getFirstName(profile),
-      lastName:    getLastName(profile),
+      firstName:   _notionFirst,
+      lastName:    _notionLast,
       headline:    getHeadline(profile),
       company:     getCompany(profile),
       score:       Math.round((total / 18) * 100),    // 0-100 display
@@ -386,7 +412,7 @@ export default async function handler(req, res) {
       body:     `Uncaught error in the score handler.\n\n${err?.stack || err?.message || String(err)}`,
       context:  { url: normalised, ip, actor: APIFY_ACTOR }
     }).catch(() => {});
-    return res.status(500).json({ error: 'Audit failed. Please try again in a minute.' });
+    return res.status(500).json({ error: 'Something went wrong on our end.', _waitlist: true });
   }
 }
 
@@ -525,7 +551,7 @@ async function fetchInstagramData(handle) {
         resultsLimit: 6,
         resultsType:  'details'
       })
-    }, 10000);
+    }, 5000);
     if (!r.ok) return null;
     const items = await r.json();
     if (!Array.isArray(items) || !items.length) return null;
@@ -562,7 +588,7 @@ async function fetchXData(handle) {
         startUrls:      [{ url: `https://x.com/${handle}` }],
         maxItems:       5
       })
-    }, 10000);
+    }, 5000);
     if (!r.ok) return null;
     const items = await r.json();
     if (!Array.isArray(items) || !items.length) return null;
@@ -589,8 +615,9 @@ async function fetchApifyPosts(linkedinUrl) {
   if (!process.env.APIFY_API_TOKEN || !APIFY_POSTS_ACTOR) return [];
   const url = `${APIFY_API}/${APIFY_POSTS_ACTOR}/run-sync-get-dataset-items`;
   try {
-    // 12s cap - posts scraper occasionally takes its time. Beyond this we'd
-    // rather skip posts data than fail the audit.
+    // 8s cap — posts scraper now starts in parallel with Stage 1 (profile fetch),
+    // so by the time Stage 2 resolves it's typically already done. Cap at 8s to
+    // avoid holding the pipeline open if it's slow.
     const r = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
@@ -606,7 +633,7 @@ async function fetchApifyPosts(linkedinUrl) {
         maxResults:         20,
         limitPerSource:     20
       })
-    }, 12000);
+    }, 8000);
     if (!r.ok) {
       const text = await r.text().catch(() => '');
       console.warn('[Apify posts] non-OK', r.status, text.slice(0, 200));
@@ -624,7 +651,7 @@ async function fetchApifyPosts(linkedinUrl) {
 async function fetchApify(linkedinUrl) {
   // Apify "run-sync-get-dataset-items" runs the actor and returns the dataset rows directly.
   const url = `${APIFY_API}/${APIFY_ACTOR}/run-sync-get-dataset-items`;
-  const r = await fetch(url, {
+  const r = await fetchWithTimeout(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -649,7 +676,7 @@ async function fetchApify(linkedinUrl) {
       linkedInProfileUrls: [linkedinUrl],
       linkedinProfileUrl:  linkedinUrl
     })
-  });
+  }, 25000);
   if (!r.ok) {
     const text = await r.text().catch(() => '');
     throw new Error(`Apify ${r.status}: ${text.slice(0, 200)}`);
@@ -815,7 +842,7 @@ async function fetchPlatformPresence(firstName, lastName, companyName) {
       num: '5',
       api_key: process.env.SERPAPI_API_KEY
     });
-    return fetch(`${SERPAPI_API}?${params}`)
+    return fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 8000)
       .then(r => r.ok ? r.json() : null)
       .catch(() => null);
   });
@@ -823,11 +850,11 @@ async function fetchPlatformPresence(firstName, lastName, companyName) {
   // Google News engine - dedicated news-index search, catches mentions across
   // every news source Google indexes (Reuters, AP, BBC, NYT, Bloomberg, FT, plus
   // local/regional outlets the standard tier-1 allowlist would miss).
-  const newsCall = fetch(`${SERPAPI_API}?` + new URLSearchParams({
+  const newsCall = fetchWithTimeout(`${SERPAPI_API}?` + new URLSearchParams({
     engine: 'google_news',
     q: `${fullName}${company}`,
     api_key: process.env.SERPAPI_API_KEY
-  })).then(r => r.ok ? r.json() : null).catch(() => null);
+  }), {}, 8000).then(r => r.ok ? r.json() : null).catch(() => null);
 
   const [platformResults, newsResult] = await Promise.all([
     Promise.allSettled(platformCalls),
@@ -894,7 +921,7 @@ async function fetchGoogleTrends(firstName, lastName) {
     api_key: process.env.SERPAPI_API_KEY
   });
   try {
-    const r = await fetch(`${SERPAPI_API}?${params}`);
+    const r = await fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 8000);
     if (!r.ok) return null;
     const j = await r.json();
     const timeline = j?.interest_over_time?.timeline_data || [];
@@ -946,8 +973,10 @@ async function checkPersonalDomain(firstName, lastName) {
   const f = String(firstName).toLowerCase().replace(/[^a-z]/g, '');
   const l = String(lastName).toLowerCase().replace(/[^a-z]/g, '');
   if (!f || !l || f.length < 2 || l.length < 2) return null;
+
   // Patterns ordered by likelihood. firstnamelastname.com is the most common executive personal site.
   // Expanded TLD set: .me / .io / .co are increasingly common for personal sites.
+  // Deliberately excludes ${l}.com (surname-only) — too many businesses share a last name.
   const candidates = [
     `https://${f}${l}.com`,
     `https://${f}-${l}.com`,
@@ -957,24 +986,67 @@ async function checkPersonalDomain(firstName, lastName) {
     `https://${f}${l}.io`,
     `https://${f}${l}.co`,
     `https://${f}-${l}.me`,
-    `https://${f}-${l}.io`,
-    `https://${l}.com`     // surname-only domains (less common but happens for senior execs)
+    `https://${f}-${l}.io`
   ];
+
+  // Parked / for-sale domain patterns we want to reject even when they return 200
+  const PARKED_PATTERNS = /parked|for\s*sale|buy\s*this\s*domain|domain\s*is\s*available|godaddy|sedo|hugedomains|dan\.com|namecheap|underconstruction|under\s+construction|coming\s+soon/i;
+
   for (const url of candidates) {
     try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 2000);
-      // HEAD request, follow redirects. Some sites refuse HEAD - GET as fallback would be slower.
-      const r = await fetch(url, {
+      // 1) Quick HEAD to confirm the domain resolves at all
+      const headCtrl = new AbortController();
+      const headTimer = setTimeout(() => headCtrl.abort(), 2000);
+      const head = await fetch(url, {
         method: 'HEAD',
         redirect: 'follow',
-        signal: ctrl.signal,
+        signal: headCtrl.signal,
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityIndex/1.0)' }
       }).catch(() => null);
-      clearTimeout(timer);
-      if (r && r.ok) {
-        return { url, found: true };
+      clearTimeout(headTimer);
+      if (!head || !head.ok) continue;
+
+      // 2) Validate ownership: fetch the first ~10KB of HTML and confirm this
+      //    person's name actually appears. Avoids false positives where the domain
+      //    is owned by a different person or a business with the same name.
+      const getCtrl  = new AbortController();
+      const getTimer = setTimeout(() => getCtrl.abort(), 3000);
+      const get = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        signal: getCtrl.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityIndex/1.0)' }
+      }).catch(() => null);
+      clearTimeout(getTimer);
+      if (!get || !get.ok) continue;
+
+      // Read first ~12KB only — enough for <head> + above-fold content
+      const reader  = get.body.getReader();
+      const chunks  = [];
+      let   totalBytes = 0;
+      try {
+        while (totalBytes < 12000) {
+          const { done, value } = await reader.read();
+          if (done || !value) break;
+          chunks.push(value);
+          totalBytes += value.length;
+        }
+      } finally {
+        reader.cancel().catch(() => {});
       }
+      const html  = new TextDecoder().decode(
+        chunks.reduce((a, b) => { const c = new Uint8Array(a.length + b.length); c.set(a); c.set(b, a.length); return c; }, new Uint8Array(0))
+      ).toLowerCase();
+
+      // Reject parked / for-sale / under-construction pages
+      if (PARKED_PATTERNS.test(html)) continue;
+
+      // Require BOTH first and last name to appear somewhere in the visible content.
+      // A personal site almost always names the person in the title, bio, or above-fold.
+      if (!html.includes(f) || !html.includes(l)) continue;
+
+      return { url, found: true };
+
     } catch (_) { /* ignore single-URL failures, try the next */ }
   }
   return null;
@@ -1051,7 +1123,7 @@ async function fetchSerpFootprint(normalisedUrl, profileForQuery, recentOnly = f
     api_key: process.env.SERPAPI_API_KEY
   });
   if (recentOnly) params.append('tbs', 'qdr:m3');     // last 3 months
-  const r = await fetch(`${SERPAPI_API}?${params}`);
+  const r = await fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 10000);
   if (!r.ok) throw new Error(`SerpAPI ${r.status}`);
   return r.json();
 }
@@ -1076,7 +1148,7 @@ const ROLE_FRAMING = {
 const GOAL_FRAMING = {
   clients:     { priority: 'Brand Clarity + Content Cadence',                directive: 'Moves should make it OBVIOUSLY easy for an ideal client to identify themselves in your positioning, then to see proof you can deliver.' },
   speaking:    { priority: 'Authority Signals + Speaker Reel',                directive: 'Moves should focus on visible speaker credentials - past stages, named talks, a discoverable speaker reel, outbound pitching.' },
-  credibility: { priority: 'Authority Signals + Network Recognition',         directive: 'Moves should focus on third-party validation - press mentions, named board roles, awards, Wikipedia eligibility, peer endorsements.' },
+  credibility: { priority: 'Authority Signals + Network Recognition',         directive: 'Moves should focus on third-party validation - press mentions, named board roles, awards, peer endorsements. If authority score ≥ 2 and ≥ 1 press hit, Wikipedia is the single highest-ROI move: fewer than 0.3% of executives have an entry — it is the most trusted credibility signal on the internet. Explain the 3-step path: (1) 3+ independent verifiable sources, (2) Articles for Creation submission, (3) specialist writer.' },
   legacy:      { priority: 'Brand Clarity + Authority + Sustained POV',       directive: 'Moves should focus on inheritable assets - a book, a named framework, an annual letter, a community that survives platforms.' }
 };
 
@@ -1418,7 +1490,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 - speaker  = Keynote speaking kit + public-speaking coaching
 - pr       = PR advisory`;
 
-  const r = await fetch(ANTHROPIC_API, {
+  const r = await fetchWithTimeout(ANTHROPIC_API, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1434,7 +1506,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
       max_tokens: 2800,
       messages: [{ role: 'user', content: prompt }]
     })
-  });
+  }, 20000);
   if (!r.ok) throw new Error(`Anthropic ${r.status}`);
   const data = await r.json();
   const text = data.content?.[0]?.text || '';
@@ -1539,19 +1611,27 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 // add aliases here - no need to touch the scoring functions.
 
 function getFirstName(p) {
-  // supreme_coder: firstName. Others: first_name / firstname / split fullName.
-  if (p.firstName)  return String(p.firstName).trim();
-  if (p.first_name) return String(p.first_name).trim();
-  if (p.firstname)  return String(p.firstname).trim();
-  const full = p.fullName || p.name || p.full_name || '';
+  // Ordered by actor prevalence:
+  // supreme_coder → firstName
+  // dev_fusion → first_name / firstname
+  // generic LinkedIn APIs → givenName / given_name
+  // Apify generic → split fullName / full_name / name / displayName
+  if (p.firstName)   return String(p.firstName).trim();
+  if (p.first_name)  return String(p.first_name).trim();
+  if (p.firstname)   return String(p.firstname).trim();
+  if (p.givenName)   return String(p.givenName).trim();
+  if (p.given_name)  return String(p.given_name).trim();
+  const full = p.fullName || p.full_name || p.displayName || p.display_name || p.name || '';
   if (full) return String(full).trim().split(/\s+/)[0] || '';
   return '';
 }
 function getLastName(p) {
-  if (p.lastName)  return String(p.lastName).trim();
-  if (p.last_name) return String(p.last_name).trim();
-  if (p.lastname)  return String(p.lastname).trim();
-  const full = p.fullName || p.name || p.full_name || '';
+  if (p.lastName)    return String(p.lastName).trim();
+  if (p.last_name)   return String(p.last_name).trim();
+  if (p.lastname)    return String(p.lastname).trim();
+  if (p.familyName)  return String(p.familyName).trim();
+  if (p.family_name) return String(p.family_name).trim();
+  const full = p.fullName || p.full_name || p.displayName || p.display_name || p.name || '';
   if (full) {
     const parts = String(full).trim().split(/\s+/);
     return parts.length > 1 ? parts.slice(1).join(' ') : '';
