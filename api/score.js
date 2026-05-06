@@ -205,7 +205,8 @@ export default async function handler(req, res) {
       presenceRes,
       postsRes,
       visionRes,
-      trendsRes
+      trendsRes,
+      llmVisRes
     ] = await Promise.allSettled([
       fetchSerpFootprint(normalised, queryArgs, false),
       fetchSerpFootprint(normalised, queryArgs, true),
@@ -213,7 +214,11 @@ export default async function handler(req, res) {
       fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
       postsPromise,                            // already running since before Stage 1 — likely done
       analyzeVisualIdentity(profile),          // moved up — runs in parallel with SerpAPI
-      fetchGoogleTrends(queryArgs.firstName, queryArgs.lastName)
+      fetchGoogleTrends(queryArgs.firstName, queryArgs.lastName),
+      // GEO probe — what does an LLM with web search say about this person.
+      // Adds ~5-15s to the slowest stage but runs alongside SerpAPI/Apify so
+      // critical-path latency only grows if it's the slowest call in the batch.
+      probeLLMVisibility(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
     const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
@@ -222,7 +227,8 @@ export default async function handler(req, res) {
     const rawPosts     = postsRes.status      === 'fulfilled' ? postsRes.value      : [];
     const visionAnalysis = visionRes.status === 'fulfilled' ? visionRes.value : null;
     const googleTrends  = trendsRes.status  === 'fulfilled' ? trendsRes.value  : null;
-    const postsData    = analyzePostsData(rawPosts);     // null if empty
+    const llmVisibility  = llmVisRes.status === 'fulfilled' ? llmVisRes.value : null;
+    const postsData    = analyzePostsData(rawPosts, normalised, profile);     // null if empty
     const serp = serpAll;     // alias for older usage in scoreFootprint
     const press = mergePressResults(serpAll, serpRecent);
     // Google name-position scoring - uses the serpAll we already have, no extra API call.
@@ -240,7 +246,7 @@ export default async function handler(req, res) {
     // 2) Compute heuristic sub-scores so we can kick off Claude immediately.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
     const heuristic = {
-      footprint: scoreFootprint(profile, serp, presence, googleRanking, personalSite),
+      footprint: scoreFootprint(profile, serp, presence, googleRanking, personalSite, llmVisibility),
       authority: scoreAuthority(profile, press, presence),
       cadence:   scoreCadence(profile, postsData),
       visual:    scoreVisual(profile, { score: 1 }, visionAnalysis),  // vision overrides when present
@@ -267,7 +273,8 @@ export default async function handler(req, res) {
       googleTrends:   googleTrends,                  // { avg, peak, points } | null
       careerStage:    careerStage,
       postsData:      postsData,
-      visionAnalysis: visionAnalysis    // null OR { photo: {score, notes}, banner: {score, notes} }
+      visionAnalysis: visionAnalysis,   // null OR { photo: {score, notes}, banner: {score, notes} }
+      llmVisibility:  llmVisibility     // null OR { recognized, confidence, summary, themes, topSources, citations, score }
     };
 
     // Fire Claude + IG/X enrichment at the same time — neither depends on the other.
@@ -386,10 +393,15 @@ export default async function handler(req, res) {
         text:     postsData.topPostText,
         likes:    postsData.topPostLikes,
         comments: postsData.topPostComments,
+        shares:   postsData.topPostShares || 0,
         url:      postsData.topPostUrl
       } : null,
       // Claude vision read on profile photo + banner (null if vision skipped)
       visionAnalysis:      visionAnalysis,
+      // GEO / LLM-search visibility — what an LLM with web search knows about
+      // them. Used by the "When AI meets your name" finding card on results.
+      // null if probe skipped (no API key, timeout, parse fail).
+      llmVisibility:       llmVisibility,
       // Backward-compat: keep older field names mapped from the new payload
       personalSummary:     analysis.executiveSummary,
       reportTeasers:       (analysis.moves || []).map(m => m.title),
@@ -646,6 +658,142 @@ async function fetchApifyPosts(linkedinUrl) {
     console.warn('[Apify posts] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
     return [];
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GEO probe — "what do LLMs know about this person?"
+// ─────────────────────────────────────────────────────────────────────────────
+// In 2026 prospects, recruiters, and journalists are searching via ChatGPT /
+// Perplexity / Claude before (or instead of) Google. The audit's footprint
+// dimension was measuring 2018-era visibility (where do you appear on a SERP).
+// This probe measures the modern equivalent: what does an LLM say when someone
+// asks "who is X?" — does it know you, what does it think you're known for,
+// and what sources is it pulling from?
+//
+// Implementation: a single Claude call with the web_search tool enabled. We
+// give Claude 5 web searches max (more than enough for a "tell me about X"
+// query) and force a JSON response so we can parse reliably. We capture the
+// citations the model cites so the user can see exactly which pages are
+// shaping the LLM's view of them.
+//
+// Failure mode is silent (returns null) — better to render the audit without
+// the GEO card than fail the whole pipeline.
+async function probeLLMVisibility(firstName, lastName, companyName) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  if (!fullName) return null;
+  const companyLine = companyName ? ` They currently work at ${companyName}.` : '';
+  const prompt = `You are auditing the public AI-search footprint of a real person. Search the web and tell me what you find about "${fullName}".${companyLine}
+
+Use the web_search tool (up to 5 queries) to find recent, specific public information — their work, what they're known for, notable accomplishments, press mentions, content they've published. Distinguish them from anyone else with the same name.
+
+Then return ONLY a single JSON object in this EXACT shape, no preamble or commentary:
+
+{
+  "recognized": true | false,
+  "confidence": "specific" | "vague" | "none",
+  "summary": "<one or two sentences describing who this person is and what they do, max 240 chars. If recognized=false, write a one-line statement that no specific public information exists>",
+  "themes": ["<2-4 short phrases the person is publicly associated with — what they're known for. Empty array if recognized=false>"],
+  "topSources": ["<root domain of the most-cited public source>", "<second>", "<third>"]
+}
+
+Confidence rubric:
+- "specific" = you found multiple specific data points (role, company, named work, named press, distinct point of view)
+- "vague" = generic info only ("appears to be a marketing professional"), or you can't fully disambiguate from same-name people
+- "none" = no specific public information found
+
+Return ONLY the JSON.`;
+
+  try {
+    const r = await fetchWithTimeout(ANTHROPIC_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 900,
+        // web_search tool gives Claude actual current-web access — same kind of
+        // lookup ChatGPT/Perplexity do under the hood. max_uses keeps cost
+        // bounded; 5 is plenty for a name lookup.
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
+        messages: [{ role: 'user', content: prompt }]
+      })
+    }, 18000);  // 18s — web_search adds latency vs plain Claude calls
+    if (!r.ok) {
+      const errText = await r.text().catch(() => '');
+      console.warn('[geo] non-OK', r.status, errText.slice(0, 200));
+      return null;
+    }
+    const data = await r.json();
+    // Response can have multiple content blocks (tool_use, text, server_tool_use,
+    // web_search_tool_result, then final text). Concatenate every text block
+    // and grab the JSON from the LAST one — that's Claude's final answer.
+    const allTextBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text || '');
+    const lastText = allTextBlocks.length ? allTextBlocks[allTextBlocks.length - 1] : '';
+    const match = lastText.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    let parsed;
+    try { parsed = JSON.parse(match[0]); } catch { return null; }
+
+    // Pull citations from the response — the web_search_tool_result blocks
+    // contain the URLs Claude actually fetched.
+    const citations = [];
+    (data.content || []).forEach(b => {
+      if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) {
+        b.content.forEach(item => {
+          if (item.type === 'web_search_result' && item.url) {
+            citations.push({
+              url:   String(item.url).slice(0, 400),
+              title: String(item.title || '').slice(0, 200)
+            });
+          }
+        });
+      }
+    });
+    // Dedupe citations by root domain — keep the first per domain.
+    const seenDomains = new Set();
+    const dedupedCitations = [];
+    citations.forEach(c => {
+      let domain = '';
+      try { domain = new URL(c.url).hostname.replace(/^www\./, ''); } catch {}
+      if (domain && !seenDomains.has(domain)) {
+        seenDomains.add(domain);
+        dedupedCitations.push({ ...c, domain });
+      }
+    });
+
+    return {
+      recognized: !!parsed.recognized,
+      confidence: ['specific', 'vague', 'none'].includes(parsed.confidence) ? parsed.confidence : 'none',
+      summary:    String(parsed.summary || '').slice(0, 280),
+      themes:     Array.isArray(parsed.themes) ? parsed.themes.filter(Boolean).slice(0, 4).map(t => String(t).slice(0, 60)) : [],
+      topSources: Array.isArray(parsed.topSources) ? parsed.topSources.filter(Boolean).slice(0, 5).map(s => String(s).slice(0, 80)) : [],
+      citations:  dedupedCitations.slice(0, 5),
+      // Score 0-3 used by the footprint dimension below.
+      // none=0, vague + 1-2 sources=1, specific + 2+ sources=2, specific + 3+ + named themes=3
+      score: scoreLLMVisibility(parsed, dedupedCitations)
+    };
+  } catch (err) {
+    console.warn('[geo] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
+    return null;
+  }
+}
+
+function scoreLLMVisibility(parsed, citations) {
+  const conf = parsed?.confidence;
+  const themes = Array.isArray(parsed?.themes) ? parsed.themes.filter(Boolean) : [];
+  const cites = Array.isArray(citations) ? citations.length : 0;
+  if (!parsed?.recognized || conf === 'none') return 0;
+  if (conf === 'vague')   return cites >= 2 ? 1 : 0;
+  if (conf === 'specific') {
+    if (themes.length >= 2 && cites >= 3) return 3;  // strong: LLM knows you, has named angles, multi-source
+    if (cites >= 2) return 2;                         // medium: LLM knows you, sourced
+    return 1;                                          // recognised but thin
+  }
+  return 0;
 }
 
 async function fetchApify(linkedinUrl) {
@@ -953,7 +1101,7 @@ function trendsBonus(trends) {
 function scoreGoogleNamePosition(firstName, lastName, serp) {
   const orgResults = serp?.organic_results || [];
   const fullName = `${firstName || ''} ${lastName || ''}`.toLowerCase().trim();
-  if (!fullName || !orgResults.length) return { topPosition: null, ownedTop10: 0 };
+  if (!fullName || !orgResults.length) return { topPosition: null, ownedTop10: 0, topLinks: [] };
   let topPosition = null;
   let ownedTop10  = 0;
   orgResults.slice(0, 10).forEach((r, idx) => {
@@ -963,7 +1111,90 @@ function scoreGoogleNamePosition(firstName, lastName, serp) {
       ownedTop10++;
     }
   });
-  return { topPosition, ownedTop10 };
+  return {
+    topPosition,
+    ownedTop10,
+    topLinks: extractTopSearchLinks(orgResults, fullName)
+  };
+}
+
+// Surface the top 3-5 organic results so the audit can SHOW the user where
+// they appear on Google — proves the scrape was real and gives them concrete
+// evidence of their current footprint. Logic:
+//   1. Dedupe by domain (one slot per domain — LinkedIn shouldn't take 4 of 5)
+//   2. Prefer results that mention the user's name in title/snippet
+//   3. Boost authority domains (LinkedIn, Wikipedia, news outlets, .edu, .gov,
+//      GitHub, Crunchbase, personal/branded domains)
+//   4. Cap at 5
+function extractTopSearchLinks(orgResults, fullName) {
+  if (!Array.isArray(orgResults) || !orgResults.length) return [];
+  // Authority domains get a relevance boost when ranking — these are the
+  // sites a journalist or recruiter would consider "real coverage".
+  const AUTHORITY = new Set([
+    'linkedin.com', 'wikipedia.org', 'crunchbase.com', 'github.com',
+    'forbes.com', 'bloomberg.com', 'wsj.com', 'ft.com', 'reuters.com',
+    'techcrunch.com', 'wired.com', 'theverge.com', 'nytimes.com',
+    'theguardian.com', 'bbc.com', 'bbc.co.uk', 'cnn.com', 'cnbc.com',
+    'businessinsider.com', 'fastcompany.com', 'inc.com', 'entrepreneur.com',
+    'medium.com', 'substack.com', 'about.me', 'producthunt.com',
+    'ted.com', 'youtube.com', 'spotify.com', 'apple.com'
+  ]);
+
+  function rootDomain(url) {
+    try {
+      const u = new URL(url);
+      const host = u.hostname.replace(/^www\./, '');
+      // Treat `*.linkedin.com`, `*.medium.com`, `*.substack.com` as one bucket
+      const parts = host.split('.');
+      if (parts.length >= 2) {
+        const last2 = parts.slice(-2).join('.');
+        // Handle .co.uk, .com.au type TLDs
+        if (parts.length >= 3 && /\.(co|com|org|gov|ac|net)\.[a-z]{2}$/.test(host)) {
+          return parts.slice(-3).join('.');
+        }
+        return last2;
+      }
+      return host;
+    } catch { return ''; }
+  }
+
+  const candidates = [];
+  const fullNameLc = (fullName || '').toLowerCase();
+  orgResults.forEach((r, idx) => {
+    const link = r.link || r.url;
+    const title = r.title || '';
+    const snippet = r.snippet || '';
+    if (!link || !title) return;
+    const domain = rootDomain(link);
+    if (!domain) return;
+    const haystack = `${title} ${snippet}`.toLowerCase();
+    const mentionsUser = fullNameLc && haystack.includes(fullNameLc);
+    const isAuthority  = AUTHORITY.has(domain);
+    // Score: lower is better. Position is the base, with discounts for
+    // authority + name-match — so a relevant authority result on page 1
+    // beats a noisy generic result at position 1.
+    let score = idx;                  // raw rank
+    if (mentionsUser)  score -= 5;    // name match is the strongest signal
+    if (isAuthority)   score -= 3;    // authority boost
+    candidates.push({
+      link,
+      title,
+      snippet: snippet.slice(0, 160),
+      domain,
+      mentionsUser,
+      isAuthority,
+      score,
+      rank: idx + 1
+    });
+  });
+
+  // Dedupe by domain — keep the best-scoring result per domain.
+  const byDomain = new Map();
+  candidates
+    .sort((a, b) => a.score - b.score)
+    .forEach(c => { if (!byDomain.has(c.domain)) byDomain.set(c.domain, c); });
+
+  return Array.from(byDomain.values()).slice(0, 5);
 }
 
 // Personal-domain detection — tries common firstname/lastname URL patterns with a fast HEAD request.
@@ -1235,8 +1466,16 @@ async function analyzeProfile(profile, heuristic, ctx = {}) {
   // Posts data line - real cadence + topic + engagement signal
   const pd = ctx.postsData;
   const postsLine = pd
-    ? `Posts in last 90 days: ${pd.recentCount}. Avg engagement (likes + 2×comments): ${pd.avgEngagement}. Top post: "${(pd.topPostText || '').slice(0, 140)}". Sample recent posts: ${(pd.samplePosts || []).slice(0, 3).map(s => `"${s.slice(0, 80)}…"`).join(' / ')}`
+    ? `Posts in last 90 days: ${pd.recentCount} (own posts only — reposts excluded). Avg engagement (likes + 2×comments + 3×shares): ${pd.avgEngagement}. Top post: "${(pd.topPostText || '').slice(0, 140)}". Sample recent posts: ${(pd.samplePosts || []).slice(0, 3).map(s => `"${s.slice(0, 80)}…"`).join(' / ')}`
     : 'No post-scraper data — cadence is unobserved (treat as 0 unless proxied by creator/verified status)';
+
+  // GEO / LLM-search visibility — what an LLM with web search says about them.
+  // This is the modern half of the footprint dimension. If an LLM doesn't know
+  // them or only has vague info, the moves should call that out specifically.
+  const llm = ctx.llmVisibility;
+  const llmLine = llm
+    ? `When ChatGPT/Perplexity-style search engines are asked about this person, the answer is: "${(llm.summary || '').slice(0, 200)}" [confidence: ${llm.confidence}, recognised: ${llm.recognized}, themes: ${(llm.themes || []).join(' / ') || 'none named'}, top sources: ${(llm.topSources || []).slice(0, 3).join(', ') || 'none'}]`
+    : 'GEO probe unavailable — treat AI-search visibility as unobserved.';
 
   // Cross-platform presence summary - now includes real metrics for Instagram
   // and X when the deep scrapers returned data. Claude can reference specific
@@ -1306,6 +1545,10 @@ CAREER STAGE (from LinkedIn experience):
 POSTING ACTIVITY (from dedicated post scraper):
 - ${postsLine}
 - If you have real samplePosts text, REFERENCE IT. Quote the topic of their highest-engagement post. If their last 5 posts cover 5 different topics, NAME the topic-scatter problem.
+
+GEO / AI-SEARCH VISIBILITY (from a live web-search probe of an LLM):
+- ${llmLine}
+- This signal matters because in 2026 prospects, recruiters, and journalists open ChatGPT or Perplexity BEFORE Google. If the LLM doesn't know them (recognized=false / confidence=none) — write at least one move about owning a clear "known for" angle that LLMs can index (Substack, recurring podcast guesting, named POV in press). If confidence=vague — the gap is positioning, not visibility: name the wobble. If confidence=specific — reinforce the angle the LLM already gave them.
 
 OBSERVED CROSS-CHANNEL EVIDENCE (use this to write SPECIFIC moves, not generic ones):
 - Tier: ${tierName || 'unknown'}
@@ -1717,50 +1960,161 @@ function analyzeCareerStage(profile) {
 
 // Posts-data analysis - if Apify post-scraper returned posts, compute real
 // cadence + topic + engagement signals. Otherwise null.
-function analyzePostsData(posts) {
+//
+// IMPORTANT — the post-scraper's raw output is NOT clean:
+//   • It includes reposts/reshares (where the user clicked "Repost" on
+//     someone else's content). Those shouldn't count as the user's own work.
+//   • It can include posts authored by other people (rare, but we've seen it).
+//   • Engagement counts include likes + comments + shares, but the legacy
+//     formula only weighted likes + 2×comments and ignored shares.
+//   • "Best post" was previously sorted across ALL posts ever returned, so
+//     a 5-year-old viral post would beat a recent one. We now restrict the
+//     top-post pick to the last 90 days so it's a current signal.
+//
+// We pass `profileUrl` (normalised LinkedIn URL like `linkedin.com/in/yentl`)
+// and the raw `profile` object so we can match author. When the scraper tags
+// a post with an author, we drop anything where the author isn't the user.
+function analyzePostsData(posts, profileUrl, profile) {
   if (!Array.isArray(posts) || posts.length === 0) return null;
   const now = Date.now();
   const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
+
+  // Build identity hints so we can verify author = user.
+  // We accept ANY of: handle in URL, full name match (case-insensitive),
+  // public-id, or LinkedIn member ID.
+  const handle = (profileUrl || '').split('/in/')[1]?.replace(/\/.*$/, '').toLowerCase() || '';
+  const firstName = profile ? (getFirstName(profile) || '') : '';
+  const lastName  = profile ? (getLastName(profile)  || '') : '';
+  const fullName  = (firstName + ' ' + lastName).trim().toLowerCase() ||
+    String(profile?.fullName || profile?.name || '').toLowerCase();
+  const publicId  = String(profile?.publicIdentifier || profile?.publicId || handle || '').toLowerCase();
+
+  function isOwnPost(p) {
+    // 1. Reject explicit reposts.
+    if (p.is_repost === true || p.isRepost === true || p.reposted === true) return false;
+    if (p.repostedBy || p.repostedFrom || p.reshared || p.sharedFrom) return false;
+    // Some scrapers tag with `type: 'repost'` or `actionType: 'reshare'`.
+    const type = String(p.type || p.postType || p.actionType || '').toLowerCase();
+    if (type.includes('repost') || type.includes('reshare') || type.includes('share')) return false;
+
+    // 2. Match author when the scraper tags one. If we can determine the post
+    //    has an author AND the author isn't the user, reject. If we can't tell
+    //    who authored it, default to keeping it (the scraper presumably only
+    //    fetched the user's feed in the first place).
+    const authorObj = p.author || p.authorInfo || p.user || null;
+    const authorUrl = String(
+      authorObj?.profileUrl || authorObj?.profile_url || authorObj?.url ||
+      authorObj?.linkedinUrl || p.authorUrl || p.authorProfileUrl || ''
+    ).toLowerCase();
+    const authorName = String(
+      authorObj?.name || authorObj?.fullName ||
+      [authorObj?.firstName, authorObj?.lastName].filter(Boolean).join(' ') ||
+      p.authorName || p.author_name || ''
+    ).toLowerCase().trim();
+    const authorPublicId = String(
+      authorObj?.publicIdentifier || authorObj?.public_id ||
+      authorObj?.username || authorObj?.handle || ''
+    ).toLowerCase();
+
+    if (authorUrl && handle && authorUrl.includes(`/in/${handle}`)) return true;
+    if (authorPublicId && publicId && authorPublicId === publicId)  return true;
+    if (authorName && fullName && authorName === fullName)          return true;
+    // If we have author info but none of it matches the user, reject.
+    if (authorUrl || authorName || authorPublicId) return false;
+    // No author info — default to keep.
+    return true;
+  }
+
+  // Score formula: likes + 2×comments + 3×shares. Shares are the strongest
+  // signal of "this post moved beyond my immediate audience". They were
+  // missing from the previous formula.
+  function engagement(p) {
+    const likes    = Number(p.numLikes    || p.likes    || p.reactions || p.reactionCount || p.stats?.total_reactions || p.stats?.likes || 0);
+    const comments = Number(p.numComments || p.comments || p.commentCount || p.stats?.comments || 0);
+    const shares   = Number(p.numShares   || p.shares   || p.shareCount   || p.reposts || p.repostCount || p.stats?.reposts || p.stats?.shares || 0);
+    return likes + (2 * comments) + (3 * shares);
+  }
+
+  const ownPosts = posts.filter(isOwnPost);
+  // If author-filtering wiped everything, fall back to raw posts so we don't
+  // return null (some scrapers don't tag author at all and trip the
+  // mismatch path). Better to surface something than nothing.
+  const candidates = ownPosts.length ? ownPosts : posts;
+
+  // Cadence + avg engagement: only count posts we've kept.
   const recent = [];
   const allEngagement = [];
-  posts.forEach(p => {
-    // Date can be ISO string, timestamp, "X days ago" relative
+  candidates.forEach(p => {
     const postedAt = parsePostTimestamp(p);
-    const likes    = Number(p.numLikes || p.likes || p.reactions || p.reactionCount || 0);
-    const comments = Number(p.numComments || p.comments || p.commentCount || 0);
-    const eng = likes + (comments * 2);   // comments worth more than likes
+    const eng = engagement(p);
     if (postedAt && (now - postedAt) <= NINETY_DAYS) {
-      recent.push({ postedAt, text: (p.text || p.postText || '').slice(0, 200), engagement: eng });
+      recent.push({ postedAt, text: (p.text || p.postText || p.content || '').slice(0, 200), engagement: eng, raw: p });
     }
     if (eng > 0) allEngagement.push(eng);
   });
   recent.sort((a, b) => b.postedAt - a.postedAt);
   const recentCount = recent.length;
-  const avgEngagement = allEngagement.length ? Math.round(allEngagement.reduce((a, b) => a + b, 0) / allEngagement.length) : 0;
-  const topPost = posts.slice().sort((a, b) => {
-    const ea = Number(a.numLikes || a.likes || 0) + 2 * Number(a.numComments || a.comments || 0);
-    const eb = Number(b.numLikes || b.likes || 0) + 2 * Number(b.numComments || b.comments || 0);
-    return eb - ea;
-  })[0];
+  const avgEngagement = allEngagement.length
+    ? Math.round(allEngagement.reduce((a, b) => a + b, 0) / allEngagement.length)
+    : 0;
+
+  // "Best post" = highest engagement among RECENT (last 90 days) own posts.
+  // Falls back to all own posts if none were within 90 days (e.g. user posts
+  // quarterly). Final fallback is everything in `candidates`.
+  const recentRanked = recent.slice().sort((a, b) => b.engagement - a.engagement);
+  let topPost = recentRanked[0]?.raw || null;
+  if (!topPost) {
+    const ownRanked = candidates.slice().sort((a, b) => engagement(b) - engagement(a));
+    topPost = ownRanked[0] || null;
+  }
+
+  // Don't surface a "top post" that has zero engagement — it'd be a worse
+  // signal than no top-post at all. Set null instead so the finding card
+  // hides cleanly.
+  const topPostEng = topPost ? engagement(topPost) : 0;
+  const showTopPost = topPost && topPostEng >= 5;
+
   return {
     totalCount:    posts.length,
+    ownCount:      ownPosts.length,
     recentCount,
     avgEngagement,
-    topPostText:   topPost ? (topPost.text || topPost.postText || '').slice(0, 280) : '',
-    topPostLikes:    topPost ? Number(topPost.numLikes || topPost.likes || 0) : 0,
-    topPostComments: topPost ? Number(topPost.numComments || topPost.comments || 0) : 0,
-    topPostUrl:    topPost ? (topPost.url || topPost.postUrl || topPost.link || topPost.permalink || '') : '',
-    topPostEng:    topPost ? Number(topPost.numLikes || topPost.likes || 0) + 2 * Number(topPost.numComments || topPost.comments || 0) : 0,
+    topPostText:   showTopPost ? (topPost.text || topPost.postText || topPost.content || '').slice(0, 280) : '',
+    topPostLikes:    showTopPost ? Number(topPost.numLikes || topPost.likes || topPost.stats?.total_reactions || topPost.stats?.likes || 0) : 0,
+    topPostComments: showTopPost ? Number(topPost.numComments || topPost.comments || topPost.stats?.comments || 0) : 0,
+    topPostShares:   showTopPost ? Number(topPost.numShares || topPost.shares || topPost.shareCount || topPost.stats?.reposts || topPost.stats?.shares || 0) : 0,
+    topPostUrl:    showTopPost ? (topPost.url || topPost.postUrl || topPost.link || topPost.permalink || topPost.shareUrl || '') : '',
+    topPostEng:    showTopPost ? topPostEng : 0,
     samplePosts:   recent.slice(0, 5).map(r => r.text)
   };
 }
 function parsePostTimestamp(post) {
-  const v = post.postedAt || post.timestamp || post.date || post.posted_at || post.publishedAt;
+  // Try direct fields first.
+  let v = post.postedAt || post.timestamp || post.date || post.posted_at || post.publishedAt || post.time;
+  // apimaestro~linkedin-profile-posts uses a NESTED `posted_at` object:
+  //   { date: 'YYYY-MM-DD HH:MM:SS', timestamp: 1700000000000, relative: '2d' }
+  if (v && typeof v === 'object') {
+    v = v.timestamp || v.date || v.iso || v.relative || null;
+  }
   if (!v) return null;
   if (typeof v === 'number') return v > 1e12 ? v : v * 1000;
   if (typeof v === 'string') {
     const t = Date.parse(v);
     if (!Number.isNaN(t)) return t;
+    // Handle relative strings like "2d", "3w", "1mo" as a last resort.
+    const m = v.match(/^(\d+)\s*(s|m|h|d|w|mo|y)/i);
+    if (m) {
+      const n = Number(m[1]);
+      const unit = m[2].toLowerCase();
+      const ms = unit === 's' ? 1000
+              : unit === 'm' ? 60000
+              : unit === 'h' ? 3.6e6
+              : unit === 'd' ? 8.64e7
+              : unit === 'w' ? 6.048e8
+              : unit === 'mo' ? 2.628e9
+              : 3.154e10;
+      return Date.now() - n * ms;
+    }
   }
   return null;
 }
@@ -1816,7 +2170,7 @@ function getHonors(p) {
 // Profile completeness is now a baseline (max 0.5pt) - photo/banner/About are
 // the bare minimum, not a differentiator. Real signal comes from external
 // channels: Google density, ranking position, owned platforms, news mentions.
-function scoreFootprint(profile, serp, presence, ranking, personalSite) {
+function scoreFootprint(profile, serp, presence, ranking, personalSite, llmVisibility) {
   let pts = 0;
 
   // Profile completeness - basics only, max 0.5pt total
@@ -1844,6 +2198,16 @@ function scoreFootprint(profile, serp, presence, ranking, personalSite) {
   if (results.some(r => /forbes|bloomberg|wsj|techcrunch|reuters|tedx|news|press/i.test(r.link || ''))) {
     pts += 0.3;
   }
+
+  // GEO / LLM-search visibility — modern half of the footprint dimension.
+  // Probe score is 0–3; we cap its contribution at 0.6pt so it can't dominate
+  // the dimension on its own (a person could be famous in LLMs but invisible
+  // on Google — both halves matter). Adds genuine signal because Google and
+  // LLM training corpora draw from overlapping but distinct sources.
+  const llmScore = Number(llmVisibility?.score || 0);
+  if (llmScore >= 3)      pts += 0.6;
+  else if (llmScore >= 2) pts += 0.4;
+  else if (llmScore >= 1) pts += 0.2;
 
   return clamp03(Math.round(pts));
 }

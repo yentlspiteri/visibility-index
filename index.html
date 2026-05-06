@@ -4203,6 +4203,136 @@ fbq('track', 'PageView');
   }
   .toppost-link:hover { opacity: 0.75; }
 
+  /* ── Top Google search results list (within finding-card) ──
+     Renders the actual scraped page-one links so the user sees concrete
+     proof we ran a real Google scrape against their name. */
+  .gsearch-list {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .gsearch-item {
+    display: block;
+    padding: 10px 12px;
+    border: 1px solid rgba(252,252,252,0.08);
+    border-radius: 8px;
+    background: rgba(252,252,252,0.03);
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .gsearch-item:hover {
+    background: rgba(134,131,229,0.08);
+    border-color: rgba(134,131,229,0.30);
+  }
+  .gsearch-domain {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--vp-lavender, #8683E5);
+    margin-bottom: 3px;
+  }
+  .gsearch-domain .gsearch-rank {
+    color: rgba(252,252,252,0.40);
+    font-weight: 500;
+    margin-left: 6px;
+    letter-spacing: 0.02em;
+  }
+  .gsearch-title {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(252,252,252,0.92);
+    line-height: 1.4;
+    text-decoration: none;
+  }
+  .gsearch-snippet {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: rgba(252,252,252,0.55);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  /* ── "When AI meets your name" — LLM/GEO visibility card ──
+     Shows what an LLM with web search says about the user. Three sub-blocks:
+     a recognition badge, the LLM's actual quote, and the themes pills. */
+  .geo-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .geo-badge.is-specific {
+    background: rgba(134,131,229,0.18);
+    color: var(--vp-lavender, #8683E5);
+    border: 1px solid rgba(134,131,229,0.45);
+  }
+  .geo-badge.is-vague {
+    background: rgba(252,252,252,0.06);
+    color: rgba(252,252,252,0.65);
+    border: 1px solid rgba(252,252,252,0.18);
+  }
+  .geo-badge.is-none {
+    background: rgba(255,140,90,0.12);
+    color: #FFC9A8;
+    border: 1px solid rgba(255,140,90,0.35);
+  }
+  .geo-summary {
+    margin: 4px 0 12px;
+    padding: 10px 0 10px 14px;
+    border-left: 3px solid var(--vp-lavender, #8683E5);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(252,252,252,0.92);
+  }
+  .geo-themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 10px;
+  }
+  .geo-theme {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(252,252,252,0.05);
+    border: 1px solid rgba(252,252,252,0.10);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: rgba(252,252,252,0.85);
+  }
+  .geo-cites {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: rgba(252,252,252,0.45);
+    margin-top: 6px;
+  }
+  .geo-cites a {
+    color: rgba(252,252,252,0.65);
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(252,252,252,0.30);
+  }
+  .geo-cites a:hover { color: var(--vp-lavender, #8683E5); border-bottom-color: var(--vp-lavender, #8683E5); }
+  .geo-cites .geo-sep { color: rgba(252,252,252,0.25); margin: 0 6px; }
+
   /* "Gap" framing for missing things — softer visual treatment */
   .finding-card.is-gap {
     border-color: rgba(252,252,252,0.10);
@@ -8320,6 +8450,7 @@ fbq('track', 'PageView');
   let lastPlatforms = {};
   let lastGoogleRanking = null;    // { topPosition, ownedTop10 }
   let lastTopPost       = null;    // { text, likes, comments, url } or null
+  let lastLlmVisibility = null;    // { recognized, confidence, summary, themes, citations } or null
 
   // Maps Claude's service token → human label shown on the move-card service tag
   const SERVICE_LABELS = {
@@ -8751,6 +8882,7 @@ fbq('track', 'PageView');
     lastPlatforms           = (payload && payload.platforms)           || {};
     lastGoogleRanking       = (payload && payload.googleRanking)       || null;
     lastTopPost             = (payload && payload.topPost)              || null;
+    lastLlmVisibility       = (payload && payload.llmVisibility)        || null;
 
     // Personalize the result with profile data + Claude analysis from /api/score response.
     // We DON'T try to load the LinkedIn CDN photo any more - LinkedIn's media.licdn.com blocks
@@ -9137,6 +9269,87 @@ fbq('track', 'PageView');
       });
     }
 
+    // ── Top Google search results — the actual page-one links we scraped
+    // for the user's name. Proves the audit ran a real SerpAPI query and
+    // shows the user concrete evidence of their current digital footprint.
+    // Skipped if SerpAPI returned nothing or extraction yielded < 3 links.
+    const topLinks = (ranking && Array.isArray(ranking.topLinks)) ? ranking.topLinks : [];
+    if (topLinks.length >= 3) {
+      const showLinks = topLinks.slice(0, 3);
+      const itemsHtml = showLinks.map(l => {
+        const domain  = escapeHtmlPage(l.domain || '');
+        const title   = escapeHtmlPage(l.title  || '');
+        const snippet = escapeHtmlPage(l.snippet || '');
+        const link    = escapeHtmlPage(l.link   || '');
+        const rankBadge = l.rank ? `<span class="gsearch-rank">· position ${l.rank}</span>` : '';
+        return `<a class="gsearch-item" href="${link}" target="_blank" rel="noopener">` +
+                 `<span class="gsearch-domain">${domain}${rankBadge}</span>` +
+                 `<span class="gsearch-title">${title}</span>` +
+                 (snippet ? `<span class="gsearch-snippet">${snippet}</span>` : '') +
+               `</a>`;
+      }).join('');
+      cards.push({
+        wide: true,
+        icon: '🔍',
+        label: 'Top results we found for you',
+        valueHTML: `<div class="gsearch-list">${itemsHtml}</div>`,
+        sub: 'These are the actual page-one links Google returns for your name. Anything not on this list is a gap to close.'
+      });
+    }
+
+    // ── When AI meets your name — GEO / LLM-search visibility ──
+    // 2026 prospects, recruiters, journalists open ChatGPT before Google.
+    // We probe Claude (with web search) for "tell me about [Name]" and
+    // surface its actual answer + the themes it associates them with + the
+    // sources it pulled from. This is the modern half of the footprint
+    // dimension; the Google card above is the legacy half.
+    const geo = lastLlmVisibility;
+    if (geo && (geo.recognized || geo.confidence === 'none')) {
+      const conf = geo.confidence || 'none';
+      const badgeLabel =
+        conf === 'specific' ? 'AI knows you'
+      : conf === 'vague'    ? 'AI sees you faintly'
+      :                       'AI doesn\'t know you yet';
+      const badgeClass =
+        conf === 'specific' ? 'is-specific'
+      : conf === 'vague'    ? 'is-vague'
+      :                       'is-none';
+
+      // Build themes pills (skip if empty)
+      const themesHtml = (geo.themes && geo.themes.length)
+        ? `<div class="geo-themes">${geo.themes.map(t => `<span class="geo-theme">${escapeHtmlPage(t)}</span>`).join('')}</div>`
+        : '';
+
+      // Build citations row (max 3 visible)
+      const cites = (geo.citations || []).slice(0, 3);
+      const citesHtml = cites.length
+        ? `<span class="geo-cites">Pulled from: ${cites.map((c, i) => {
+            const dom = escapeHtmlPage(c.domain || '');
+            const url = escapeHtmlPage(c.url || '');
+            const sep = i > 0 ? '<span class="geo-sep">·</span>' : '';
+            return `${sep}<a href="${url}" target="_blank" rel="noopener">${dom}</a>`;
+          }).join('')}</span>`
+        : '';
+
+      const subline =
+        conf === 'specific' ? 'When someone asks an AI about you, this is the story it tells. Make sure it\'s the one you want.'
+      : conf === 'vague'    ? 'AI search has heard of you but can\'t pin down what you\'re known for. Distinct point of view + sourced press fixes this.'
+      :                       'When someone asks ChatGPT or Perplexity about you, they get nothing specific. This is the fastest-growing visibility gap.';
+
+      cards.push({
+        wide: true,
+        gap: conf !== 'specific',
+        icon: '🤖',
+        label: 'When AI meets your name',
+        valueHTML:
+          `<span class="geo-badge ${badgeClass}">${escapeHtmlPage(badgeLabel)}</span>` +
+          (geo.summary ? `<div class="geo-summary">${escapeHtmlPage(geo.summary)}</div>` : '') +
+          themesHtml +
+          citesHtml,
+        sub: subline
+      });
+    }
+
     // ── Best-performing post — quote the user's own top-engagement post so they
     // can pattern-match what's working. Wide card with a styled quote block.
     if (lastTopPost && lastTopPost.text) {
@@ -9144,9 +9357,11 @@ fbq('track', 'PageView');
       const excerpt = txt.length > 220 ? txt.slice(0, 220).replace(/\s+\S*$/, '') + '…' : txt;
       const likes    = Number(lastTopPost.likes || 0);
       const comments = Number(lastTopPost.comments || 0);
+      const shares   = Number(lastTopPost.shares || 0);
       const meta     = [
         likes    > 0 ? `${likes.toLocaleString()} likes`       : '',
-        comments > 0 ? `${comments.toLocaleString()} comments` : ''
+        comments > 0 ? `${comments.toLocaleString()} comments` : '',
+        shares   > 0 ? `${shares.toLocaleString()} shares`     : ''
       ].filter(Boolean).join(' · ');
       const link = (lastTopPost.url || '').startsWith('http')
         ? `<a href="${escapeHtmlPage(lastTopPost.url)}" target="_blank" rel="noopener" class="toppost-link">View post →</a>`
