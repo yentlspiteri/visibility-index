@@ -5874,6 +5874,39 @@ fbq('track', 'PageView');
     .nav-mobile-panel { top: 76px; padding: 32px 24px max(32px, env(safe-area-inset-bottom)); }
   }
 
+  /* ── Mobile nav: always dark so it reads clearly against cream content sections.
+     The desktop transparency-to-white crossfade looks elegant on large screens, but
+     on mobile the near-white scroll state blends into the page — keeping it dark
+     matches the hero, gives clear separation, and maintains brand tone. ── */
+  @media (max-width: 768px) {
+    /* Nav bar itself */
+    nav.top,
+    nav.top.scrolled {
+      background: rgba(11, 3, 89, 0.92) !important;
+      backdrop-filter: saturate(160%) blur(16px) !important;
+      -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+      border-bottom-color: rgba(255,255,255,0.08) !important;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 6px 24px rgba(11,3,89,0.28) !important;
+    }
+    /* Logo stays cream */
+    nav.top .logo svg g,
+    nav.top .logo svg path,
+    nav.top.scrolled .logo svg g,
+    nav.top.scrolled .logo svg path {
+      fill: var(--vp-cream, #fafafa) !important;
+    }
+    /* Nav links stay cream */
+    nav.top .nav-link,
+    nav.top.scrolled .nav-link {
+      color: var(--vp-cream, #fafafa) !important;
+    }
+    /* Burger bars stay cream */
+    nav.top .nav-burger span,
+    nav.top.scrolled .nav-burger span {
+      background: var(--vp-cream, #fafafa) !important;
+    }
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════════
      MOBILE STACKED FORM (≤600px) - prose pattern collapses to a real form
      ═══════════════════════════════════════════════════════════════════════════ */
@@ -6881,13 +6914,13 @@ fbq('track', 'PageView');
       </div>
 
       <div class="loading-panel hidden" id="loading-panel">
-        <div class="loading-title">Running your audit</div>
-        <div class="loading-subtitle" id="loading-subtitle">Scanning your public LinkedIn signals…</div>
+        <div class="loading-title">Good things take time.</div>
+        <div class="loading-subtitle" id="loading-subtitle">Reading your public signals…</div>
         <ul class="loading-list" id="loading-list">
-          <li class="loading-row" data-step="0" data-msg="Scanning your LinkedIn profile…"><span class="loading-icon"></span><span>Profile &amp; Footprint</span></li>
-          <li class="loading-row" data-step="1" data-msg="Measuring your authority signals…"><span class="loading-icon"></span><span>Clarity &amp; Authority</span></li>
-          <li class="loading-row" data-step="2" data-msg="Reviewing content and visual identity…"><span class="loading-icon"></span><span>Cadence &amp; Visual</span></li>
-          <li class="loading-row" data-step="3" data-msg="Calculating your Visibility Index…"><span class="loading-icon"></span><span>Score</span></li>
+          <li class="loading-row" data-step="0" data-msg="Mapping your footprint across the web…"><span class="loading-icon"></span><span>Profile &amp; Footprint</span></li>
+          <li class="loading-row" data-step="1" data-msg="Weighing your authority signals…"><span class="loading-icon"></span><span>Clarity &amp; Authority</span></li>
+          <li class="loading-row" data-step="2" data-msg="Reading your content and visual identity…"><span class="loading-icon"></span><span>Cadence &amp; Visual</span></li>
+          <li class="loading-row" data-step="3" data-msg="Putting it all together…"><span class="loading-icon"></span><span>Score</span></li>
         </ul>
         <!-- Slow-audit nudge: hidden until 60s elapsed. Captures email so we can
              deliver results even if the user closes the tab. -->
@@ -8557,18 +8590,28 @@ fbq('track', 'PageView');
       }
     })();
 
-    // After the animation hits the last step, swap the subtitle to a "still pulling data" line
-    // so a slow API doesn't look stuck.
-    let extendedTimer = null;
+    // After the animation hits the last step, start cycling patience messages so a
+    // slow API doesn't look frozen. Rotate every 5s — positive, patient, brand-toned.
+    const _patienceMsgs = [
+      'Good things take time — we\'re going deep.',
+      'Patience is a superpower. Almost there.',
+      'We\'re reading between the lines, not just the headlines.',
+      'Your footprint is wider than you think — mapping every signal.',
+      'Thoroughness is the point. You\'ll see why.',
+      'Still digging — the internet is a big place.',
+    ];
+    let _patienceIdx = 0;
+    let _patienceInterval = null;
     animPromise.then(() => {
-      extendedTimer = setTimeout(() => {
+      _patienceInterval = setInterval(() => {
         const subtitle = document.getElementById('loading-subtitle');
-        if (subtitle) subtitle.textContent = 'LinkedIn is being slow - hold tight, almost there…';
-      }, 4000);
+        if (subtitle) subtitle.textContent = _patienceMsgs[_patienceIdx % _patienceMsgs.length];
+        _patienceIdx++;
+      }, 5000);
     });
 
     const [data] = await Promise.all([fetchPromise, animPromise]);
-    if (extendedTimer) clearTimeout(extendedTimer);
+    if (_patienceInterval) clearInterval(_patienceInterval);
     clearTimeout(slowAuditTimer);   // audit resolved — no need to show the nudge
     finishLastLoadingStep();
 
