@@ -206,7 +206,11 @@ export default async function handler(req, res) {
       postsRes,
       visionRes,
       trendsRes,
-      llmVisRes
+      llmVisRes,
+      youtubeRes,
+      podcastRes,
+      booksRes,
+      githubRes
     ] = await Promise.allSettled([
       fetchSerpFootprint(normalised, queryArgs, false),
       fetchSerpFootprint(normalised, queryArgs, true),
@@ -215,10 +219,12 @@ export default async function handler(req, res) {
       postsPromise,                            // already running since before Stage 1 — likely done
       analyzeVisualIdentity(profile),          // moved up — runs in parallel with SerpAPI
       fetchGoogleTrends(queryArgs.firstName, queryArgs.lastName),
-      // GEO probe — what does an LLM with web search say about this person.
-      // Adds ~5-15s to the slowest stage but runs alongside SerpAPI/Apify so
-      // critical-path latency only grows if it's the slowest call in the batch.
-      probeLLMVisibility(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName)
+      probeLLMVisibility(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
+      // New enrichment signals — all run in parallel, all silent-fail to null
+      fetchYouTubeVideos(queryArgs.firstName, queryArgs.lastName),
+      fetchPodcastAppearances(queryArgs.firstName, queryArgs.lastName),
+      fetchPublishedBooks(queryArgs.firstName, queryArgs.lastName),
+      fetchGitHubProfile(queryArgs.firstName, queryArgs.lastName)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
     const serpRecent = serpRecentRes.status === 'fulfilled' ? serpRecentRes.value : null;
@@ -228,6 +234,10 @@ export default async function handler(req, res) {
     const visionAnalysis = visionRes.status === 'fulfilled' ? visionRes.value : null;
     const googleTrends  = trendsRes.status  === 'fulfilled' ? trendsRes.value  : null;
     const llmVisibility  = llmVisRes.status === 'fulfilled' ? llmVisRes.value : null;
+    const youtubeVideos  = youtubeRes.status === 'fulfilled' ? youtubeRes.value : null;
+    const podcastData    = podcastRes.status === 'fulfilled' ? podcastRes.value : null;
+    const booksData      = booksRes.status   === 'fulfilled' ? booksRes.value   : null;
+    const githubData     = githubRes.status  === 'fulfilled' ? githubRes.value  : null;
     const postsData    = analyzePostsData(rawPosts, normalised, profile);     // null if empty
     const serp = serpAll;     // alias for older usage in scoreFootprint
     const press = mergePressResults(serpAll, serpRecent);
@@ -402,6 +412,19 @@ export default async function handler(req, res) {
       // them. Used by the "When AI meets your name" finding card on results.
       // null if probe skipped (no API key, timeout, parse fail).
       llmVisibility:       llmVisibility,
+      // ── New enrichment signals ──────────────────────────────────────────────
+      // YouTube videos featuring the person (via SerpAPI YouTube engine).
+      // { videos: [...], count } or null.
+      youtubeVideos:       youtubeVideos,
+      // Podcast appearances on Apple Podcasts / Spotify (via SerpAPI Google).
+      // { appearances: [...], count } or null.
+      podcastData:         podcastData,
+      // Published books via Google Books API (author lookup, free).
+      // { books: [...], count } or null.
+      booksData:           booksData,
+      // GitHub profile (free API). Only populated for tech-relevant profiles.
+      // { login, followers, repos, url, ... } or null.
+      githubData:          githubData,
       // Backward-compat: keep older field names mapped from the new payload
       personalSummary:     analysis.executiveSummary,
       reportTeasers:       (analysis.moves || []).map(m => m.title),
@@ -1051,6 +1074,177 @@ async function fetchPlatformPresence(firstName, lastName, companyName) {
   }
 
   return presence;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// YOUTUBE VIDEOS — SerpAPI YouTube engine (uses existing SERPAPI_API_KEY, no
+// separate YouTube quota). Returns up to 5 video results with thumbnails,
+// view counts and channel names so the UI can show a proper visual card.
+// Failure is silent — null means the card is skipped, not an audit failure.
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchYouTubeVideos(firstName, lastName) {
+  if (!firstName || !lastName || !process.env.SERPAPI_API_KEY) return null;
+  const params = new URLSearchParams({
+    engine:       'youtube',
+    search_query: `"${firstName} ${lastName}"`,
+    api_key:      process.env.SERPAPI_API_KEY
+  });
+  try {
+    const r = await fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const videos = (j.video_results || [])
+      .filter(v => v.link && v.title)
+      .slice(0, 5)
+      .map(v => ({
+        id:        v.link?.match(/v=([^&]+)/)?.[1] || '',
+        title:     (v.title       || '').slice(0, 120),
+        channel:   (v.channel?.name || '').slice(0, 60),
+        views:     typeof v.views === 'number' ? v.views : null,
+        length:    v.length         || null,
+        date:      v.published_date || null,
+        thumbnail: v.thumbnail?.static || null,
+        url:       v.link
+      }));
+    return videos.length ? { videos, count: videos.length } : null;
+  } catch (err) {
+    console.warn('[youtube] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PODCAST APPEARANCES — Google site-search via SerpAPI for Apple Podcasts and
+// Spotify episode pages. No new key. Returns up to 4 episode URLs with titles
+// and show names so the UI can list "Guest on X podcasts."
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchPodcastAppearances(firstName, lastName) {
+  if (!firstName || !lastName || !process.env.SERPAPI_API_KEY) return null;
+  const fullName = `"${firstName} ${lastName}"`;
+  const params = new URLSearchParams({
+    engine:  'google',
+    q:       `${fullName} (site:podcasts.apple.com OR site:open.spotify.com/episode OR site:podchaser.com)`,
+    num:     '6',
+    api_key: process.env.SERPAPI_API_KEY
+  });
+  try {
+    const r = await fetchWithTimeout(`${SERPAPI_API}?${params}`, {}, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const PODCAST_DOMAINS = ['podcasts.apple.com', 'open.spotify.com/episode', 'podchaser.com'];
+    const hits = (j.organic_results || [])
+      .filter(h => h.link && PODCAST_DOMAINS.some(d => h.link.includes(d)))
+      .slice(0, 4)
+      .map(h => ({
+        url:      h.link,
+        title:    (h.title   || '')
+                    .replace(/ on Apple Podcasts$/, '')
+                    .replace(/ \| Spotify$/, '')
+                    .replace(/ - Podchaser$/, '')
+                    .slice(0, 120),
+        show:     (h.source?.domain || h.displayed_link || '').replace('open.spotify.com', 'Spotify').replace('podcasts.apple.com', 'Apple Podcasts').slice(0, 60),
+        snippet:  (h.snippet || '').slice(0, 200),
+        platform: h.link.includes('spotify.com')  ? 'spotify'
+                : h.link.includes('apple.com')    ? 'apple'
+                : 'other'
+      }));
+    return hits.length ? { appearances: hits, count: hits.length } : null;
+  } catch (err) {
+    console.warn('[podcasts] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUBLISHED BOOKS — Google Books API (free, no key needed for ≤1000 req/day).
+// Returns books where the person is listed as an author. Strong authority signal
+// — fewer than 5% of executives have published a book.
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchPublishedBooks(firstName, lastName) {
+  if (!firstName || !lastName) return null;
+  const query = encodeURIComponent(`inauthor:"${firstName} ${lastName}"`);
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=6&printType=books&orderBy=relevance`;
+  try {
+    const r = await fetchWithTimeout(url, {}, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j.totalItems || !j.items?.length) return null;
+    const first = firstName.toLowerCase();
+    const last  = lastName.toLowerCase();
+    const books = j.items
+      .map(item => {
+        const v = item.volumeInfo || {};
+        // Only include if listed as an author (not just mentioned inside)
+        const isAuthor = (v.authors || []).some(a => {
+          const al = a.toLowerCase();
+          return al.includes(first) && al.includes(last);
+        });
+        if (!isAuthor) return null;
+        return {
+          title:     (v.title       || '').slice(0, 120),
+          subtitle:  (v.subtitle    || '').slice(0, 80),
+          publisher: (v.publisher   || '').slice(0, 60),
+          date:      (v.publishedDate || '').slice(0, 4),  // year only
+          cover:     (v.imageLinks?.thumbnail || '').replace('http:', 'https:') || null,
+          url:       v.infoLink || null,
+          isbn:      (v.industryIdentifiers || []).find(id => id.type === 'ISBN_13')?.identifier || null
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 3);
+    return books.length ? { books, count: books.length } : null;
+  } catch (err) {
+    console.warn('[books] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GITHUB PROFILE — GitHub Search API (free, 60 unauthenticated req/hour;
+// set GITHUB_TOKEN env var for 5000/hour). Relevant for tech executives.
+// Only surfaces profiles with meaningful public activity (≥20 repos or ≥50
+// followers) to avoid false positives on common names.
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchGitHubProfile(firstName, lastName) {
+  if (!firstName || !lastName) return null;
+  const token   = process.env.GITHUB_TOKEN;
+  const headers = {
+    'Accept':     'application/vnd.github.v3+json',
+    'User-Agent': 'visibility-index'
+  };
+  if (token) headers['Authorization'] = `token ${token}`;
+  const query = encodeURIComponent(`${firstName} ${lastName} in:name`);
+  try {
+    const r = await fetchWithTimeout(
+      `https://api.github.com/search/users?q=${query}&per_page=3`, { headers }, 6000
+    );
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j.items?.length) return null;
+    // Fetch the top candidate's full profile
+    const profileR = await fetchWithTimeout(
+      `https://api.github.com/users/${j.items[0].login}`, { headers }, 5000
+    );
+    if (!profileR.ok) return null;
+    const p = await profileR.json();
+    // Skip low-signal profiles (likely wrong person or inactive account)
+    if ((p.public_repos || 0) < 5 && (p.followers || 0) < 20) return null;
+    return {
+      login:     p.login,
+      name:      (p.name      || '').slice(0, 80),
+      bio:       (p.bio       || '').slice(0, 200),
+      followers: p.followers     || 0,
+      following: p.following     || 0,
+      repos:     p.public_repos  || 0,
+      stars:     p.public_gists  || 0,   // proxy; star counts need a separate call
+      url:       p.html_url,
+      avatar:    p.avatar_url    || null,
+      company:   (p.company || '').replace(/^@/, '').slice(0, 60)
+    };
+  } catch (err) {
+    console.warn('[github] skipped', err?.name === 'AbortError' ? 'timeout' : (err?.message || err));
+    return null;
+  }
 }
 
 // SerpAPI Google Trends — interest-over-time for the user's name. Returns a

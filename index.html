@@ -6304,6 +6304,54 @@ fbq('track', 'PageView');
   .results-wrap .finding-value em { color: rgba(15,15,15,0.78) !important; font-weight: 500; }
   .results-wrap .finding-sub { color: rgba(15,15,15,0.55) !important; }
 
+  /* ── SERP results list — cream-card overrides (base styles use rgba-white for dark bg) ── */
+  .results-wrap .gsearch-item {
+    background: rgba(63,54,178,0.03) !important;
+    border-color: rgba(63,54,178,0.10) !important;
+  }
+  .results-wrap .gsearch-item:hover {
+    background: rgba(63,54,178,0.07) !important;
+    border-color: rgba(63,54,178,0.28) !important;
+  }
+  .results-wrap .gsearch-domain  { color: var(--vp-indigo, #3F36B2) !important; }
+  .results-wrap .gsearch-domain .gsearch-rank { color: rgba(15,15,15,0.30) !important; }
+  .results-wrap .gsearch-title   { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .gsearch-snippet { color: rgba(15,15,15,0.55) !important; }
+
+  /* ── GEO / "When AI meets your name" card — cream-card overrides ── */
+  .results-wrap .geo-badge.is-specific {
+    background: rgba(63,54,178,0.10) !important;
+    color: var(--vp-indigo, #3F36B2) !important;
+    border-color: rgba(63,54,178,0.30) !important;
+  }
+  .results-wrap .geo-badge.is-vague {
+    background: rgba(63,54,178,0.06) !important;
+    color: var(--vp-indigo, #3F36B2) !important;
+    border-color: rgba(63,54,178,0.18) !important;
+    opacity: 0.75;
+  }
+  .results-wrap .geo-badge.is-none {
+    background: rgba(229,88,44,0.07) !important;
+    color: #C0440E !important;
+    border-color: rgba(229,88,44,0.22) !important;
+  }
+  .results-wrap .geo-summary {
+    color: rgba(15,15,15,0.88) !important;
+    border-left-color: var(--vp-indigo, #3F36B2) !important;
+  }
+  .results-wrap .geo-theme {
+    background: rgba(63,54,178,0.06) !important;
+    border-color: rgba(63,54,178,0.14) !important;
+    color: var(--vp-indigo, #3F36B2) !important;
+  }
+  .results-wrap .geo-cites { color: rgba(15,15,15,0.45) !important; }
+  .results-wrap .geo-cites a {
+    color: rgba(15,15,15,0.62) !important;
+    border-bottom-color: rgba(15,15,15,0.22) !important;
+  }
+  .results-wrap .geo-cites a:hover { color: var(--vp-indigo, #3F36B2) !important; border-bottom-color: var(--vp-indigo, #3F36B2) !important; }
+  .results-wrap .geo-cites .geo-sep { color: rgba(15,15,15,0.18) !important; }
+
   /* Finding-card lives on a CREAM card-within-card. Override the headline + dot
      + top-post quote colors that were originally designed for a dark background. */
   .results-wrap .finding-headline {
@@ -7132,11 +7180,11 @@ fbq('track', 'PageView');
 <!-- ─────────── METHODOLOGY (now BEFORE Circle - Circle is the bottom-of-page CTA) ─────────── -->
 <section class="method-wrap" id="methodology">
   <div class="container-narrow" style="max-width: 1140px;">
-    <div class="eyebrow-row" style="justify-content: center; margin-bottom: 18px;">
+    <div class="eyebrow-row" style="margin-bottom: 18px;">
       <span class="dot"></span>
       <span class="eyebrow">How we measure</span>
     </div>
-    <h2 class="h2" style="text-align: center; margin-bottom: 18px;">What we look at.</h2>
+    <h2 class="h2" style="margin-bottom: 18px;">What we look at.</h2>
     <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65); max-width: 720px; display: none;" aria-hidden="true"></p>
 
     <!-- 2-col grid: hexagon left, dimension detail right (stacks on mobile) -->
