@@ -6352,6 +6352,167 @@ fbq('track', 'PageView');
   .results-wrap .geo-cites a:hover { color: var(--vp-indigo, #3F36B2) !important; border-bottom-color: var(--vp-indigo, #3F36B2) !important; }
   .results-wrap .geo-cites .geo-sep { color: rgba(15,15,15,0.18) !important; }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     YOUTUBE · PODCASTS · BOOKS · GITHUB — enrichment finding cards
+     Base styles work on dark backgrounds; .results-wrap overrides below flip
+     them to the cream card context automatically.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  /* ── YouTube thumbnail grid ── */
+  .yt-grid {
+    display: flex;
+    gap: 10px;
+    margin: 6px 0 2px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .yt-grid::-webkit-scrollbar { display: none; }
+  .yt-thumb-card {
+    flex: 0 0 180px;
+    text-decoration: none;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(252,252,252,0.05);
+    border: 1px solid rgba(252,252,252,0.10);
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .yt-thumb-card:hover { transform: translateY(-2px); border-color: rgba(134,131,229,0.40); }
+  .yt-thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+  .yt-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .yt-thumb-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    font-size: 24px; color: rgba(252,252,252,0.4);
+  }
+  .yt-length {
+    position: absolute; bottom: 5px; right: 6px;
+    background: rgba(0,0,0,0.72);
+    color: #fff;
+    font-size: 10px; font-weight: 600;
+    padding: 1px 5px; border-radius: 3px;
+    pointer-events: none;
+  }
+  .yt-views { font-size: 10px; color: rgba(252,252,252,0.5); }
+  .yt-thumb-meta {
+    padding: 7px 8px 8px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .yt-thumb-title {
+    font-family: var(--font-body); font-size: 11.5px; font-weight: 600;
+    line-height: 1.4; color: rgba(252,252,252,0.92);
+  }
+  .yt-thumb-channel {
+    font-family: var(--font-body); font-size: 10px;
+    color: rgba(252,252,252,0.50);
+  }
+
+  /* ── Podcast list ── */
+  .podcast-list { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 8px; }
+  .podcast-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(252,252,252,0.04);
+    border: 1px solid rgba(252,252,252,0.08);
+  }
+  .podcast-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .podcast-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .podcast-title {
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    color: rgba(252,252,252,0.92); text-decoration: none; line-height: 1.4;
+    word-break: break-word;
+  }
+  .podcast-title:hover { color: var(--vp-lavender, #8683E5); }
+  .podcast-show {
+    font-family: var(--font-body); font-size: 11px;
+    color: rgba(252,252,252,0.45); letter-spacing: 0.02em;
+  }
+
+  /* ── Books shelf ── */
+  .books-shelf {
+    display: flex; gap: 14px; margin: 6px 0 2px;
+    overflow-x: auto; padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .books-shelf::-webkit-scrollbar { display: none; }
+  .book-item {
+    flex: 0 0 120px; text-decoration: none;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .book-cover {
+    width: 80px; height: 112px; object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    display: block;
+  }
+  .book-cover-fallback {
+    width: 80px; height: 112px; border-radius: 4px;
+    background: rgba(63,54,178,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .book-info { display: flex; flex-direction: column; gap: 2px; }
+  .book-title {
+    font-family: var(--font-body); font-size: 12px; font-weight: 600;
+    line-height: 1.4; color: rgba(252,252,252,0.90);
+    word-break: break-word;
+  }
+  .book-subtitle { font-size: 10px; color: rgba(252,252,252,0.50); line-height: 1.3; }
+  .book-pub { font-size: 10px; color: rgba(252,252,252,0.40); }
+
+  /* ── GitHub row ── */
+  .gh-row { display: flex; align-items: flex-start; gap: 12px; margin: 4px 0 2px; }
+  .gh-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(252,252,252,0.12);
+  }
+  .gh-stats { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .gh-handle {
+    font-family: var(--font-body); font-size: 14px; font-weight: 700;
+    color: rgba(252,252,252,0.92); text-decoration: none;
+  }
+  .gh-handle:hover { color: var(--vp-lavender, #8683E5); }
+  .gh-meta { font-size: 12px; color: rgba(252,252,252,0.55); }
+  .gh-bio { font-size: 12px; color: rgba(252,252,252,0.65); line-height: 1.4; margin-top: 2px; }
+
+  /* ── Light-theme overrides (inside .results-wrap cream cards) ── */
+  .results-wrap .yt-thumb-card {
+    background: rgba(63,54,178,0.04) !important;
+    border-color: rgba(63,54,178,0.12) !important;
+  }
+  .results-wrap .yt-thumb-card:hover { border-color: rgba(63,54,178,0.30) !important; }
+  .results-wrap .yt-thumb-title   { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .yt-thumb-channel { color: rgba(15,15,15,0.45) !important; }
+  .results-wrap .yt-views         { color: rgba(15,15,15,0.40) !important; }
+  .results-wrap .yt-thumb-placeholder { color: rgba(15,15,15,0.25) !important; }
+
+  .results-wrap .podcast-item {
+    background: rgba(63,54,178,0.04) !important;
+    border-color: rgba(63,54,178,0.10) !important;
+  }
+  .results-wrap .podcast-title { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .podcast-title:hover { color: var(--vp-indigo, #3F36B2) !important; }
+  .results-wrap .podcast-show  { color: rgba(15,15,15,0.45) !important; }
+
+  .results-wrap .book-cover-fallback { background: rgba(63,54,178,0.10) !important; }
+  .results-wrap .book-title    { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .book-subtitle { color: rgba(15,15,15,0.50) !important; }
+  .results-wrap .book-pub      { color: rgba(15,15,15,0.38) !important; }
+
+  .results-wrap .gh-avatar  { border-color: rgba(63,54,178,0.18) !important; }
+  .results-wrap .gh-handle  { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .gh-handle:hover { color: var(--vp-indigo, #3F36B2) !important; }
+  .results-wrap .gh-meta    { color: rgba(15,15,15,0.50) !important; }
+  .results-wrap .gh-bio     { color: rgba(15,15,15,0.62) !important; }
+
   /* Finding-card lives on a CREAM card-within-card. Override the headline + dot
      + top-post quote colors that were originally designed for a dark background. */
   .results-wrap .finding-headline {
@@ -9505,6 +9666,117 @@ fbq('track', 'PageView');
         icon: '📅', label: 'Posting rhythm',
         valueHTML: "You're on a cadence",
         sub: 'Keep it up - rhythm beats volume.'
+      });
+    }
+
+    // ── YouTube videos ────────────────────────────────────────────────────────
+    const yt = payload && payload.youtubeVideos;
+    if (yt && yt.videos && yt.videos.length) {
+      const fmtViews = n => {
+        if (!n) return '';
+        if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0','') + 'M views';
+        if (n >= 1000)    return (n / 1000).toFixed(0) + 'K views';
+        return n + ' views';
+      };
+      const thumbs = yt.videos.slice(0, 3).map(v => {
+        const thumb  = v.thumbnail ? `<img src="${escapeHtmlPage(v.thumbnail)}" alt="${escapeHtmlPage(v.title)}" loading="lazy" class="yt-thumb-img" />` : '<div class="yt-thumb-placeholder">▶</div>';
+        const views  = v.views ? `<span class="yt-views">${escapeHtmlPage(fmtViews(v.views))}</span>` : '';
+        const length = v.length ? `<span class="yt-length">${escapeHtmlPage(v.length)}</span>` : '';
+        return `<a href="${escapeHtmlPage(v.url)}" target="_blank" rel="noopener" class="yt-thumb-card" title="${escapeHtmlPage(v.title)}">
+          <div class="yt-thumb-wrap">${thumb}${length}</div>
+          <div class="yt-thumb-meta">
+            <span class="yt-thumb-title">${escapeHtmlPage(v.title.length > 55 ? v.title.slice(0,52)+'…' : v.title)}</span>
+            <span class="yt-thumb-channel">${escapeHtmlPage(v.channel)}${views ? ' · '+escapeHtmlPage(fmtViews(v.views)) : ''}</span>
+          </div>
+        </a>`;
+      }).join('');
+      const count = yt.count >= 3 ? '3+' : String(yt.count);
+      cards.push({
+        wide: true,
+        icon: '🎬',
+        label: 'On YouTube',
+        valueHTML: `<div class="yt-grid">${thumbs}</div>`,
+        sub: `${count} video${yt.count > 1 ? 's' : ''} found — shows, interviews, or content featuring you.`
+      });
+    }
+
+    // ── Podcast appearances ───────────────────────────────────────────────────
+    const pods = payload && payload.podcastData;
+    if (pods && pods.appearances && pods.appearances.length) {
+      const platformIcon = p => p === 'spotify' ? '🟢' : p === 'apple' ? '🎵' : '🎙️';
+      const items = pods.appearances.map(a =>
+        `<li class="podcast-item">
+          <span class="podcast-icon">${platformIcon(a.platform)}</span>
+          <div class="podcast-meta">
+            <a href="${escapeHtmlPage(a.url)}" target="_blank" rel="noopener" class="podcast-title">${escapeHtmlPage(a.title)}</a>
+            ${a.show ? `<span class="podcast-show">${escapeHtmlPage(a.show)}</span>` : ''}
+          </div>
+        </li>`
+      ).join('');
+      cards.push({
+        wide: true,
+        icon: '🎙️',
+        label: 'Podcast appearances',
+        valueHTML: `<ul class="podcast-list">${items}</ul>`,
+        sub: `${pods.count} appearance${pods.count > 1 ? 's' : ''} found on Apple Podcasts or Spotify. Podcasts compound — one episode reaches new audiences for years.`
+      });
+    } else {
+      // Gap only if authority score is meaningful — most people have zero podcasts
+      const authScore = (subs && subs.authority) || 0;
+      if (authScore >= 2) {
+        cards.push({
+          wide: false, gap: true,
+          icon: '🎙️', label: 'Podcast appearances',
+          valueHTML: 'Not found on Apple Podcasts or Spotify',
+          sub: 'Pitch yourself as a guest: 3 bullet points on your POV + 2 topic angles. Most hosts say yes to a well-researched cold email.'
+        });
+      }
+    }
+
+    // ── Published books ───────────────────────────────────────────────────────
+    const bks = payload && payload.booksData;
+    if (bks && bks.books && bks.books.length) {
+      const shelfItems = bks.books.map(b => {
+        const cover = b.cover
+          ? `<img src="${escapeHtmlPage(b.cover)}" alt="${escapeHtmlPage(b.title)}" loading="lazy" class="book-cover" />`
+          : `<div class="book-cover book-cover-fallback">📚</div>`;
+        const year = b.date ? ` · ${escapeHtmlPage(b.date)}` : '';
+        const pub  = b.publisher ? `${escapeHtmlPage(b.publisher)}${year}` : year.slice(3);
+        return `<a href="${b.url ? escapeHtmlPage(b.url) : '#'}" target="_blank" rel="noopener" class="book-item">
+          ${cover}
+          <div class="book-info">
+            <span class="book-title">${escapeHtmlPage(b.title)}</span>
+            ${b.subtitle ? `<span class="book-subtitle">${escapeHtmlPage(b.subtitle.slice(0,60))}</span>` : ''}
+            ${pub ? `<span class="book-pub">${pub}</span>` : ''}
+          </div>
+        </a>`;
+      }).join('');
+      cards.push({
+        wide: true,
+        icon: '📚',
+        label: 'Published author',
+        valueHTML: `<div class="books-shelf">${shelfItems}</div>`,
+        sub: `${bks.count} book${bks.count > 1 ? 's' : ''} found — fewer than 3% of executives have a published book. This is a top-tier authority signal.`
+      });
+    }
+
+    // ── GitHub profile (only for tech-relevant profiles) ──────────────────────
+    const gh = payload && payload.githubData;
+    if (gh && gh.login && (gh.followers >= 50 || gh.repos >= 10)) {
+      const fmt = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.0','') + 'k' : String(n);
+      const avatar = gh.avatar
+        ? `<img src="${escapeHtmlPage(gh.avatar)}" alt="${escapeHtmlPage(gh.login)}" class="gh-avatar" loading="lazy" />`
+        : '';
+      const stats = [
+        gh.followers ? `<strong>${fmt(gh.followers)}</strong> followers` : '',
+        gh.repos     ? `<strong>${gh.repos}</strong> repos` : ''
+      ].filter(Boolean).join(' · ');
+      cards.push({
+        wide: false,
+        icon: '💻',
+        label: 'Open source',
+        valueHTML: `<div class="gh-row">${avatar}<div class="gh-stats"><a href="${escapeHtmlPage(gh.url)}" target="_blank" rel="noopener" class="gh-handle">@${escapeHtmlPage(gh.login)}</a><span class="gh-meta">${stats}</span>${gh.bio ? `<span class="gh-bio">${escapeHtmlPage(gh.bio.slice(0,120))}</span>` : ''}</div></div>`,
+        sub: 'Open source contribution builds technical credibility and network far beyond your company walls.'
       });
     }
 
