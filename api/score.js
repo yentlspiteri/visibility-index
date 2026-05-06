@@ -52,12 +52,12 @@ const RESULT_CACHE_MAX_ENTRIES = 100;
 
 const TIERS = [
   { min:0,  max:5,  name:'The Hidden Gem',
-    tagline:'Real expertise. The world doesn’t know it yet.',
+    tagline:"Real expertise. The world doesn't know it yet.",
     blurb:'Nearly invisible - but everything is ahead of you.',
     cta:"See the roadmap" },
   { min:6,  max:10, name:'The Rising Voice',
     tagline:"You're currently building momentum, but a few gaps are holding you back.",
-    blurb:'You have something to say. Your brand isn’t amplifying it yet.',
+    blurb:"You have something to say. Your brand isn't amplifying it yet.",
     cta:"See what to build first" },
   { min:11, max:15, name:'The Emerging Authority',
     tagline:'Solid foundations. Time to scale.',
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
 
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
   if (isRateLimited(ip)) {
-    return res.status(429).json({ error: 'You’ve hit the audit limit for this hour. Come back shortly.' });
+    return res.status(429).json({ error: "You've hit the audit limit for this hour. Come back shortly." });
   }
 
   const body = req.body || {};
@@ -123,38 +123,38 @@ export default async function handler(req, res) {
       console.error('Apify failed:', errMsg, 'actor=', APIFY_ACTOR);
 
       // Categorise the failure → user-facing message + ops alert category
-      // _waitlist=true → frontend shows "we’re busy, leave your email" card
+      // _waitlist=true → frontend shows "we're busy, leave your email" card
       // _waitlist=false → user-input error (wrong handle, private profile) — no waitlist
       let userError, alertCategory, alertSubject, waitlist = false;
       if (/hard limit|subscribe to a paid|free user|usage limit/i.test(errMsg)) {
-        userError     = ‘Our scanner is at capacity right now.’;
-        alertCategory = ‘apify-hard-limit’;
-        alertSubject  = ‘🚨 Apify scraper hit hard limit - audit is OFFLINE for users’;
+        userError     = 'Our scanner is at capacity right now.';
+        alertCategory = 'apify-hard-limit';
+        alertSubject  = '🚨 Apify scraper hit hard limit - audit is OFFLINE for users';
         waitlist      = true;
       } else if (/rate.?limit|blocked|empty profile/i.test(errMsg)) {
-        userError     = ‘We\’re seeing a lot of audits right now and LinkedIn is pushing back.’;
-        alertCategory = ‘apify-rate-limit’;
-        alertSubject  = ‘⚠️ Apify scraper rate-limited by LinkedIn’;
+        userError     = 'We\'re seeing a lot of audits right now and LinkedIn is pushing back.';
+        alertCategory = 'apify-rate-limit';
+        alertSubject  = '⚠️ Apify scraper rate-limited by LinkedIn';
         waitlist      = true;
       } else if (/401|403|unauthor/i.test(errMsg)) {
-        userError     = ‘Profile scraper isn’t configured. Check that APIFY_API_TOKEN is set on the deploy.’;
-        alertCategory = ‘apify-auth’;
-        alertSubject  = ‘🚨 Apify auth failure - APIFY_API_TOKEN missing or invalid’;
+        userError     = "Profile scraper isn't configured. Check that APIFY_API_TOKEN is set on the deploy.";
+        alertCategory = 'apify-auth';
+        alertSubject  = '🚨 Apify auth failure - APIFY_API_TOKEN missing or invalid';
       } else if (/404|not.?found/i.test(errMsg)) {
-        userError     = ‘That LinkedIn profile doesn’t exist. Check the handle in the URL.’;
-        alertCategory = null; // Don’t alert on user-input errors
+        userError     = "That LinkedIn profile doesn't exist. Check the handle in the URL.";
+        alertCategory = null; // Don't alert on user-input errors
       } else if (/private/i.test(errMsg)) {
-        userError     = ‘That profile is private - the audit needs a public LinkedIn URL.’;
+        userError     = "That profile is private - the audit needs a public LinkedIn URL.";
         alertCategory = null;
-      } else if (/abort|timed?\s?out/i.test(errMsg) || profileRes.reason?.name === ‘AbortError’) {
-        userError     = ‘We\’re getting hammered with audits right now and the scanner timed out.’;
-        alertCategory = ‘apify-timeout’;
-        alertSubject  = ‘⚠️ Apify scraper timed out (>25s)’;
+      } else if (/abort|timed?\s?out/i.test(errMsg) || profileRes.reason?.name === 'AbortError') {
+        userError     = 'We\'re getting hammered with audits right now and the scanner timed out.';
+        alertCategory = 'apify-timeout';
+        alertSubject  = '⚠️ Apify scraper timed out (>25s)';
         waitlist      = true;
       } else {
-        userError     = ‘We\’re seeing unusually high demand right now and hit a snag.’;
-        alertCategory = ‘apify-unknown’;
-        alertSubject  = ‘⚠️ Apify scraper failed (unknown error)’;
+        userError     = 'We\'re seeing unusually high demand right now and hit a snag.';
+        alertCategory = 'apify-unknown';
+        alertSubject  = '⚠️ Apify scraper failed (unknown error)';
         waitlist      = true;
       }
 
@@ -167,8 +167,8 @@ export default async function handler(req, res) {
           context:  {
             actor:     APIFY_ACTOR,
             url:       normalised,
-            role:      body.role || ‘(none)’,
-            goal:      body.goal || ‘(none)’,
+            role:      body.role || '(none)',
+            goal:      body.goal || '(none)',
             ip:        ip
           }
         }).catch(() => {}); // fire-and-forget

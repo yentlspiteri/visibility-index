@@ -8639,7 +8639,12 @@ fbq('track', 'PageView');
         // don't lose the lead. Much better than a dead-end "check connection" banner.
         showNetworkErrorCard(normalised);
       } else {
-        showError((data && data.error) || 'Audit failed. Please try again.', !!(data && data._waitlist));
+        // Never surface raw internal codes (server_500, server_502, etc.) to users.
+        const rawMsg = (data && data.error) || '';
+        const friendlyMsg = /^server_\d+$/.test(rawMsg)
+          ? 'Our server hit a temporary issue — please try again in a moment.'
+          : rawMsg || 'Audit failed. Please try again.';
+        showError(friendlyMsg, !!(data && data._waitlist));
       }
       return;
     }
