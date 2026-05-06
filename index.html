@@ -6483,6 +6483,134 @@ fbq('track', 'PageView');
   .gh-meta { font-size: 12px; color: rgba(252,252,252,0.55); }
   .gh-bio { font-size: 12px; color: rgba(252,252,252,0.65); line-height: 1.4; margin-top: 2px; }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     REPORT-READY STRIP — between findings and personal card.
+     Cream-card context (same as rest of results). Shows 3 improvement areas
+     locked behind email gate; drives conversion without feeling pushy.
+     ══════════════════════════════════════════════════════════════════════════ */
+  .report-strip {
+    background: linear-gradient(135deg, rgba(63,54,178,0.07) 0%, rgba(11,3,89,0.04) 100%);
+    border: 1.5px solid rgba(63,54,178,0.18);
+    border-radius: 20px;
+    padding: clamp(24px, 4vw, 36px);
+    margin: clamp(20px, 3vw, 28px) auto;
+    max-width: 880px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .report-strip.hidden { display: none; }
+  .report-strip-body { flex: 1 1 300px; }
+  .report-strip-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-body);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--vp-indigo, #3F36B2);
+    margin-bottom: 8px;
+  }
+  .report-strip-eyebrow::before {
+    content: '';
+    display: inline-block; width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--vp-indigo, #3F36B2);
+    animation: demand-blink 1.6s ease-in-out infinite;
+  }
+  .report-strip-title {
+    font-family: var(--font-display);
+    font-size: clamp(16px, 3vw, 20px);
+    font-weight: 700;
+    color: var(--vp-deep-black, #0c0b09);
+    line-height: 1.35;
+    margin: 0 0 16px;
+  }
+  .report-strip-gaps {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .report-gap-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: rgba(63,54,178,0.04);
+    border: 1px solid rgba(63,54,178,0.11);
+    border-radius: 10px;
+  }
+  .report-gap-icon { font-size: 16px; flex-shrink: 0; }
+  .report-gap-text { flex: 1; min-width: 0; }
+  .report-gap-label {
+    display: block;
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    color: var(--vp-deep-black, #0c0b09); line-height: 1.3;
+  }
+  .report-gap-detail {
+    display: block;
+    font-family: var(--font-body); font-size: 11.5px;
+    color: transparent;
+    background: rgba(63,54,178,0.12);
+    border-radius: 3px;
+    margin-top: 3px;
+    user-select: none;
+    /* Blurred "locked" hint text */
+    filter: blur(4px);
+    pointer-events: none;
+  }
+  .report-gap-lock {
+    display: block;
+    font-size: 11px; font-weight: 600;
+    color: var(--vp-indigo, #3F36B2);
+    opacity: 0.65;
+    margin-top: 5px;
+    letter-spacing: 0.02em;
+  }
+  .report-strip-cta-col {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+    align-items: flex-start; gap: 10px;
+    justify-content: center;
+    padding-top: 4px;
+  }
+  .report-strip-btn {
+    background: var(--vp-indigo, #3F36B2);
+    color: #fff;
+    border: 0; border-radius: 12px;
+    font-family: var(--font-body); font-size: 15px; font-weight: 600;
+    padding: 14px 24px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, transform .15s ease;
+    box-shadow: 0 4px 16px rgba(63,54,178,0.28);
+  }
+  .report-strip-btn:hover { background: #352db5; transform: translateY(-2px); }
+  .report-strip-btn:active { transform: scale(.97); }
+  .report-strip-hint {
+    font-family: var(--font-body); font-size: 11.5px;
+    color: rgba(15,15,15,0.45);
+    line-height: 1.4;
+  }
+  @media (max-width: 600px) {
+    .report-strip { flex-direction: column; gap: 18px; }
+    .report-strip-cta-col { width: 100%; }
+    .report-strip-btn { width: 100%; text-align: center; }
+  }
+
+  /* ── Sticky bar label (gate-bar-label) ── */
+  .gate-bar-label {
+    display: none;  /* hidden in standalone mode */
+  }
+  body.audit-complete .gate-bar-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(252,252,252,0.82);
+    margin-bottom: 10px;
+    letter-spacing: 0.01em;
+  }
+  .gate-bar-icon { font-size: 16px; flex-shrink: 0; }
+
   /* ── Light-theme overrides (inside .results-wrap cream cards) ── */
   .results-wrap .yt-thumb-card {
     background: rgba(63,54,178,0.04) !important;
@@ -7211,6 +7339,25 @@ fbq('track', 'PageView');
       <div class="findings-grid" id="findings-grid"><!-- populated by JS --></div>
     </div>
 
+    <!-- Report-ready strip: appears after findings, shows 3 locked improvement
+         areas from the user's lowest sub-scores. Drives email conversion by
+         making the gap between "I know my score" and "I know what to do" tangible. -->
+    <div class="report-strip hidden" id="report-strip">
+      <div class="report-strip-body">
+        <span class="report-strip-eyebrow">Your personalised report is ready</span>
+        <p class="report-strip-title" id="report-strip-title">Here's where you can move the needle most.</p>
+        <ul class="report-strip-gaps" id="report-strip-gaps">
+          <!-- Populated by JS: 3 weakest dimension cards with locked detail -->
+        </ul>
+      </div>
+      <div class="report-strip-cta-col">
+        <button type="button" class="report-strip-btn" id="report-strip-btn">
+          Get my full report — it's free
+        </button>
+        <span class="report-strip-hint">Personalised PDF · 3 moves · in your inbox in minutes</span>
+      </div>
+    </div>
+
     <!-- Personalized analysis (Claude-generated from real LinkedIn profile data) -->
     <div class="personal-card hidden" id="personal-card">
       <div class="personal-summary-row">
@@ -7242,6 +7389,12 @@ fbq('track', 'PageView');
     <!-- Standalone email gate (leaderboard removed - was placeholder content; replace in v0.5 with real research-backed distribution chart) -->
     <div class="gate-standalone" id="gate-standalone">
       <div class="gate-card" id="gate-card">
+        <!-- Visible only in sticky-bar mode (audit-complete). Gives the bar
+             context so it reads as a benefit, not a random email form. -->
+        <div class="gate-bar-label" id="gate-bar-label">
+          <span class="gate-bar-icon">📄</span>
+          <span id="gate-bar-text">Your personalised report is ready — get your roadmap.</span>
+        </div>
         <div class="gate-eyebrow">Your full report</div>
         <h3 id="gate-cta-line">Here's what to build first.</h3>
         <p>Personalised PDF. Three moves. In your inbox.</p>
@@ -9793,6 +9946,124 @@ fbq('track', 'PageView');
       grid.appendChild(el);
     });
     wrap.classList.remove('hidden');
+
+    // ── Report-ready strip: show 3 weakest dimensions as teasers ──
+    populateReportStrip(subs, total);
+  }
+
+  function populateReportStrip(subs, total) {
+    const strip     = document.getElementById('report-strip');
+    const titleEl   = document.getElementById('report-strip-title');
+    const gapsEl    = document.getElementById('report-strip-gaps');
+    const btn       = document.getElementById('report-strip-btn');
+    if (!strip || !titleEl || !gapsEl || !btn) return;
+
+    // ── Dimension metadata (icons + blurred action teasers per level) ──
+    const DIM_META = {
+      footprint:  {
+        icon: '🌐', label: 'Digital Footprint',
+        teasers: [
+          'Claim your name on 4 platforms that are actively hurting you right now.',
+          'Two quick wins to double your indexed pages within 30 days.',
+          'One channel you\'re underusing that your peers are growing fast on.',
+          'Fine-tune your cross-platform narrative for maximum discoverability.'
+        ]
+      },
+      clarity: {
+        icon: '🎯', label: 'Brand Clarity',
+        teasers: [
+          'Rewrite your headline with the exact formula the top 5% use.',
+          'Sharpen your positioning statement to attract inbound in 48 hours.',
+          'Fix the one message inconsistency that\'s confusing your best audiences.',
+          'Tighten the language across your top three visibility assets.'
+        ]
+      },
+      authority: {
+        icon: '🏆', label: 'Authority Signals',
+        teasers: [
+          'Three no-pitch outreach templates that land media and podcast slots.',
+          'The fastest path to a credible media mention in your industry.',
+          'Which publications to target first — and exactly how to approach them.',
+          'Leverage your existing signals to open doors to speaking invitations.'
+        ]
+      },
+      cadence: {
+        icon: '📅', label: 'Content Cadence',
+        teasers: [
+          'A 4-week posting plan built around your busiest schedule.',
+          'Two content formats your audience engages with most — start here.',
+          'The optimal posting frequency for your current follower count.',
+          'How to turn one idea into five posts without sounding repetitive.'
+        ]
+      },
+      visual: {
+        icon: '🎨', label: 'Visual Identity',
+        teasers: [
+          'Update these three profile assets to immediately signal seniority.',
+          'The background image formula that top executives are using right now.',
+          'Headshot brief your photographer needs to make you look the part.',
+          'Align your visual assets across LinkedIn, Google, and press profiles.'
+        ]
+      },
+      network: {
+        icon: '👥', label: 'Network Recognition',
+        teasers: [
+          'Four words to add to your profile that peers immediately associate with expertise.',
+          'Activate your dormant network with one low-effort, high-signal move.',
+          'How to convert connections into visible champions without being salesy.',
+          'Build the kind of recognition that brings inbound — not just engagement.'
+        ]
+      }
+    };
+
+    // ── Tier-personalised strip title ──
+    const tier = tierFor(total);
+    const tierTitles = {
+      'The Hidden Gem':        'Here\'s your path from Hidden Gem to Rising Voice.',
+      'The Rising Voice':      'Here\'s what closes the gap to Emerging Authority.',
+      'The Emerging Authority':'Here\'s how you reach Recognised Leader.',
+      'The Recognised Leader': 'Here\'s how you sharpen from good to legacy-level.'
+    };
+    titleEl.textContent = tierTitles[tier.name] || "Here's where you can move the needle most.";
+
+    // ── Find the 3 lowest-scoring dimensions (shuffle ties for variety) ──
+    const ranked = Object.keys(subs)
+      .filter(k => DIM_META[k])
+      .map(k => ({ key: k, score: subs[k] ?? 0 }))
+      .sort((a, b) => a.score !== b.score ? a.score - b.score : (Math.random() < 0.5 ? -1 : 1))
+      .slice(0, 3);
+
+    gapsEl.innerHTML = '';
+    ranked.forEach(({ key, score }) => {
+      const meta   = DIM_META[key];
+      const teaser = meta.teasers[Math.min(score, meta.teasers.length - 1)];
+
+      const li = document.createElement('li');
+      li.className = 'report-gap-item';
+      li.innerHTML = `
+        <span class="report-gap-icon" aria-hidden="true">${meta.icon}</span>
+        <span class="report-gap-text">
+          <span class="report-gap-label">${meta.label}</span>
+          <span class="report-gap-detail" aria-hidden="true">${escapeHtmlPage(teaser)}</span>
+          <span class="report-gap-lock" aria-label="Locked — get the free report to unlock">In your free report &rarr;</span>
+        </span>
+      `;
+      gapsEl.appendChild(li);
+    });
+
+    // ── Show strip ──
+    strip.classList.remove('hidden');
+
+    // ── CTA: scroll to gate, focus email ──
+    btn.addEventListener('click', function onStripClick() {
+      const gate  = document.querySelector('.gate-standalone') || document.getElementById('gate-standalone');
+      const email = document.getElementById('gate-email') || (gate && gate.querySelector('input[type="email"]'));
+      if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (email) setTimeout(() => email.focus(), 400);
+      if (window.track) window.track('report_strip_cta_click', { tier: tier.name });
+      // Remove listener after first click to avoid duplicate scrolls
+      btn.removeEventListener('click', onStripClick);
+    }, { once: true });
   }
 
   function escapeHtmlPage(s) {
