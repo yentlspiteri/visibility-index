@@ -105,6 +105,11 @@ export default async function handler(req, res) {
     // (e.g. supreme_coder) reject URLs without it as "not valid".
     const fullUrl = `https://www.${normalised}/`;
 
+    // Start the posts scraper immediately — it only needs the URL, not the profile.
+    // Running in parallel with Stage 1 (fetchApify) removes it from the critical path
+    // entirely (~8-12s saved vs. running it in Stage 2 after the profile returns).
+    const postsPromise = fetchApifyPosts(normalised);
+
     // 1) Fetch the LinkedIn profile FIRST so we can use the real name + company
     //    in the press search. The handle alone produces noisy/wrong results.
     //    +1-2s of latency in exchange for dramatically more relevant Tier-1 detection.
@@ -206,8 +211,8 @@ export default async function handler(req, res) {
       fetchSerpFootprint(normalised, queryArgs, true),
       checkPersonalDomain(queryArgs.firstName, queryArgs.lastName),
       fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
-      fetchApifyPosts(normalised),
-      analyzeVisualIdentity(profile),         // moved up — runs in parallel with SerpAPI
+      postsPromise,                            // already running since before Stage 1 — likely done
+      analyzeVisualIdentity(profile),          // moved up — runs in parallel with SerpAPI
       fetchGoogleTrends(queryArgs.firstName, queryArgs.lastName)
     ]);
     const serpAll    = serpAllRes.status    === 'fulfilled' ? serpAllRes.value    : null;
@@ -225,30 +230,15 @@ export default async function handler(req, res) {
     // Career stage from the experience array - feeds Claude for tenure-aware moves
     const careerStage = analyzeCareerStage(profile);
 
-    // ─── Stage 3: handle-dependent enrichment (IG/X metrics) ───
-    // These need handles parsed from Stage 2's presence map, so they can't move up.
-    // Both run in parallel; failure in one doesn't block the other.
+    // ─── Stage 3 + Claude: run in parallel ───────────────────────────────────
+    // IG/X enrichment needs handles from Stage 2's presence map (can't move earlier).
+    // Claude only needs heuristic scores + profile, which are already available.
+    // Running them together saves 5–8s vs. the old sequential order.
     const igHandle = extractHandle(presence.instagram?.hits?.[0]?.url, 'instagram.com');
     const xHandle  = extractHandle(presence.x?.hits?.[0]?.url, 'x.com');
-    const [igRes, xRes] = await Promise.allSettled([
-      igHandle ? fetchInstagramData(igHandle) : Promise.resolve(null),
-      xHandle  ? fetchXData(xHandle)         : Promise.resolve(null)
-    ]);
-    const igData = igRes.status === 'fulfilled' ? igRes.value : null;
-    const xData  = xRes.status  === 'fulfilled' ? xRes.value  : null;
 
-    // Merge Instagram/X enriched data INTO the presence map - the page + PDF
-    // can now show "Instagram: 4.2k followers" instead of just "Detected".
-    if (igData && presence.instagram) {
-      presence.instagram.metrics = igData;
-    }
-    if (xData && presence.x) {
-      presence.x.metrics = xData;
-    }
-
-    // 2) Compute heuristic sub-scores FIRST so Claude can write commentary using real numbers.
+    // 2) Compute heuristic sub-scores so we can kick off Claude immediately.
     //    Visual is provisional (depends on clarity); we recompute after Claude returns.
-    //    Footprint, authority, network now also factor in cross-platform presence.
     const heuristic = {
       footprint: scoreFootprint(profile, serp, presence, googleRanking, personalSite),
       authority: scoreAuthority(profile, press, presence),
@@ -257,9 +247,7 @@ export default async function handler(req, res) {
       network:   scoreNetwork(profile, presence)
     };
 
-    // Provisional tier - sum the heuristic scores to give Claude a tier hint for
-    // tier-aware move templates (Hidden Gem moves should look very different from
-    // Recognised Leader moves).
+    // Provisional tier - gives Claude a tier hint for tier-aware move templates.
     const provisionalTotal = (heuristic.footprint || 0) + (heuristic.authority || 0)
                            + (heuristic.cadence   || 0) + (heuristic.visual    || 0)
                            + (heuristic.network   || 0) + 1;     // +1 for placeholder clarity
@@ -281,13 +269,33 @@ export default async function handler(req, res) {
       postsData:      postsData,
       visionAnalysis: visionAnalysis    // null OR { photo: {score, notes}, banner: {score, notes} }
     };
-    const analysis = await analyzeProfile(profile, heuristic, analysisCtx).catch(err => {
-      console.error('Claude analysis failed:', err);
-      return {
-        clarityScore: 1, clarityRationale: 'Fallback heuristic - LLM unavailable.',
-        executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: []
-      };
-    });
+
+    // Fire Claude + IG/X enrichment at the same time — neither depends on the other.
+    const [[igRes, xRes], analysis] = await Promise.all([
+      Promise.allSettled([
+        igHandle ? fetchInstagramData(igHandle) : Promise.resolve(null),
+        xHandle  ? fetchXData(xHandle)         : Promise.resolve(null)
+      ]),
+      analyzeProfile(profile, heuristic, analysisCtx).catch(err => {
+        console.error('Claude analysis failed:', err);
+        return {
+          clarityScore: 1, clarityRationale: 'Fallback heuristic - LLM unavailable.',
+          executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: []
+        };
+      })
+    ]);
+
+    const igData = igRes.status === 'fulfilled' ? igRes.value : null;
+    const xData  = xRes.status  === 'fulfilled' ? xRes.value  : null;
+
+    // Merge Instagram/X enriched data INTO the presence map - the page + PDF
+    // can now show "Instagram: 4.2k followers" instead of just "Detected".
+    if (igData && presence.instagram) {
+      presence.instagram.metrics = igData;
+    }
+    if (xData && presence.x) {
+      presence.x.metrics = xData;
+    }
     const clarity = { score: analysis.clarityScore, rationale: analysis.clarityRationale };
 
     // 4) Final sub-scores - re-compute visual with the real clarity now
@@ -313,10 +321,17 @@ export default async function handler(req, res) {
     // response, never throws. If NOTION_AUDITS_DATABASE_ID isn't set, it no-ops.
     // Status starts at "audit_completed"; /api/lead and the Calendly webhook
     // upsert the row to "email_submitted" / "walkthrough_booked" later.
+    const _notionFirst = getFirstName(profile);
+    const _notionLast  = getLastName(profile);
+    if (!_notionFirst && !_notionLast) {
+      // Diagnostic: if names are blank, log the available keys so we can see
+      // which key the actor used (check Vercel function logs for "[Notion names blank]").
+      console.warn('[Notion names blank] profile keys:', Object.keys(profile || {}).slice(0, 30).join(', '));
+    }
     logAuditCompleted({
       linkedinUrl: normalised ? `https://www.${normalised}/` : null,
-      firstName:   getFirstName(profile),
-      lastName:    getLastName(profile),
+      firstName:   _notionFirst,
+      lastName:    _notionLast,
       headline:    getHeadline(profile),
       company:     getCompany(profile),
       score:       Math.round((total / 18) * 100),    // 0-100 display
@@ -536,7 +551,7 @@ async function fetchInstagramData(handle) {
         resultsLimit: 6,
         resultsType:  'details'
       })
-    }, 10000);
+    }, 5000);
     if (!r.ok) return null;
     const items = await r.json();
     if (!Array.isArray(items) || !items.length) return null;
@@ -573,7 +588,7 @@ async function fetchXData(handle) {
         startUrls:      [{ url: `https://x.com/${handle}` }],
         maxItems:       5
       })
-    }, 10000);
+    }, 5000);
     if (!r.ok) return null;
     const items = await r.json();
     if (!Array.isArray(items) || !items.length) return null;
@@ -600,8 +615,9 @@ async function fetchApifyPosts(linkedinUrl) {
   if (!process.env.APIFY_API_TOKEN || !APIFY_POSTS_ACTOR) return [];
   const url = `${APIFY_API}/${APIFY_POSTS_ACTOR}/run-sync-get-dataset-items`;
   try {
-    // 12s cap - posts scraper occasionally takes its time. Beyond this we'd
-    // rather skip posts data than fail the audit.
+    // 8s cap — posts scraper now starts in parallel with Stage 1 (profile fetch),
+    // so by the time Stage 2 resolves it's typically already done. Cap at 8s to
+    // avoid holding the pipeline open if it's slow.
     const r = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
@@ -617,7 +633,7 @@ async function fetchApifyPosts(linkedinUrl) {
         maxResults:         20,
         limitPerSource:     20
       })
-    }, 12000);
+    }, 8000);
     if (!r.ok) {
       const text = await r.text().catch(() => '');
       console.warn('[Apify posts] non-OK', r.status, text.slice(0, 200));
@@ -957,8 +973,10 @@ async function checkPersonalDomain(firstName, lastName) {
   const f = String(firstName).toLowerCase().replace(/[^a-z]/g, '');
   const l = String(lastName).toLowerCase().replace(/[^a-z]/g, '');
   if (!f || !l || f.length < 2 || l.length < 2) return null;
+
   // Patterns ordered by likelihood. firstnamelastname.com is the most common executive personal site.
   // Expanded TLD set: .me / .io / .co are increasingly common for personal sites.
+  // Deliberately excludes ${l}.com (surname-only) — too many businesses share a last name.
   const candidates = [
     `https://${f}${l}.com`,
     `https://${f}-${l}.com`,
@@ -968,24 +986,67 @@ async function checkPersonalDomain(firstName, lastName) {
     `https://${f}${l}.io`,
     `https://${f}${l}.co`,
     `https://${f}-${l}.me`,
-    `https://${f}-${l}.io`,
-    `https://${l}.com`     // surname-only domains (less common but happens for senior execs)
+    `https://${f}-${l}.io`
   ];
+
+  // Parked / for-sale domain patterns we want to reject even when they return 200
+  const PARKED_PATTERNS = /parked|for\s*sale|buy\s*this\s*domain|domain\s*is\s*available|godaddy|sedo|hugedomains|dan\.com|namecheap|underconstruction|under\s+construction|coming\s+soon/i;
+
   for (const url of candidates) {
     try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 2000);
-      // HEAD request, follow redirects. Some sites refuse HEAD - GET as fallback would be slower.
-      const r = await fetch(url, {
+      // 1) Quick HEAD to confirm the domain resolves at all
+      const headCtrl = new AbortController();
+      const headTimer = setTimeout(() => headCtrl.abort(), 2000);
+      const head = await fetch(url, {
         method: 'HEAD',
         redirect: 'follow',
-        signal: ctrl.signal,
+        signal: headCtrl.signal,
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityIndex/1.0)' }
       }).catch(() => null);
-      clearTimeout(timer);
-      if (r && r.ok) {
-        return { url, found: true };
+      clearTimeout(headTimer);
+      if (!head || !head.ok) continue;
+
+      // 2) Validate ownership: fetch the first ~10KB of HTML and confirm this
+      //    person's name actually appears. Avoids false positives where the domain
+      //    is owned by a different person or a business with the same name.
+      const getCtrl  = new AbortController();
+      const getTimer = setTimeout(() => getCtrl.abort(), 3000);
+      const get = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        signal: getCtrl.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityIndex/1.0)' }
+      }).catch(() => null);
+      clearTimeout(getTimer);
+      if (!get || !get.ok) continue;
+
+      // Read first ~12KB only — enough for <head> + above-fold content
+      const reader  = get.body.getReader();
+      const chunks  = [];
+      let   totalBytes = 0;
+      try {
+        while (totalBytes < 12000) {
+          const { done, value } = await reader.read();
+          if (done || !value) break;
+          chunks.push(value);
+          totalBytes += value.length;
+        }
+      } finally {
+        reader.cancel().catch(() => {});
       }
+      const html  = new TextDecoder().decode(
+        chunks.reduce((a, b) => { const c = new Uint8Array(a.length + b.length); c.set(a); c.set(b, a.length); return c; }, new Uint8Array(0))
+      ).toLowerCase();
+
+      // Reject parked / for-sale / under-construction pages
+      if (PARKED_PATTERNS.test(html)) continue;
+
+      // Require BOTH first and last name to appear somewhere in the visible content.
+      // A personal site almost always names the person in the title, bio, or above-fold.
+      if (!html.includes(f) || !html.includes(l)) continue;
+
+      return { url, found: true };
+
     } catch (_) { /* ignore single-URL failures, try the next */ }
   }
   return null;
@@ -1087,7 +1148,7 @@ const ROLE_FRAMING = {
 const GOAL_FRAMING = {
   clients:     { priority: 'Brand Clarity + Content Cadence',                directive: 'Moves should make it OBVIOUSLY easy for an ideal client to identify themselves in your positioning, then to see proof you can deliver.' },
   speaking:    { priority: 'Authority Signals + Speaker Reel',                directive: 'Moves should focus on visible speaker credentials - past stages, named talks, a discoverable speaker reel, outbound pitching.' },
-  credibility: { priority: 'Authority Signals + Network Recognition',         directive: 'Moves should focus on third-party validation - press mentions, named board roles, awards, Wikipedia eligibility, peer endorsements.' },
+  credibility: { priority: 'Authority Signals + Network Recognition',         directive: 'Moves should focus on third-party validation - press mentions, named board roles, awards, peer endorsements. If authority score ≥ 2 and ≥ 1 press hit, Wikipedia is the single highest-ROI move: fewer than 0.3% of executives have an entry — it is the most trusted credibility signal on the internet. Explain the 3-step path: (1) 3+ independent verifiable sources, (2) Articles for Creation submission, (3) specialist writer.' },
   legacy:      { priority: 'Brand Clarity + Authority + Sustained POV',       directive: 'Moves should focus on inheritable assets - a book, a named framework, an annual letter, a community that survives platforms.' }
 };
 
@@ -1550,19 +1611,27 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 // add aliases here - no need to touch the scoring functions.
 
 function getFirstName(p) {
-  // supreme_coder: firstName. Others: first_name / firstname / split fullName.
-  if (p.firstName)  return String(p.firstName).trim();
-  if (p.first_name) return String(p.first_name).trim();
-  if (p.firstname)  return String(p.firstname).trim();
-  const full = p.fullName || p.name || p.full_name || '';
+  // Ordered by actor prevalence:
+  // supreme_coder → firstName
+  // dev_fusion → first_name / firstname
+  // generic LinkedIn APIs → givenName / given_name
+  // Apify generic → split fullName / full_name / name / displayName
+  if (p.firstName)   return String(p.firstName).trim();
+  if (p.first_name)  return String(p.first_name).trim();
+  if (p.firstname)   return String(p.firstname).trim();
+  if (p.givenName)   return String(p.givenName).trim();
+  if (p.given_name)  return String(p.given_name).trim();
+  const full = p.fullName || p.full_name || p.displayName || p.display_name || p.name || '';
   if (full) return String(full).trim().split(/\s+/)[0] || '';
   return '';
 }
 function getLastName(p) {
-  if (p.lastName)  return String(p.lastName).trim();
-  if (p.last_name) return String(p.last_name).trim();
-  if (p.lastname)  return String(p.lastname).trim();
-  const full = p.fullName || p.name || p.full_name || '';
+  if (p.lastName)    return String(p.lastName).trim();
+  if (p.last_name)   return String(p.last_name).trim();
+  if (p.lastname)    return String(p.lastname).trim();
+  if (p.familyName)  return String(p.familyName).trim();
+  if (p.family_name) return String(p.family_name).trim();
+  const full = p.fullName || p.full_name || p.displayName || p.display_name || p.name || '';
   if (full) {
     const parts = String(full).trim().split(/\s+/);
     return parts.length > 1 ? parts.slice(1).join(' ') : '';

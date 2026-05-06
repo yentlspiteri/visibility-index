@@ -3051,6 +3051,146 @@ fbq('track', 'PageView');
     .content-card-title { font-size: 15px; }
   }
 
+  /* ─────────── Creative Toolkit ─────────── */
+  .toolkit-wrap {
+    background: #EAEAF8;
+    padding: 96px 0;
+  }
+  .toolkit-eyebrow-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 40px;
+  }
+  .toolkit-eyebrow-row .tk-arrow {
+    font-size: 9px;
+    color: var(--vp-black);
+    line-height: 1;
+  }
+  .toolkit-eyebrow-row .eyebrow {
+    color: var(--vp-black);
+    letter-spacing: 0.12em;
+    font-size: 11px;
+  }
+  .toolkit-h2 {
+    color: var(--vp-black);
+    font-size: clamp(30px, 3.8vw, 50px);
+    line-height: 1.12;
+    max-width: 700px;
+    margin: 0 0 60px;
+    letter-spacing: -0.025em;
+  }
+  .toolkit-tags {
+    max-width: 940px;
+    font-size: clamp(15px, 1.45vw, 18px);
+    line-height: 2.3;
+    color: var(--vp-grey-1);
+  }
+  .toolkit-tag {
+    display: inline;
+    transition: color 0.4s ease, font-weight 0.4s ease;
+    cursor: default;
+  }
+  .toolkit-tag.tk-active {
+    color: var(--vp-navy);
+    font-weight: 700;
+  }
+  .toolkit-sep {
+    color: var(--vp-grey-1);
+    margin: 0 5px;
+    font-weight: 400;
+  }
+  @media (max-width: 768px) {
+    .toolkit-wrap { padding: 64px 0; }
+    .toolkit-h2 { margin-bottom: 36px; }
+    .toolkit-tags { font-size: 15px; line-height: 2.1; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     FAQ SECTION
+     ═══════════════════════════════════════════════════════════════════════ */
+  .faq-wrap {
+    background: #fff;
+    padding: 96px 0;
+  }
+  .faq-eyebrow-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 40px;
+  }
+  .faq-eyebrow-row .faq-arrow { font-size: 9px; color: var(--vp-black); line-height: 1; }
+  .faq-h2 {
+    font-size: clamp(28px, 3.4vw, 46px);
+    color: var(--vp-black);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    max-width: 640px;
+    margin: 0 0 56px;
+  }
+  .faq-list {
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .faq-item {
+    border-bottom: 1px solid rgba(15,15,15,0.10);
+  }
+  .faq-item:first-child { border-top: 1px solid rgba(15,15,15,0.10); }
+  .faq-q {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 22px 0;
+    font-family: var(--font-display);
+    font-size: clamp(15px, 1.35vw, 17px);
+    font-weight: 600;
+    color: var(--vp-black);
+    cursor: pointer;
+    text-align: left;
+    box-sizing: border-box;
+  }
+  .faq-q:hover { color: var(--vp-indigo); }
+  .faq-chevron {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(15,15,15,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .25s ease, border-color .2s;
+  }
+  .faq-chevron svg { display: block; }
+  .faq-item.open .faq-chevron {
+    transform: rotate(180deg);
+    border-color: var(--vp-indigo);
+  }
+  .faq-item.open .faq-q { color: var(--vp-indigo); }
+  .faq-a {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .35s cubic-bezier(.4,0,.2,1);
+  }
+  .faq-item.open .faq-a { max-height: 400px; }
+  .faq-a-inner {
+    padding: 0 0 22px;
+    font-family: var(--font-body);
+    font-size: clamp(14px, 1.15vw, 16px);
+    line-height: 1.7;
+    color: var(--vp-grey-2);
+  }
+  .faq-a-inner a { color: var(--vp-indigo); text-decoration: underline; }
+  @media (max-width: 768px) {
+    .faq-wrap { padding: 64px 0; }
+    .faq-h2 { margin-bottom: 36px; }
+  }
+
   .next-moves-wrap {
     background: var(--vp-navy);
     color: var(--vp-white);
@@ -3581,6 +3721,15 @@ fbq('track', 'PageView');
   @keyframes hex-node-pulse {
     0%   { r: 6;  opacity: 0.6; }
     100% { r: 22; opacity: 0;   }
+  }
+  /* Invitation pulse — brief scale-pop fired by JS on mobile to hint that vertices are tappable */
+  .method-diagram .hex-vertex.hex-invite .hex-node {
+    animation: hex-invite-pop 0.5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes hex-invite-pop {
+    0%   { r: 7;  }
+    50%  { r: 11; }
+    100% { r: 7;  }
   }
 
   /* Detail panel - sits in the RIGHT column on desktop, below on mobile.
@@ -4956,10 +5105,16 @@ fbq('track', 'PageView');
   body.menu-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
   body.menu-open .nav-burger span:nth-child(2) { opacity: 0; }
   body.menu-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-  /* Slide-down panel — default hidden, made visible by JS toggle (body.menu-open).
-     Scoped styles for the panel itself live in the mobile media query for layout. */
-  .nav-mobile-panel  { display: none; }
-  body.menu-open .nav-mobile-panel { display: flex; }
+  /* Slide-down panel — hidden via transform+visibility so the slide transition
+     actually animates (display:none kills transitions). Toggled by body.menu-open. */
+  .nav-mobile-panel {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .nav-mobile-panel.is-open {
+    visibility: visible;
+    pointer-events: auto;
+  }
 
   /* ════════════════════════════════════════════════════════════════════════════
      ERROR CARD - shown when audit fails (LinkedIn private, scraper down, etc.)
@@ -5135,6 +5290,118 @@ fbq('track', 'PageView');
     .demand-form button[type="submit"] { width: 100%; }
   }
 
+  /* ── Snag / network-error card ─────────────────────────────────────────────
+     Shown when the fetch fails entirely (network/server unreachable). Amber
+     tint = "our problem, not yours." Same structure as demand-card. */
+  .snag-card {
+    background: rgba(245,158,11,0.06);
+    border-color: rgba(245,158,11,0.30);
+  }
+  .snag-card .demand-eyebrow { color: #92400E; }
+  .snag-card .demand-title   { color: var(--vp-black, #0F0F0F); }
+  .snag-card .demand-sub     { color: var(--vp-grey-2, #4B5563); }
+  /* Override indigo submit button → amber for snag card */
+  .snag-card .demand-form button[type="submit"] {
+    background: #D97706;
+  }
+  .snag-card .demand-form button[type="submit"]:hover { background: #B45309; }
+  .snag-retry {
+    background: none;
+    border: none;
+    color: var(--vp-grey-2, #4B5563);
+    font-family: var(--font-body, Helvetica);
+    font-size: 13px;
+    padding: 6px 0 2px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    align-self: flex-start;
+    margin-top: 4px;
+    transition: color .15s ease;
+  }
+  .snag-retry:hover { color: var(--vp-black, #0F0F0F); }
+
+  /* ── Slow-audit nudge ─────────────────────────────────────────────────────
+     Appears inside the loading panel after 60s. Audit keeps running in the
+     background. Email submitted → we deliver results to inbox regardless of
+     whether the user closes the tab. */
+  .slow-audit-nudge {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: rgba(63,54,178,0.05);
+    border: 1.5px solid rgba(63,54,178,0.15);
+    border-radius: 12px;
+    animation: vi-error-in .4s cubic-bezier(.2,.8,.25,1) both;
+  }
+  .slow-audit-nudge.hidden { display: none; }
+  .slow-audit-msg {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--vp-grey-2, #4B5563);
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+  .slow-audit-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .slow-audit-form input[type="email"] {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 0 12px;
+    border: 1.5px solid rgba(63,54,178,0.22);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--font-body);
+    background: #fff;
+    color: var(--vp-black);
+    outline: none;
+    transition: border-color .15s ease;
+  }
+  .slow-audit-form input[type="email"]:focus { border-color: var(--vp-indigo, #3F36B2); }
+  .slow-audit-form button[type="submit"] {
+    flex-shrink: 0;
+    height: 38px;
+    padding: 0 16px;
+    background: var(--vp-indigo, #3F36B2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .slow-audit-form button[type="submit"]:hover  { background: #352db5; transform: translateY(-1px); }
+  .slow-audit-form button[type="submit"]:active { transform: scale(.97); }
+  .slow-audit-form button:disabled { opacity: 0.6; cursor: wait; transform: none !important; }
+  .slow-audit-dismiss {
+    background: none;
+    border: none;
+    color: var(--vp-grey-2, #4B5563);
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 2px 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color .15s ease;
+  }
+  .slow-audit-dismiss:hover { color: var(--vp-black); }
+  /* Sent state: hide form + dismiss, turn message green */
+  .slow-audit-nudge.sent .slow-audit-form,
+  .slow-audit-nudge.sent .slow-audit-dismiss { display: none; }
+  .slow-audit-nudge.sent .slow-audit-msg { color: #166534; margin: 0; font-weight: 500; }
+  @media (max-width: 420px) {
+    .slow-audit-form { flex-direction: column; }
+    .slow-audit-form input[type="email"],
+    .slow-audit-form button[type="submit"] { width: 100%; height: 42px; }
+  }
+
   /* Mobile dimension list — hidden on desktop, visible only on mobile where the
      hex diagram is suppressed. Six numbered rows with title + 1-line description. */
   .method-list-mobile { display: none; }
@@ -5190,24 +5457,51 @@ fbq('track', 'PageView');
   }
 
   /* ════════════════════════════════════════════════════════════════════════════
-     MOBILE SECTION TRIM — focus the small-screen experience on the audit.
-     - Methodology hex diagram is too dense to be useful on a 380px viewport;
-       we hide it on mobile and link out to /methodology for users who want depth.
-     - Circle section's huge CTA pad is replaced by tighter spacing.
-     - Belt-and-braces with !important so cached deploys don't undo this on mobile.
+     MOBILE SECTION TRIM
      ════════════════════════════════════════════════════════════════════════════ */
   @media (max-width: 768px) {
-    .method-diagram { display: none !important; }
-    .method-split { grid-template-columns: 1fr !important; gap: 24px !important; }
-    /* Reduce vertical padding everywhere — mobile users scroll less, want fewer
-       big-empty zones between sections. */
+    /* Hexagon is now shown on mobile — strip the decorative background/border so
+       it fills edge-to-edge and the SVG has the full column width. */
+    .method-diagram {
+      padding: 20px 4px 4px !important;
+      background: none !important;
+      border: none !important;
+    }
+    /* Bump label size slightly for touch readability */
+    .method-diagram .hex-label { font-size: 12px !important; }
+
+    .method-split { grid-template-columns: 1fr !important; gap: 16px !important; }
+
+    /* Detail panel: card sitting below the hex, replaces the old right column */
+    .method-detail {
+      padding: 20px 22px !important;
+      background: rgba(63,54,178,0.04) !important;
+      border: 1.5px solid rgba(63,54,178,0.11) !important;
+      border-radius: 16px !important;
+      min-height: 90px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+    }
+    /* Empty state: hide the number+body, turn title into a soft hint */
+    .method-detail.is-empty .method-detail-num  { display: none !important; }
+    .method-detail.is-empty .method-detail-body { display: none !important; }
+    .method-detail.is-empty .method-detail-title {
+      font-size: 14px !important;
+      font-weight: 400 !important;
+      color: rgba(15,15,15,0.42) !important;
+      text-align: center !important;
+    }
+    /* Populated state — let content sizes be set by the general media query below */
+
+    /* Reduce vertical padding everywhere */
     section.method-wrap, section.circle-wrap, .case-wrap, .faq-wrap {
       padding-top: 56px !important;
       padding-bottom: 56px !important;
     }
-    /* Hide the "Learn more about each dimension →" desktop hover panel area on mobile.
-       Replaced by a single "See methodology" link below the lede. */
-    .method-detail { padding: 0 !important; }
+
+    /* Text list is fully replaced by the interactive hex — hide it */
+    .method-list-mobile { display: none !important; }
   }
 
   /* ════════════════════════════════════════════════════════════════════════════
@@ -5388,16 +5682,13 @@ fbq('track', 'PageView');
       display: none !important;
     }
 
-    /* Keep the CTA visible but tight; never wrap, never grow */
-    nav.top .nav-cta {
-      padding: 8px 14px !important;
-      font-size: 13px !important;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    /* Hide the "Book a call" CTA on mobile — too crowded between logo + burger */
+    nav.top .nav-cta { display: none !important; }
 
-    /* Lock scroll while menu is open */
-    body.menu-open { overflow: hidden !important; }
+    /* Prevent the body scrolling under the open panel without using overflow:hidden,
+       which breaks position:fixed in Safari/WebKit (fixed children get positioned
+       relative to the scrolled body instead of the viewport). */
+    body.menu-open { overscroll-behavior: none; touch-action: none; }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -5406,6 +5697,7 @@ fbq('track', 'PageView');
      mobile media query so desktop users also get the burger menu pattern.
      ═══════════════════════════════════════════════════════════════════════════ */
   .nav-mobile-panel {
+    display: flex;
     flex-direction: column;
     gap: 8px;
     position: fixed;
@@ -5416,15 +5708,14 @@ fbq('track', 'PageView');
     background: rgba(250, 250, 250, 0.98);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    transform: translateY(-100%);
-    transition: transform .35s cubic-bezier(.4,0,.2,1);
-    z-index: 49;
+    /* transform is driven entirely via JS element.animate() + inline style
+       so scroll-snap / layout flushes can't cancel a mid-flight CSS transition */
+    transform: translateY(-110%);
+    z-index: 51;
     overflow-y: auto;
   }
-  body.menu-open .nav-mobile-panel {
-    display: flex;
-    transform: translateY(0);
-  }
+  /* .is-open applied by JS — keeps visibility/pointer-events in sync */
+  .nav-mobile-panel.is-open { transform: translateY(0); }
   .nav-mobile-link {
     font-family: var(--font-display);
     font-size: 22px;
@@ -5612,8 +5903,12 @@ fbq('track', 'PageView');
   .method-diagram .hex-label { font-size: 13px; }
   .method-diagram .hex-num   { font-size: 11px; }
 
-  /* Touch-aware instruction line */
-  .method-hint::before { content: attr(data-hover-text); }
+  /* Touch-aware instruction line — text lives in data attrs so CSS can swap it */
+  .method-hint { font-size: 0; }   /* hide raw text node */
+  .method-hint::before {
+    font-size: 13px;
+    content: attr(data-hover-text);
+  }
   @media (hover: none) {
     .method-hint::before { content: attr(data-tap-text); }
   }
@@ -6202,35 +6497,28 @@ fbq('track', 'PageView');
     }
     footer .footer-col a:active { opacity: 0.7; }
 
-    /* Email becomes a brand-indigo CTA pill — visible against the dark footer.
-       Sizes to content with safe overflow handling so the text never bleeds past
-       the rounded background (was happening on iPhone 14 sized viewports). */
-    footer .footer-email {
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+    /* Email pill — more specific than `footer .footer-col a` to win the !important war */
+    footer .footer-col a.footer-email {
+      display: block !important;
       box-sizing: border-box !important;
-      width: auto !important;
-      max-width: 100% !important;
-      min-height: 0 !important;
-      padding: 13px 20px !important;
+      width: 100% !important;
+      padding: 17px 28px !important;
       margin: 0 !important;
-      font-size: 14px !important;
+      font-size: 16px !important;
       font-weight: 600 !important;
       letter-spacing: -0.005em !important;
-      line-height: 1.1 !important;
+      line-height: 1.2 !important;
+      text-align: center !important;
       white-space: nowrap !important;
-      text-overflow: ellipsis !important;
-      overflow: hidden !important;
       text-transform: none !important;
       color: #fcfcfc !important;
       background: var(--vp-indigo, #3F36B2) !important;
       border-radius: 999px !important;
       text-decoration: none !important;
-      box-shadow: 0 6px 18px rgba(63,54,178,0.35) !important;
+      box-shadow: 0 8px 24px rgba(63,54,178,0.40) !important;
       transition: transform .15s ease, box-shadow .15s ease !important;
     }
-    footer .footer-email:active {
+    footer .footer-col a.footer-email:active {
       transform: scale(0.97) !important;
       box-shadow: 0 3px 10px rgba(63,54,178,0.30) !important;
     }
@@ -6332,6 +6620,7 @@ fbq('track', 'PageView');
            (3) the post-nav <script> removes any stragglers if JS detects a mobile viewport. -->
       <a href="#methodology" class="nav-link nav-link-desktop" style="display:none">Methodology</a>
       <a href="#circle"      class="nav-link nav-link-desktop" style="display:none">The Circle</a>
+      <a href="#faq"         class="nav-link nav-link-desktop" style="display:none">FAQ</a>
       <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
       <button type="button" class="nav-burger" id="nav-burger"
               aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-panel">
@@ -6339,14 +6628,15 @@ fbq('track', 'PageView');
       </button>
     </div>
   </div>
-  <!-- Mobile slide-down panel - hidden on desktop, toggled by .nav-burger at <=768px -->
-  <div class="nav-mobile-panel" id="nav-mobile-panel" aria-hidden="true">
-    <a href="#methodology" class="nav-mobile-link">Methodology</a>
-    <a href="#circle"      class="nav-mobile-link">The Circle</a>
-    <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-mobile-cta">Book a call</a>
-  </div>
-  </div>
 </nav>
+<!-- Mobile slide-down panel — lives OUTSIDE <nav> so position:fixed is relative to
+     the viewport, not the sticky nav container (sticky ancestors break fixed children). -->
+<div class="nav-mobile-panel" id="nav-mobile-panel" aria-hidden="true">
+  <a href="#methodology" class="nav-mobile-link">Methodology</a>
+  <a href="#circle"      class="nav-mobile-link">The Circle</a>
+  <a href="#faq"         class="nav-mobile-link">FAQ</a>
+  <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-mobile-cta">Book a call</a>
+</div>
 
 <!-- DESKTOP-ONLY NAV REVEAL - on desktop viewports we strip the inline display:none
      from .nav-link-desktop elements. On mobile the inline style stays, so the
@@ -6469,6 +6759,16 @@ fbq('track', 'PageView');
           <li class="loading-row" data-step="2" data-msg="Reviewing content and visual identity…"><span class="loading-icon"></span><span>Cadence &amp; Visual</span></li>
           <li class="loading-row" data-step="3" data-msg="Calculating your Visibility Index…"><span class="loading-icon"></span><span>Score</span></li>
         </ul>
+        <!-- Slow-audit nudge: hidden until 60s elapsed. Captures email so we can
+             deliver results even if the user closes the tab. -->
+        <div class="slow-audit-nudge hidden" id="slow-audit-nudge" role="status" aria-live="polite">
+          <p class="slow-audit-msg">Taking a little longer than usual — leave your email and we'll send your results directly, even if you close this tab.</p>
+          <form class="slow-audit-form" novalidate>
+            <input type="email" placeholder="you@company.com" required autocomplete="email" inputmode="email" />
+            <button type="submit">Email me my results →</button>
+          </form>
+          <button type="button" class="slow-audit-dismiss">I'll wait</button>
+        </div>
       </div>
 
     </div><!-- /.action-card -->
@@ -6671,9 +6971,7 @@ fbq('track', 'PageView');
       <span class="eyebrow">How we measure</span>
     </div>
     <h2 class="h2" style="text-align: center; margin-bottom: 18px;">What we look at.</h2>
-    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65); max-width: 720px;">
-      No need to fill out a survey. We look at your LinkedIn profile and automatically analyse where it stands on six different measures.
-    </p>
+    <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(15,15,15,0.65); max-width: 720px; display: none;" aria-hidden="true"></p>
 
     <!-- 2-col grid: hexagon left, dimension detail right (stacks on mobile) -->
     <div class="method-split">
@@ -6753,14 +7051,14 @@ fbq('track', 'PageView');
           <text class="hex-label" x="98"  y="178" text-anchor="end">Network</text>
         </g>
       </svg>
-      <p class="method-hint" id="method-hint">Hover any point to see what we measure</p>
+      <p class="method-hint" id="method-hint" data-hover-text="Hover any point to see what we measure" data-tap-text="Tap any point to explore"></p>
     </div>
 
     <!-- Detail panel - populated from the hovered/active vertex -->
     <div class="method-detail is-empty" id="method-detail" aria-live="polite">
-      <span class="method-detail-num"   id="method-detail-num">01 - Digital Footprint</span>
-      <h3 class="method-detail-title"   id="method-detail-title">Pick a point to read more</h3>
-      <p class="method-detail-body"     id="method-detail-body">Each of the six points scores 0-3 from your public LinkedIn signals. Together they sum to your 0-18 Visibility Index.</p>
+      <span class="method-detail-num"   id="method-detail-num"></span>
+      <h3 class="method-detail-title"   id="method-detail-title">Tap any point to explore</h3>
+      <p class="method-detail-body"     id="method-detail-body"></p>
     </div>
 
   </div>
@@ -6855,6 +7153,206 @@ fbq('track', 'PageView');
     </div>
   </div>
 </section>
+
+<!-- ─────────── CREATIVE TOOLKIT ─────────── -->
+<section class="toolkit-wrap" id="creative-toolkit">
+  <div class="container">
+    <div class="toolkit-eyebrow-row">
+      <span class="tk-arrow">▲</span>
+      <span class="eyebrow">OUR CREATIVE TOOLKIT</span>
+    </div>
+    <h2 class="h2 toolkit-h2">Tailored assets that fit your brand,<br>not the other way around</h2>
+    <div class="toolkit-tags" id="toolkit-tags">
+      <span class="toolkit-tag">Brand Kit</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Brand Strategy</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Business Card</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">e-Book Design</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Copywriting</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Email Signature Design</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Logo</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Media Branding</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Merchandise</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Newsletters</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Photography</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Podcast</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Presentations</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Public Speaking Coaching</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Socials Calendar</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Social Media Content &amp; Design</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Video</span><span class="toolkit-sep"> — </span>
+      <span class="toolkit-tag">Website</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── FAQ ─────────── -->
+<section class="faq-wrap" id="faq">
+  <div class="container">
+    <div class="faq-eyebrow-row">
+      <span class="faq-arrow">▲</span>
+      <span class="eyebrow">FREQUENTLY ASKED QUESTIONS</span>
+    </div>
+    <h2 class="h2 faq-h2">Everything you want to know<br>about your personal brand visibility</h2>
+
+    <div class="faq-list" id="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          What is a Personal Brand Visibility Score?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">Your Personal Brand Visibility Score is a 0–100 rating that measures how discoverable and credible you are across the channels that matter most — LinkedIn, Google search, press, and your wider digital footprint. It's calculated from 18 signals across six pillars: digital footprint, profile clarity, authority signals, content cadence, visual identity, and network reach. A higher score means you're more likely to be found, trusted, and generate inbound opportunities.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          How does the free audit work?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">Paste your LinkedIn profile URL, and our engine analyses your public presence in real time — your profile content, Google search footprint, press mentions, cross-platform presence, and more. Within 30–60 seconds you receive an overall score, a tier (Hidden Gem → Recognised Leader), a breakdown by pillar, and three prioritised action points. No login or credentials required.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Who is the Visibility Index designed for?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">The audit is built specifically for founders, C-suite executives, and board members who want their personal brand to drive real business outcomes — deal flow, speaking invitations, board appointments, and talent attraction. Our scoring weights reflect an executive audience where authority and thought leadership matter more than connection volume.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          What's a good visibility score for an executive?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">Scores fall into four tiers. <strong>Hidden Gem (0–39)</strong>: significant gaps that limit inbound visibility. <strong>Rising Voice (40–59)</strong>: solid foundations but inconsistent presence. <strong>Emerging Authority (60–79)</strong>: visible and credible — most executives we audit land here. <strong>Recognised Leader (80–100)</strong>: top-decile presence that generates consistent inbound. If you're below 60, even small fixes tend to produce measurable improvements within 30–60 days.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          How long does the audit take?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">Most audits complete in 30–60 seconds. We're scanning your LinkedIn profile, Google search results, press mentions, and more in real time, so speed depends on how quickly those external sources respond. You'll see a live progress indicator throughout — the wait is worth it for the depth of analysis.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Is my data safe?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">We only read publicly available information — exactly what any visitor to your LinkedIn profile or a Google search can see without logging in. We don't ask for your password, access token, or any private account data. Your score results are not sold or shared with third parties. If you choose to enter your email to receive your full report, that address is stored securely and used only for Von Peach communications.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          How often should I re-run my audit?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">We recommend a fresh audit every 60–90 days, or any time you make a significant update — new role, new headline, updated photo, or a shift in posting cadence. Your score can change meaningfully within a month of implementing the recommendations, so re-running after changes is a good way to track progress.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          What happens after the audit — how can Von Peach help?
+          <span class="faq-chevron"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="faq-a" role="region">
+          <div class="faq-a-inner">Von Peach is a personal branding agency specialising in executive visibility. After your audit you can book a free 15-minute walkthrough where we map the fastest path from your current score to Recognised Leader. From there, our team can handle everything from rewriting your headline and about section to building a full content strategy, brand kit, and thought-leadership programme — bespoke to your goals and industry.</div>
+        </div>
+      </div>
+
+    </div><!-- /.faq-list -->
+  </div>
+</section>
+
+<!-- FAQ JSON-LD — enables Google rich-snippet accordion in search results -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a Personal Brand Visibility Score?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Your Personal Brand Visibility Score is a 0–100 rating that measures how discoverable and credible you are across LinkedIn, Google search, press mentions, and your wider digital footprint. It's calculated from 18 signals across six pillars: digital footprint, profile clarity, authority signals, content cadence, visual identity, and network reach."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does the free audit work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Paste your LinkedIn profile URL and our engine analyses your public presence in real time — profile content, Google search footprint, press mentions, cross-platform presence, and more. Within 30–60 seconds you receive an overall score, a tier (Hidden Gem to Recognised Leader), a breakdown by pillar, and three prioritised action points. No login or credentials required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Who is the Visibility Index designed for?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The audit is built specifically for founders, C-suite executives, and board members who want their personal brand to drive real business outcomes — deal flow, speaking invitations, board appointments, and talent attraction."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What's a good visibility score for an executive?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Scores fall into four tiers: Hidden Gem (0–39), Rising Voice (40–59), Emerging Authority (60–79), and Recognised Leader (80–100). Most executives we audit land in the Emerging Authority range. Scores below 60 typically improve measurably within 30–60 days of implementing the recommendations."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does the audit take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most audits complete in 30–60 seconds. We scan LinkedIn, Google search results, press mentions, and more in real time. You'll see a live progress indicator throughout."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my data safe?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We only read publicly available information — exactly what any visitor to your LinkedIn profile or a Google search can see without logging in. We don't ask for your password or any private account data. Your results are not sold or shared with third parties."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How often should I re-run my audit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We recommend a fresh audit every 60–90 days, or any time you make a significant update — new role, new headline, updated photo, or a shift in posting cadence. Your score can change meaningfully within a month of implementing the recommendations."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens after the audit — how can Von Peach help?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Von Peach is a personal branding agency specialising in executive visibility. After your audit you can book a free 15-minute walkthrough to map the fastest path to Recognised Leader. Our team can handle everything from rewriting your headline to building a full content strategy and thought-leadership programme."
+      }
+    }
+  ]
+}
+</script>
 
 <!-- ─────────── FOOTER (mirrors vonpeach.com - 3-col + giant decorative wordmark) ─────────── -->
 <footer>
@@ -7190,8 +7688,22 @@ fbq('track', 'PageView');
     if (!burger || !panel) return;
     function setOpen(isOpen) {
       document.body.classList.toggle('menu-open', isOpen);
+      panel.classList.toggle('is-open', isOpen);
       burger.setAttribute('aria-expanded', String(isOpen));
       panel.setAttribute('aria-hidden', String(!isOpen));
+
+      // Drive the slide animation via Web Animations API so scroll-snap /
+      // layout flushes on the main thread can't cancel a CSS transition.
+      // Cancel any prior animation first (stacked animations compete).
+      panel.getAnimations().forEach(a => a.cancel());
+      const from = isOpen ? 'translateY(-110%)' : 'translateY(0)';
+      const to   = isOpen ? 'translateY(0)'     : 'translateY(-110%)';
+      panel.style.transform = from;   // pin start (no flash before anim starts)
+      const anim = panel.animate(
+        [{ transform: from }, { transform: to }],
+        { duration: 350, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }
+      );
+      anim.onfinish = () => { panel.style.transform = to; anim.cancel(); };
     }
     burger.addEventListener('click', () => {
       setOpen(!document.body.classList.contains('menu-open'));
@@ -7238,7 +7750,7 @@ fbq('track', 'PageView');
     const hint = document.getElementById('method-hint');
     if (!hint) return;
     hint.setAttribute('data-hover-text', 'Hover any point to see what we measure');
-    hint.setAttribute('data-tap-text',   'Tap any point to see what we measure');
+    hint.setAttribute('data-tap-text',   'Tap any point to explore');
     // The actual copy swap is done via CSS @media (hover: none) on .method-hint::before
   })();
 
@@ -7718,9 +8230,22 @@ fbq('track', 'PageView');
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDim(key); }
       });
     });
-    // On larger screens, show the first dimension by default so the panel never feels empty
-    if (window.matchMedia('(min-width: 720px)').matches) {
-      showDim('footprint');
+    // Show the first dimension immediately on all screen sizes so the detail card
+    // never looks broken. On mobile this populates the card below the hex.
+    showDim('footprint');
+
+    // On mobile: pulse all vertices once after a short delay to signal interactivity.
+    // Uses a lightweight CSS class rather than WAAPI so it doesn't compete with
+    // the existing animations.
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      setTimeout(() => {
+        vertices.forEach((v, i) => {
+          setTimeout(() => {
+            v.classList.add('hex-invite');
+            setTimeout(() => v.classList.remove('hex-invite'), 600);
+          }, i * 80);
+        });
+      }, 800);
     }
   })();
 
@@ -7779,7 +8304,8 @@ fbq('track', 'PageView');
 
   /* Latest audit state - passed to /api/lead on email submit */
   let lastScore = 0, lastSubs = {}, lastTier = null, lastUrl = '';
-  let lastRole = '', lastGoal = '';
+  let lastRole = '', lastGoal = '', lastNormalised = '';
+  let slowAuditTimer = null;
   let lastMoves = [], lastTierRoadmap = [], lastNextTier = null;
   // Full payload kept for /api/lead → builds the PDF + emails it via Resend
   let lastProfile = null, lastExecutiveSummary = '', lastDimensionCommentary = {};
@@ -7822,6 +8348,26 @@ fbq('track', 'PageView');
 
     const raw = linkInput.value.trim();
     const normalised = normaliseLinkedIn(raw) || 'demo-profile';
+    lastNormalised = normalised;
+
+    // Arm the slow-audit nudge. If the audit isn't done in 60s, slide in the
+    // email capture strip. Reset any leftover state from a previous run first.
+    const _nudge = document.getElementById('slow-audit-nudge');
+    if (_nudge) {
+      _nudge.classList.add('hidden');
+      _nudge.classList.remove('sent');
+      const _ni = _nudge.querySelector('input[type="email"]');
+      if (_ni) _ni.value = '';
+      const _nm = _nudge.querySelector('.slow-audit-msg');
+      if (_nm) _nm.textContent = 'Taking a little longer than usual — leave your email and we\'ll send your results directly, even if you close this tab.';
+      const _nb = _nudge.querySelector('button[type="submit"]');
+      if (_nb) { _nb.disabled = false; _nb.textContent = 'Email me my results →'; }
+    }
+    clearTimeout(slowAuditTimer);
+    slowAuditTimer = setTimeout(() => {
+      const n = document.getElementById('slow-audit-nudge');
+      if (n && !loadingPanel.classList.contains('hidden')) n.classList.remove('hidden');
+    }, 60000);
 
     // Action-card transitions: keep the input panel mounted (blurred) while the loading
     // panel overlays it. `is-loading` triggers the blur + animated orb in CSS.
@@ -7853,11 +8399,32 @@ fbq('track', 'PageView');
     // Real audit - kick off the animation AND the API call in parallel.
     // The animation pauses on the last step until the API resolves (no "stuck on done" gap).
     const animPromise = new Promise(resolve => runLoadingSequence(resolve));
-    const fetchPromise = fetch('/api/score', {
+    const _fetchOpts = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal, attribution: ATTRIBUTION })
-    }).then(r => r.json()).catch(() => ({ error: 'Network error. Please try again.' }));
+    };
+    const fetchPromise = (async () => {
+      try {
+        const r = await fetch('/api/score', _fetchOpts);
+        return await r.json();
+      } catch (_firstErr) {
+        // First attempt failed (network drop / server unreachable).
+        // Show a subtle "reconnecting" message and retry once after 2.5s before
+        // giving up. Most transient failures recover on the first retry.
+        const subtitle = document.getElementById('loading-subtitle');
+        if (subtitle) subtitle.textContent = 'Reconnecting — just a moment…';
+        await new Promise(r => setTimeout(r, 2500));
+        try {
+          const r = await fetch('/api/score', _fetchOpts);
+          return await r.json();
+        } catch (_secondErr) {
+          // Both attempts failed — flag as network error so the UX can offer
+          // email capture rather than a dead-end "check your connection" banner.
+          return { error: 'network', _networkError: true };
+        }
+      }
+    })();
 
     // After the animation hits the last step, swap the subtitle to a "still pulling data" line
     // so a slow API doesn't look stuck.
@@ -7871,10 +8438,17 @@ fbq('track', 'PageView');
 
     const [data] = await Promise.all([fetchPromise, animPromise]);
     if (extendedTimer) clearTimeout(extendedTimer);
+    clearTimeout(slowAuditTimer);   // audit resolved — no need to show the nudge
     finishLastLoadingStep();
 
     if (!data || data.error) {
-      showError((data && data.error) || 'Audit failed. Please try again.', !!(data && data._waitlist));
+      if (data && data._networkError) {
+        // Total network failure (both attempts) — offer email capture so we
+        // don't lose the lead. Much better than a dead-end "check connection" banner.
+        showNetworkErrorCard(normalised);
+      } else {
+        showError((data && data.error) || 'Audit failed. Please try again.', !!(data && data._waitlist));
+      }
       return;
     }
     revealResults(data.total, data.subs, data.normalisedUrl || normalised, data);
@@ -7993,6 +8567,99 @@ fbq('track', 'PageView');
 
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+
+  function showNetworkErrorCard(linkedinUrl) {
+    // Remove any stale error / demand / snag cards
+    ['hero-error', 'demand-card', 'snag-card'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    });
+
+    const card = document.createElement('div');
+    card.id = 'snag-card';
+    card.className = 'demand-card snag-card';
+    card.setAttribute('role', 'status');
+    card.setAttribute('aria-live', 'polite');
+    card.innerHTML = `
+      <div class="demand-header">
+        <span class="demand-pulse" style="background:#F59E0B;animation:none"></span>
+        <span class="demand-eyebrow">We hit a snag</span>
+      </div>
+      <p class="demand-title">Our server couldn't be reached — that's on us.</p>
+      <p class="demand-sub">Drop your email and we'll run your audit and send the full results directly. Usually within the hour.</p>
+      <form class="demand-form" novalidate>
+        <input type="email" placeholder="you@company.com" required autocomplete="email" inputmode="email" />
+        <button type="submit">Send me my results →</button>
+      </form>
+      <button type="button" class="snag-retry">or try again now</button>
+    `;
+    actionCard.parentNode.insertBefore(card, actionCard.nextSibling);
+
+    card.querySelector('.demand-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = card.querySelector('input[type="email"]');
+      const email = input.value.trim();
+      if (!email || !email.includes('@')) { input.focus(); return; }
+      const btn = card.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, linkedinUrl, role: lastRole, goal: lastGoal })
+        });
+      } catch (_) {}
+      card.innerHTML = `
+        <div class="demand-header">
+          <span class="demand-pulse" style="background:#22c55e;animation:none"></span>
+          <span class="demand-eyebrow">Got it</span>
+        </div>
+        <p class="demand-title">We've saved your details.</p>
+        <p class="demand-sub">We'll run your audit and email you the results — usually within the hour. Check spam if you don't hear from us.</p>
+      `;
+    });
+
+    card.querySelector('.snag-retry').addEventListener('click', () => {
+      card.remove();
+      startAudit();
+    });
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ── Slow-audit nudge: one-time event handlers ────────────────────────────
+  // These live outside startAudit() so they're attached once, not re-added on
+  // every run. They read from module-level lastNormalised / lastRole / lastGoal.
+  (function () {
+    const nudge = document.getElementById('slow-audit-nudge');
+    if (!nudge) return;
+
+    nudge.querySelector('.slow-audit-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const input = nudge.querySelector('input[type="email"]');
+      const email = input.value.trim();
+      if (!email || !email.includes('@')) { input.focus(); return; }
+      const btn = nudge.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, linkedinUrl: lastNormalised, role: lastRole, goal: lastGoal })
+        });
+      } catch (_) {}
+      nudge.classList.add('sent');
+      const msg = nudge.querySelector('.slow-audit-msg');
+      if (msg) msg.textContent = '✓ Got it — we\'ll email your results as soon as they\'re ready.';
+    });
+
+    nudge.querySelector('.slow-audit-dismiss').addEventListener('click', function () {
+      nudge.classList.add('hidden');
+      clearTimeout(slowAuditTimer);   // don't re-show if dismissed
+    });
+  })();
 
   /* Loading sequence: marches through the 8 steps, then PAUSES on the last one
      ("Computing your Visibility Index") with the spinner running indefinitely
@@ -8351,9 +9018,44 @@ fbq('track', 'PageView');
     // Built from observed signals (SerpAPI site-targeted scans) - not self-reported.
     const platforms = (payload && payload.platforms) || {};
     const detectedPlatforms = Object.keys(platforms);
+
+    // ── Wikipedia: dedicated card (found OR gap) ─────────────────────────────
+    // Wikipedia is the single strongest third-party credibility signal.
+    // Give it its own card rather than burying it in "Across the web".
+    const wikiData   = platforms.wikipedia;
+    const wikiUrl    = wikiData?.hits?.[0]?.url || null;
+    const pressCount = (payload && payload.press) ? (payload.press.count || 0) : 0;
+    const authScore  = (lastSubs && lastSubs.authority != null) ? lastSubs.authority : (payload?.subs?.authority ?? -1);
+
+    if (wikiData) {
+      // ✅ Wikipedia entry found — trophy card
+      cards.push({
+        wide: true,
+        icon: '📖', label: 'Wikipedia',
+        valueHTML: wikiUrl
+          ? `<a href="${escapeHtmlPage(wikiUrl)}" target="_blank" rel="noopener" style="color:var(--vp-indigo,#3F36B2);font-weight:700;text-decoration:underline;text-decoration-color:rgba(63,54,178,0.35);text-underline-offset:3px;">Entry verified ↗</a>`
+          : '<strong>Entry verified</strong>',
+        sub: 'Fewer than 0.3% of executives have a Wikipedia page. It\'s the most trusted third-party credibility signal on the internet — journalists, investors and recruiters all check it.'
+      });
+    } else if (pressCount >= 1 || authScore >= 2) {
+      // 🔴 No Wikipedia entry, but they have enough authority to plausibly qualify.
+      // Show an actionable gap card with a 3-step path to get there.
+      const pressLine = pressCount >= 2
+        ? `You already have ${pressCount} press mention${pressCount > 1 ? 's' : ''} — that's a solid start toward notability.`
+        : 'Your first press mention is the hardest part — once you have 2–3 independent sources, you\'re in striking distance.';
+      cards.push({
+        wide: true,
+        gap: true,
+        icon: '📖', label: 'Wikipedia',
+        valueHTML: 'No entry detected',
+        sub: `${pressLine} To qualify: (1) build verifiable mentions in independent sources like press, podcasts or industry awards, (2) submit a draft via Wikipedia\'s Articles for Creation process, (3) or ask Von Peach to connect you with a specialist — it\'s one of the highest-ROI moves at this tier.`
+      });
+    }
+
+    // Build the "Across the web" list — exclude Wikipedia since it has its own card above
     if (detectedPlatforms.length > 0) {
       // Map keys to short visible labels with their first hit URL when relevant
-      const labelOrder = ['wikipedia','googleNews','youtube','crunchbase','substack','medium','instagram','x'];
+      const labelOrder = ['googleNews','youtube','crunchbase','substack','medium','instagram','x'];
       const items = labelOrder
         .filter(k => platforms[k])
         .map(k => {
@@ -8364,20 +9066,20 @@ fbq('track', 'PageView');
             ? `<a href="${escapeHtmlPage(firstUrl)}" target="_blank" rel="noopener" style="color:var(--vp-indigo,#3F36B2);font-weight:600;text-decoration:underline;text-decoration-color:rgba(63,54,178,0.35);text-underline-offset:3px;">${label}</a>`
             : `<strong>${label}</strong>`;
         });
-      // Subtitle: count CHANNELS (platforms detected), NOT the per-platform
-      // SerpAPI hit counts - those would mislead users into thinking we're
-      // measuring their actual posting activity (we're not, we're measuring
-      // Google indexing of their handle on each platform).
-      const subText = platforms.googleNews
-        ? `Detected on ${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} · including news coverage`
-        : `Detected on ${detectedPlatforms.length} channel${detectedPlatforms.length !== 1 ? 's' : ''} where you appear publicly`;
-      cards.push({
-        wide: true,
-        icon: '🌐', label: 'Across the web',
-        valueHTML: items.join(' · '),
-        sub: subText
-      });
-    } else if (profile.firstName) {
+      if (items.length > 0) {
+        // Count non-Wikipedia channels for the subtitle
+        const channelCount = detectedPlatforms.filter(k => k !== 'wikipedia').length;
+        const subText = platforms.googleNews
+          ? `Detected on ${channelCount} channel${channelCount !== 1 ? 's' : ''} · including news coverage`
+          : `Detected on ${channelCount} channel${channelCount !== 1 ? 's' : ''} where you appear publicly`;
+        cards.push({
+          wide: true,
+          icon: '🌐', label: 'Across the web',
+          valueHTML: items.join(' · '),
+          sub: subText
+        });
+      }
+    } else if (!wikiData && profile.firstName) {
       // Empty cross-platform state - opportunity framing
       cards.push({
         wide: false,
@@ -9549,72 +10251,44 @@ fbq('track', 'PageView');
   </div>
 </div>
 
-<!-- ─────────── MOBILE BOTTOM ACTION BAR ───────────
-     Adaptive thumb-zone CTA. Pre-result → focuses the audit form (smooth scroll
-     to the picker UI). Post-result → swaps to a Calendly link. We toggle visibility
-     by adding/removing body.show-bottom-bar from the audit-state JS. -->
-<div class="bottom-bar" id="bottom-bar" aria-hidden="true">
-  <a href="#input-panel" id="bottom-bar-cta" data-action="run-audit">Run the 60-second audit →</a>
-</div>
+<!-- bottom-bar removed: was conflicting with the inline "Calculate my score" button on mobile -->
+
 <script>
-(function(){
-  // Show on mobile only after the user has scrolled a bit (avoids covering hero).
-  // Once visible, it stays. Adapts content based on body classes that other JS
-  // sets (audit-complete → "Book a call").
-  var bar = document.getElementById('bottom-bar');
-  var cta = document.getElementById('bottom-bar-cta');
-  if (!bar || !cta) return;
+// ── Creative Toolkit: cycling service highlight ──
+// Each service tag gets highlighted in dark navy for 2.5s, then moves to the next.
+// Starts on "Brand Strategy" (index 1) to match the vonpeach.com original.
+(function () {
+  const tags = document.querySelectorAll('#toolkit-tags .toolkit-tag');
+  if (!tags.length) return;
+  let idx = 1;
+  tags[idx].classList.add('tk-active');
+  setInterval(function () {
+    tags[idx].classList.remove('tk-active');
+    idx = (idx + 1) % tags.length;
+    tags[idx].classList.add('tk-active');
+  }, 2500);
+})();
 
-  var mq = window.matchMedia('(max-width: 768px)');
-
-  function adaptCta() {
-    var done = document.body.classList.contains('audit-complete') || document.body.classList.contains('audit-locked');
-    if (done) {
-      cta.setAttribute('href', 'https://calendly.com/yentl-spiteri/15-min-intro');
-      cta.setAttribute('target', '_blank');
-      cta.setAttribute('rel', 'noopener');
-      cta.setAttribute('data-action', 'book-call');
-      cta.textContent = 'Book a 15-min walkthrough →';
-      bar.classList.add('is-cta');
-    } else {
-      cta.setAttribute('href', '#input-panel');
-      cta.removeAttribute('target');
-      cta.removeAttribute('rel');
-      cta.setAttribute('data-action', 'run-audit');
-      cta.textContent = 'Run the 60-second audit →';
-      bar.classList.remove('is-cta');
+/* ── FAQ accordion ── */
+(function () {
+  const list = document.getElementById('faq-list');
+  if (!list) return;
+  list.addEventListener('click', function (e) {
+    const btn = e.target.closest('.faq-q');
+    if (!btn) return;
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    // Close all
+    list.querySelectorAll('.faq-item.open').forEach(function (el) {
+      el.classList.remove('open');
+      el.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+    });
+    // Toggle clicked item
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
     }
-  }
-
-  function maybeShow(){
-    if (!mq.matches) {
-      document.body.classList.remove('show-bottom-bar');
-      bar.setAttribute('aria-hidden', 'true');
-      return;
-    }
-    if (window.scrollY > 240) {
-      document.body.classList.add('show-bottom-bar');
-      bar.setAttribute('aria-hidden', 'false');
-      adaptCta();
-    }
-  }
-  window.addEventListener('scroll', maybeShow, { passive: true });
-  if (mq.addEventListener) mq.addEventListener('change', maybeShow);
-  // Re-adapt when result/loaded state changes (cheap: poll body class on a MutationObserver)
-  if (window.MutationObserver) {
-    new MutationObserver(adaptCta).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  }
-  // Smooth-scroll the run-audit link into view of the picker
-  cta.addEventListener('click', function(e){
-    if (cta.getAttribute('data-action') !== 'run-audit') return;
-    e.preventDefault();
-    var t = document.getElementById('input-panel') || document.querySelector('.action-card');
-    if (!t) return;
-    var top = t.getBoundingClientRect().top + window.scrollY - 70;
-    window.scrollTo({ top: top, behavior: 'smooth' });
   });
-  // Run once on load (in case the page is reloaded mid-scroll)
-  maybeShow();
 })();
 </script>
 </body>
