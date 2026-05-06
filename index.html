@@ -5421,15 +5421,18 @@ fbq('track', 'PageView');
   }
 
   /* ── Snag / network-error card ─────────────────────────────────────────────
-     Shown when the fetch fails entirely (network/server unreachable). Amber
-     tint = "our problem, not yours." Same structure as demand-card. */
+     Shown when fetch fails entirely (true network failure — both retries down).
+     Solid cream background so it's readable on the dark navy hero section.
+     Amber accent = "our problem, not yours." */
   .snag-card {
-    background: rgba(245,158,11,0.06);
-    border-color: rgba(245,158,11,0.30);
+    background: #fffbf2;
+    border: 1.5px solid rgba(217,119,6,0.35);
+    box-shadow: 0 4px 24px rgba(11,3,89,0.18), 0 1px 4px rgba(217,119,6,0.12);
   }
-  .snag-card .demand-eyebrow { color: #92400E; }
-  .snag-card .demand-title   { color: var(--vp-black, #0F0F0F); }
-  .snag-card .demand-sub     { color: var(--vp-grey-2, #4B5563); }
+  .snag-card .demand-pulse    { background: #D97706 !important; }
+  .snag-card .demand-eyebrow  { color: #92400E; }
+  .snag-card .demand-title    { color: #1a1208; }
+  .snag-card .demand-sub      { color: #5c4a1e; }
   /* Override indigo submit button → amber for snag card */
   .snag-card .demand-form button[type="submit"] {
     background: #D97706;
@@ -5438,7 +5441,7 @@ fbq('track', 'PageView');
   .snag-retry {
     background: none;
     border: none;
-    color: var(--vp-grey-2, #4B5563);
+    color: #92400E;
     font-family: var(--font-body, Helvetica);
     font-size: 13px;
     padding: 6px 0 2px;
@@ -5449,7 +5452,7 @@ fbq('track', 'PageView');
     margin-top: 4px;
     transition: color .15s ease;
   }
-  .snag-retry:hover { color: var(--vp-black, #0F0F0F); }
+  .snag-retry:hover { color: #78350f; }
 
   /* ── Slow-audit nudge ─────────────────────────────────────────────────────
      Appears inside the loading panel after 60s. Audit keeps running in the
@@ -8569,22 +8572,37 @@ fbq('track', 'PageView');
       body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal, attribution: ATTRIBUTION })
     };
     const fetchPromise = (async () => {
+      // ── attemptFetch separates two distinct failure modes:
+      //   1. fetch() itself throws  → true network failure (no connection at all)
+      //   2. r.json() throws        → server returned HTML/text (502/504 timeout,
+      //                               Netlify error page, etc.) — NOT a network error.
+      //   The snag card must only appear for (1). (2) falls through to the normal
+      //   showError path so the user isn't falsely told "our server is unreachable."
+      async function attemptFetch() {
+        const r = await fetch('/api/score', _fetchOpts); // throws only on true net failure
+        let body;
+        try {
+          body = await r.json();
+        } catch (_jsonErr) {
+          // Non-JSON body: Netlify 502/504 returns HTML, not JSON.
+          // Treat this as a retryable server error, not a network snag.
+          return { error: `server_${r.status}`, _serverError: true };
+        }
+        return body;
+      }
+
       try {
-        const r = await fetch('/api/score', _fetchOpts);
-        return await r.json();
+        return await attemptFetch();
       } catch (_firstErr) {
-        // First attempt failed (network drop / server unreachable).
-        // Show a subtle "reconnecting" message and retry once after 2.5s before
-        // giving up. Most transient failures recover on the first retry.
+        // fetch() threw = true network failure (offline / DNS / TLS).
+        // Retry once after 2.5s — most transient drops recover on first retry.
         const subtitle = document.getElementById('loading-subtitle');
         if (subtitle) subtitle.textContent = 'Reconnecting — just a moment…';
         await new Promise(r => setTimeout(r, 2500));
         try {
-          const r = await fetch('/api/score', _fetchOpts);
-          return await r.json();
+          return await attemptFetch();
         } catch (_secondErr) {
-          // Both attempts failed — flag as network error so the UX can offer
-          // email capture rather than a dead-end "check your connection" banner.
+          // Both attempts failed with a true network error → show snag card.
           return { error: 'network', _networkError: true };
         }
       }
