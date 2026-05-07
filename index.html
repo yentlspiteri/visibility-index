@@ -288,10 +288,29 @@
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+
+  // ── Google Consent Mode v2 — default ALL denied ──────────────────────────
+  // MUST run before gtag('config'). Google models conversions for denied users
+  // via cookieless pings; granting after user accepts upgrades to full tracking.
+  // url_passthrough + ads_data_redaction ensure gclid still flows even when
+  // ad_storage is denied, so Google Ads conversion import stays accurate.
+  gtag('consent', 'default', {
+    ad_storage:             'denied',
+    analytics_storage:      'denied',
+    ad_user_data:           'denied',
+    ad_personalization:     'denied',
+    functionality_storage:  'denied',
+    personalization_storage:'denied',
+    security_storage:       'granted',
+    wait_for_update:        500
+  });
+
   gtag('js', new Date());
   gtag('config', 'G-2MKY8VPQBF', {
-    'cookie_domain': '.vonpeach.com',
-    'cookie_flags':  'SameSite=None;Secure'
+    cookie_domain:         '.vonpeach.com',
+    cookie_flags:          'SameSite=None;Secure',
+    url_passthrough:       true,
+    ads_data_redaction:    true
   });
   // ── Event Match Quality helpers ──
   // Meta scores every conversion 0-10 on how well it matched a real user.
@@ -397,6 +416,25 @@
   };
 </script>
 
+<!-- ── Consent Mode v2 — restore from localStorage on repeat visits ──────── -->
+<script>
+(function() {
+  try {
+    var c = JSON.parse(localStorage.getItem('__vi_consent') || 'null');
+    if (c && c.granted) {
+      gtag('consent', 'update', {
+        ad_storage:              'granted',
+        analytics_storage:       'granted',
+        ad_user_data:            'granted',
+        ad_personalization:      'granted',
+        functionality_storage:   'granted',
+        personalization_storage: 'granted'
+      });
+    }
+  } catch(_) {}
+})();
+</script>
+
 <!-- ─────────── META PIXEL (Facebook + Instagram ads) ───────────
      Pixel ID: 1714917946519921 (Von Peach business account).
      PageView fires automatically on load. Conversion events (Lead, Schedule,
@@ -412,12 +450,49 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1714917946519921');
+// Revoke Meta consent by default; granted by cookie banner on accept.
+// fbq still fires PageView - Meta uses it for reach/frequency even without consent.
+try {
+  var _viC = JSON.parse(localStorage.getItem('__vi_consent') || 'null');
+  if (!(_viC && _viC.granted)) fbq('consent', 'revoke');
+} catch(_) {}
 fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none"
   src="https://www.facebook.com/tr?id=1714917946519921&ev=PageView&noscript=1"
   alt="" /></noscript>
 <!-- End Meta Pixel Code -->
+
+<!-- ─────────── LINKEDIN INSIGHT TAG ───────────
+     Partner ID is set below. Get yours from LinkedIn Campaign Manager →
+     Account Assets → Insight Tag. Leave LI_PARTNER_ID empty to disable.
+     The tag is injected after user consent (or immediately on repeat visits
+     where consent was already granted) via loadLinkedInTag() below. -->
+<script>
+  window._LI_PARTNER_ID = ''; // ← FILL IN: your LinkedIn Campaign Manager partner ID
+  window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+  if (window._LI_PARTNER_ID) window._linkedin_data_partner_ids.push(window._LI_PARTNER_ID);
+
+  function loadLinkedInTag() {
+    if (!window._LI_PARTNER_ID || window._liTagLoaded) return;
+    window._liTagLoaded = true;
+    if (!window.lintrk) {
+      window.lintrk = function(a,b){ window.lintrk.q.push([a,b]); };
+      window.lintrk.q = [];
+    }
+    var s = document.getElementsByTagName('script')[0];
+    var b = document.createElement('script');
+    b.type = 'text/javascript'; b.async = true;
+    b.src  = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';
+    s.parentNode.insertBefore(b, s);
+  }
+
+  // Load immediately if consent was already granted on a previous visit
+  try {
+    var _viC2 = JSON.parse(localStorage.getItem('__vi_consent') || 'null');
+    if (_viC2 && _viC2.granted) loadLinkedInTag();
+  } catch(_) {}
+</script>
 
 <!-- ─── PERFORMANCE: resource hints ───
      dns-prefetch: cheap, fires before connection setup so DNS resolution is done
@@ -7097,9 +7172,94 @@ fbq('track', 'PageView');
     pointer-events: none;
   }
   .floating-helpers > * { pointer-events: auto; }
+
+  /* ── Cookie consent banner ──────────────────────────────────────────────── */
+  #vi-consent {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(11,3,89,0.97);
+    backdrop-filter: saturate(160%) blur(20px);
+    -webkit-backdrop-filter: saturate(160%) blur(20px);
+    border-top: 1px solid rgba(134,131,229,0.22);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-family: var(--font-body, Helvetica, sans-serif);
+    box-shadow: 0 -4px 32px rgba(11,3,89,0.35);
+    animation: vi-consent-in .3s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes vi-consent-in {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  #vi-consent.hidden { display: none; }
+  #vi-consent p {
+    flex: 1 1 260px;
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.5;
+  }
+  #vi-consent p a {
+    color: var(--vp-lavender, #8683E5);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  #vi-consent-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  #vi-consent-accept {
+    background: var(--vp-indigo, #3F36B2);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .12s;
+  }
+  #vi-consent-accept:hover { background: #352db5; }
+  #vi-consent-decline {
+    background: transparent;
+    color: rgba(255,255,255,0.50);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .12s, border-color .12s;
+  }
+  #vi-consent-decline:hover { color: rgba(255,255,255,0.80); border-color: rgba(255,255,255,0.32); }
+  @media (max-width: 480px) {
+    #vi-consent { padding: 14px 16px; gap: 12px; }
+    #vi-consent-actions { width: 100%; }
+    #vi-consent-accept, #vi-consent-decline { flex: 1; text-align: center; }
+  }
 </style>
 </head>
 <body>
+
+<!-- ── Cookie consent banner (Consent Mode v2 / GDPR) ─────────────────────
+     Hidden on load if consent already stored in localStorage.
+     Injects LinkedIn tag + updates gtag/fbq consent on accept.             -->
+<div id="vi-consent" role="dialog" aria-label="Cookie consent" aria-live="polite">
+  <p>We use cookies to measure ad performance and improve your experience.
+     <a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
+  <div id="vi-consent-actions">
+    <button id="vi-consent-accept" type="button">Accept all</button>
+    <button id="vi-consent-decline" type="button">Only essential</button>
+  </div>
+</div>
 
 <!-- Start-over affordance - only visible after audit completes (when nav is hidden) -->
 <a href="/" class="start-over" id="start-over" aria-label="Start a new audit">New audit</a>
@@ -11174,6 +11334,48 @@ fbq('track', 'PageView');
     }
   });
 })();
+
+  // ── Cookie consent banner ─────────────────────────────────────────────────
+  (function() {
+    var CONSENT_KEY = '__vi_consent';
+    var banner = document.getElementById('vi-consent');
+    if (!banner) return;
+
+    // Hide immediately if already decided
+    try {
+      if (localStorage.getItem(CONSENT_KEY)) { banner.classList.add('hidden'); return; }
+    } catch(_) {}
+
+    function grantConsent() {
+      try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ granted: true, ts: Date.now() })); } catch(_) {}
+      banner.classList.add('hidden');
+      // Google Consent Mode v2 — upgrade all signals
+      if (typeof gtag === 'function') {
+        gtag('consent', 'update', {
+          ad_storage:              'granted',
+          analytics_storage:       'granted',
+          ad_user_data:            'granted',
+          ad_personalization:      'granted',
+          functionality_storage:   'granted',
+          personalization_storage: 'granted'
+        });
+      }
+      // Meta
+      if (typeof fbq === 'function') fbq('consent', 'grant');
+      // LinkedIn — inject tag now
+      if (typeof loadLinkedInTag === 'function') loadLinkedInTag();
+    }
+
+    function declineConsent() {
+      try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ granted: false, ts: Date.now() })); } catch(_) {}
+      banner.classList.add('hidden');
+    }
+
+    var acceptBtn  = document.getElementById('vi-consent-accept');
+    var declineBtn = document.getElementById('vi-consent-decline');
+    if (acceptBtn)  acceptBtn.addEventListener('click',  grantConsent);
+    if (declineBtn) declineBtn.addEventListener('click', declineConsent);
+  })();
 </script>
 </body>
 </html>

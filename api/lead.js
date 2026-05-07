@@ -26,8 +26,44 @@ import { createHash } from 'node:crypto';
 import { buildReportPDF } from '../lib/buildReport.js';
 import { notifyOps }    from '../lib/notify.js';
 import { upsertAuditOnLead } from '../lib/notion-audit.js';
+import { kv as _kv } from '@vercel/kv';
 
 const RESEND_API = 'https://api.resend.com/emails';
+
+// Rate limit: max 5 lead submissions per IP per hour.
+// Protects Resend quota and Mailchimp list from bot spam under paid traffic.
+const LEAD_RATE_MAP = new Map();    // in-memory fallback
+const LEAD_RATE_LIMIT = parseInt(process.env.LEAD_RATE_LIMIT || '5', 10);
+const HOUR_MS = 3_600_000;
+
+function getLeadKV() {
+  return (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ? _kv : null;
+}
+async function isLeadRateLimited(ip) {
+  const store = getLeadKV();
+  if (store) {
+    try {
+      const count = await store.get(`ll:${ip}`);
+      if (count === null || count === undefined) return false;
+      return Number(count) >= LEAD_RATE_LIMIT;
+    } catch(e) { console.warn('[lead-kv] isRateLimited fallback:', e.message); }
+  }
+  const now = Date.now(); const entry = LEAD_RATE_MAP.get(ip);
+  if (!entry || now > entry.resetAt) return false;
+  return entry.count >= LEAD_RATE_LIMIT;
+}
+async function trackLeadRequest(ip) {
+  const store = getLeadKV();
+  if (store) {
+    try {
+      const key = `ll:${ip}`; const n = await store.incr(key);
+      if (n === 1) await store.expire(key, 3600); return;
+    } catch(e) { console.warn('[lead-kv] trackRequest fallback:', e.message); }
+  }
+  const now = Date.now(); const entry = LEAD_RATE_MAP.get(ip);
+  if (!entry || now > entry.resetAt) LEAD_RATE_MAP.set(ip, { count: 1, resetAt: now + HOUR_MS });
+  else entry.count++;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,6 +71,12 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')    return res.status(405).json({ error: 'Method not allowed' });
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  if (await isLeadRateLimited(ip)) {
+    return res.status(429).json({ error: 'Too many submissions from this connection. Try again later.' });
+  }
+  await trackLeadRequest(ip);
 
   const body = req.body || {};
   const {
