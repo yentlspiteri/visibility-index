@@ -6273,7 +6273,8 @@ fbq('track', 'PageView');
      .results-wrap .personal-card all inherit the same width, padding, radius, and centering. */
   .results-wrap .findings,
   .results-wrap .results-split,
-  .results-wrap .personal-card {
+  .results-wrap .personal-card,
+  .results-wrap .report-strip {
     background: var(--vp-cream, #fafafa) !important;
     border-radius: 24px;
     padding: clamp(32px, 5vw, 56px) !important;
@@ -6281,6 +6282,16 @@ fbq('track', 'PageView');
     max-width: 880px !important;
     box-sizing: border-box;
     width: 100%;
+  }
+  /* Report strip text — inherits cream background, needs dark text throughout */
+  .results-wrap .report-strip-title   { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .report-strip-eyebrow { color: var(--vp-indigo, #3F36B2) !important; }
+  .results-wrap .report-strip-hint    { color: rgba(15,15,15,0.45) !important; }
+  .results-wrap .report-gap-label     { color: var(--vp-deep-black, #0c0b09) !important; }
+  .results-wrap .report-gap-lock      { color: var(--vp-indigo, #3F36B2) !important; opacity: 0.70; }
+  .results-wrap .report-gap-item {
+    background: rgba(63,54,178,0.04) !important;
+    border-color: rgba(63,54,178,0.12) !important;
   }
   /* Findings strip — eyebrow + card-within-card styling */
   .results-wrap .findings-eyebrow { color: var(--vp-indigo) !important; }
