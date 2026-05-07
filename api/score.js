@@ -15,6 +15,15 @@
 import { notifyOps } from '../lib/notify.js';
 import { logAuditCompleted } from '../lib/notion-audit.js';
 
+// Vercel KV — shared state across function instances.
+// Falls back silently to in-memory when KV_REST_API_URL is not set
+// (local dev, or before KV is provisioned on the Vercel project).
+import { kv as _kv } from '@vercel/kv';
+
+function getKV() {
+  return (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ? _kv : null;
+}
+
 const APIFY_API     = 'https://api.apify.com/v2/acts';
 // LinkedIn profile actor. dev_fusion is reliable but lean - if you want
 // richer data (recommendations text, named comments on posts, full work
@@ -50,6 +59,11 @@ const RESULT_CACHE = new Map();
 const RESULT_CACHE_TTL = 60 * 60 * 1000;       // 60 minutes
 const RESULT_CACHE_MAX_ENTRIES = 100;
 
+// Max simultaneous Apify scrapes — shared via KV so all instances respect the same ceiling.
+const MAX_CONCURRENT_APIFY = parseInt(process.env.MAX_CONCURRENT_APIFY || '5', 10);
+const APIFY_SLOT_KEY        = 'apify:inflight';
+let _apifyInFlight = 0; // in-memory fallback counter
+
 const TIERS = [
   { min:0,  max:5,  name:'The Hidden Gem',
     tagline:"Real expertise. The world doesn't know it yet.",
@@ -77,7 +91,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST')    return res.status(405).json({ error: 'Method not allowed' });
 
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
-  if (isRateLimited(ip)) {
+  if (await isRateLimited(ip)) {
     return res.status(429).json({ error: "You've hit the audit limit for this hour. Come back shortly." });
   }
 
@@ -87,17 +101,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Please provide a valid LinkedIn profile URL.' });
   }
 
-  trackRequest(ip);
+  await trackRequest(ip);
 
   // ── Result cache early-return ──
   // If the same URL + role + goal combination was audited in the last 60 min,
   // return the cached payload instantly. ~30-60s saved on a re-run. We log a
   // `cached: true` flag so the frontend/analytics can distinguish cached vs fresh.
   const cacheKey = `${normalised}::${(body.role || '').toLowerCase()}::${(body.goal || '').toLowerCase()}`;
-  const cached = RESULT_CACHE.get(cacheKey);
-  if (cached && (Date.now() - cached.t) < RESULT_CACHE_TTL) {
-    console.log('[score] cache hit:', cacheKey, `(${Math.round((Date.now() - cached.t) / 1000)}s old)`);
-    return res.status(200).json({ ...cached.payload, _cached: true });
+  const cachedPayload = await getCachedResult(cacheKey);
+  if (cachedPayload) {
+    return res.status(200).json({ ...cachedPayload, _cached: true });
+  }
+
+  // Apify concurrency gate — prevents LinkedIn from blocking our actor token
+  // when paid traffic causes many simultaneous scrapes.
+  const apifySlotAcquired = await acquireApifySlot();
+  if (!apifySlotAcquired) {
+    console.warn(`[score] Apify at capacity (>${MAX_CONCURRENT_APIFY} in-flight) — returning waitlist`);
+    return res.status(503).json({
+      error: 'Our scanner is at capacity right now. Leave your email and we\'ll ping you in ~10 minutes.',
+      _waitlist: true
+    });
   }
 
   try {
@@ -432,14 +456,11 @@ export default async function handler(req, res) {
     };
 
     // ── Cache the fresh payload before returning ──
-    // Trim cache if we hit the entry cap (LRU-ish: drop oldest entries).
-    if (RESULT_CACHE.size >= RESULT_CACHE_MAX_ENTRIES) {
-      const oldest = [...RESULT_CACHE.entries()].sort((a, b) => a[1].t - b[1].t)[0];
-      if (oldest) RESULT_CACHE.delete(oldest[0]);
-    }
-    RESULT_CACHE.set(cacheKey, { t: Date.now(), payload: responsePayload });
+    await setCachedResult(cacheKey, responsePayload);
+    await releaseApifySlot();
     return res.status(200).json(responsePayload);
   } catch (err) {
+    await releaseApifySlot().catch(() => {});
     console.error('score handler error:', err);
     notifyOps({
       category: 'score-handler-crash',
@@ -2567,14 +2588,108 @@ function normaliseLinkedIn(raw) {
   return s;
 }
 
-function isRateLimited(ip) {
+// ── KV-backed result cache ─────────────────────────────────────────────────
+async function getCachedResult(cacheKey) {
+  const store = getKV();
+  if (store) {
+    try {
+      const v = await store.get(`cache:${cacheKey}`);
+      if (v) { console.log('[score] KV cache hit:', cacheKey); return v; }
+    } catch (e) {
+      console.warn('[kv] cache get failed:', e.message);
+    }
+  }
+  // Memory fallback
+  const cached = RESULT_CACHE.get(cacheKey);
+  if (cached && (Date.now() - cached.t) < RESULT_CACHE_TTL) {
+    console.log('[score] memory cache hit:', cacheKey);
+    return cached.payload;
+  }
+  return null;
+}
+
+async function setCachedResult(cacheKey, payload) {
+  const store = getKV();
+  if (store) {
+    try {
+      await store.set(`cache:${cacheKey}`, payload, { ex: Math.floor(RESULT_CACHE_TTL / 1000) });
+    } catch (e) {
+      console.warn('[kv] cache set failed (payload may be too large):', e.message);
+    }
+  }
+  // Always write memory cache too (fast local hit within warm instance)
+  if (RESULT_CACHE.size >= RESULT_CACHE_MAX_ENTRIES) {
+    const oldest = [...RESULT_CACHE.entries()].sort((a, b) => a[1].t - b[1].t)[0];
+    if (oldest) RESULT_CACHE.delete(oldest[0]);
+  }
+  RESULT_CACHE.set(cacheKey, { t: Date.now(), payload });
+}
+
+// ── Apify concurrency gate ─────────────────────────────────────────────────
+// Prevents thundering-herd bursts from firing dozens of Apify scrapes at once
+// (LinkedIn blocks actors that issue rapid bursts from the same token).
+async function acquireApifySlot() {
+  const store = getKV();
+  if (store) {
+    try {
+      const count = await store.incr(APIFY_SLOT_KEY);
+      await store.expire(APIFY_SLOT_KEY, 120); // auto-clean if function crashes
+      if (count > MAX_CONCURRENT_APIFY) {
+        await store.decr(APIFY_SLOT_KEY);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.warn('[kv] acquireApifySlot failed, using memory:', e.message);
+    }
+  }
+  // Memory fallback
+  if (_apifyInFlight >= MAX_CONCURRENT_APIFY) return false;
+  _apifyInFlight++;
+  return true;
+}
+
+async function releaseApifySlot() {
+  const store = getKV();
+  if (store) {
+    try { await store.decr(APIFY_SLOT_KEY); } catch (_) {}
+  } else {
+    _apifyInFlight = Math.max(0, _apifyInFlight - 1);
+  }
+}
+
+// ── KV-backed rate limiter (falls back to in-memory) ──────────────────────
+async function isRateLimited(ip) {
+  const store = getKV();
+  if (store) {
+    try {
+      const count = await store.get(`rl:${ip}`);
+      if (count === null || count === undefined) return false;
+      return Number(count) >= RATE_LIMIT_PER_HOUR;
+    } catch (e) {
+      console.warn('[kv] isRateLimited failed, using memory:', e.message);
+    }
+  }
+  // Memory fallback
   const now = Date.now();
   const entry = RATE_LIMIT.get(ip);
   if (!entry || now > entry.resetAt) return false;
   return entry.count >= RATE_LIMIT_PER_HOUR;
 }
 
-function trackRequest(ip) {
+async function trackRequest(ip) {
+  const store = getKV();
+  if (store) {
+    try {
+      const key = `rl:${ip}`;
+      const count = await store.incr(key);
+      if (count === 1) await store.expire(key, 3600); // set TTL on first hit
+      return;
+    } catch (e) {
+      console.warn('[kv] trackRequest failed, using memory:', e.message);
+    }
+  }
+  // Memory fallback
   const now = Date.now();
   const entry = RATE_LIMIT.get(ip);
   if (!entry || now > entry.resetAt) {
