@@ -469,7 +469,7 @@ fbq('track', 'PageView');
      The tag is injected after user consent (or immediately on repeat visits
      where consent was already granted) via loadLinkedInTag() below. -->
 <script>
-  window._LI_PARTNER_ID = ''; // ← FILL IN: your LinkedIn Campaign Manager partner ID
+  window._LI_PARTNER_ID = '2929409';
   window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
   if (window._LI_PARTNER_ID) window._linkedin_data_partner_ids.push(window._LI_PARTNER_ID);
 
@@ -493,6 +493,10 @@ fbq('track', 'PageView');
     if (_viC2 && _viC2.granted) loadLinkedInTag();
   } catch(_) {}
 </script>
+<noscript>
+  <img height="1" width="1" style="display:none;" alt=""
+       src="https://px.ads.linkedin.com/collect/?pid=2929409&fmt=gif" />
+</noscript>
 
 <!-- ─── PERFORMANCE: resource hints ───
      dns-prefetch: cheap, fires before connection setup so DNS resolution is done
