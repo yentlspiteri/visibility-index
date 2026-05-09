@@ -8267,7 +8267,9 @@ fbq('track', 'PageView');
       /^Object Not Found Matching Id/i,                  // Outlook safelink scanner
       /\[Calendly\]/i,                                   // Calendly's own console warnings (not actionable)
       /widget\.calendly\.com/i,
-      /assets\.calendly\.com/i
+      /assets\.calendly\.com/i,
+      /iabjs:\/\//i,                                     // Meta in-app browser (IG/FB/Threads) injected analytics
+      /Java object is gone/i                             // Android WebView native bridge torn down (IG/FB IAB)
     ];
     function isNoise(label, info) {
       const blob = (label || '') + ' ' + (info || '');
