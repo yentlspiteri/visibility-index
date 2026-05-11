@@ -45,7 +45,7 @@
     "logo": "https://www.vonpeach.com/favicon.ico"
   },
   "datePublished": "2026-05-04",
-  "dateModified": "2026-05-04",
+  "dateModified": "2026-05-11",
   "mainEntityOfPage": "https://index.vonpeach.com/articles/brand-clarity",
   "image": "https://index.vonpeach.com/img/og.jpg",
   "keywords": "brand clarity, personal brand positioning, LinkedIn headline"
@@ -59,6 +59,105 @@
     { "@type": "ListItem", "position": 1, "name": "Visibility Index", "item": "https://index.vonpeach.com/" },
     { "@type": "ListItem", "position": 2, "name": "Articles", "item": "https://index.vonpeach.com/articles" },
     { "@type": "ListItem", "position": 3, "name": "Brand clarity", "item": "https://index.vonpeach.com/articles/brand-clarity" }
+  ]
+}
+</script>
+
+<!-- JSON-LD: FAQPage — each Q/A maps 1:1 to the on-page FAQ section so LLMs
+     and Google can ingest the same content as structured data. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is brand clarity?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Brand clarity is whether a stranger can explain what you do — and who you do it for — after 10 seconds on your LinkedIn. It is the first of six dimensions in the Visibility Index, scored 0–3, and the single highest-leverage area to improve in personal branding."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why do most executives fail the brand-clarity test?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most executives list job titles (Founder | CEO | Investor), hedge with vague verbs (\"help startups grow\"), or oversell with abstract claims (\"transforming the future of work\"). The result is a headline that could be copy-pasted onto twenty other people in their industry. The underlying trap is the fear of narrowing — a belief that specificity loses pipeline. The opposite is true: specificity attracts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I write a clear personal-brand headline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use the audience-and-outcome formula: \"I help [specific audience] [specific outcome].\" Add one credibility anchor (a number, a named client, a named transition). Drop everything else. Example: \"I coach first-time CEOs through their first 18 months. Specialty: 30→100 headcount transitions.\""
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does it take to fix brand clarity?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "About twenty minutes of focused thinking, plus the time to update your LinkedIn headline, About section, and website hero. The work is in the thinking, not the wording — committing to one audience and one outcome is uncomfortable because it forces you to close other doors. The discomfort is the signal that you are doing it right."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will narrowing my positioning shrink my pipeline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No — and this is the most common misconception. A SaaS founder hiring a CMO does not search for \"marketing leader\"; they search for \"B2B SaaS CMO with PLG experience.\" The narrower your headline, the more findable you are for the people who actually want you. Vagueness deflects; specificity attracts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is brand clarity scored in the Visibility Index?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Brand Clarity is scored 0–3. 0 — headline lists job titles, no positioning. 1 — some signal of expertise, drifts by audience. 2 — defined niche, some inconsistency between LinkedIn, website, and recent content. 3 — crystal-clear positioning naming audience and outcome, consistent across every surface. Most first-time auditees score 1 or 2."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- JSON-LD: HowTo — the 20-minute fix as a structured procedure so it can
+     surface as a step-by-step answer in Google and AI search results. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to fix your brand clarity in 20 minutes",
+  "description": "A four-step exercise for writing a clear personal-brand headline using the audience-and-outcome formula.",
+  "totalTime": "PT20M",
+  "supply": [{ "@type": "HowToSupply", "name": "A blank page or document" }],
+  "tool":   [{ "@type": "HowToTool",   "name": "Your LinkedIn profile" }],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Name your audience",
+      "text": "Write down who you serve, in two to five words. Not \"founders\" — \"B2B SaaS founders.\" Not \"executives\" — \"climate-tech CEOs at Series A.\""
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Name the outcome",
+      "text": "Write the concrete shift you create. Not \"growth\" or \"transformation\" — a measurable outcome like \"raise your Series A\" or \"land your first board seat.\""
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Add a credibility anchor",
+      "text": "One short proof point a stranger can verify in a few seconds. Numbers if you have them (€100M raised, 3 exits); named clients or roles if you don't."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Drop the rest",
+      "text": "Pick the one identity that is load-bearing in your current chapter and lean in. Take everything else off the headline. The other identities can live in the About section."
+    }
   ]
 }
 </script>
@@ -145,6 +244,74 @@
   article em { color: var(--vp-deep-black); }
   article ul, article ol { margin: 0 0 18px; padding-left: 24px; }
   article li { margin-bottom: 8px; }
+  /* Key takeaways — sits directly under the lede, gives LLMs a clean extraction target */
+  .takeaways {
+    background: rgba(63,54,178,0.04);
+    border: 1px solid rgba(63,54,178,0.16);
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin: 0 0 32px;
+  }
+  .takeaways .label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--vp-indigo);
+    margin-bottom: 12px;
+  }
+  .takeaways ul { margin: 0; padding-left: 20px; }
+  .takeaways li { font-size: 16px; margin-bottom: 8px; }
+  .takeaways li:last-child { margin-bottom: 0; }
+  /* Anchor-linked table of contents */
+  .toc {
+    border-left: 3px solid rgba(63,54,178,0.18);
+    padding: 4px 0 4px 18px;
+    margin: 0 0 36px;
+  }
+  .toc .label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--vp-text-grey);
+    margin-bottom: 10px;
+  }
+  .toc ol { margin: 0; padding-left: 18px; font-size: 15px; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { color: var(--vp-deep-black); text-decoration: none; }
+  .toc a:hover { color: var(--vp-indigo); text-decoration: underline; }
+  /* On-page FAQ — mirrors the FAQPage JSON-LD 1:1 */
+  .faq {
+    margin: 56px 0 0;
+    border-top: 1px solid rgba(15,15,15,0.08);
+    padding-top: 36px;
+  }
+  .faq h2 { margin-top: 0; }
+  .faq details {
+    border-bottom: 1px solid rgba(15,15,15,0.08);
+    padding: 16px 0;
+  }
+  .faq details:last-of-type { border-bottom: 0; }
+  .faq summary {
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    color: var(--vp-deep-black);
+    list-style: none;
+    position: relative;
+    padding-right: 32px;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after {
+    content: '+';
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    font-size: 22px; font-weight: 400; color: var(--vp-indigo);
+    transition: transform .15s ease;
+  }
+  .faq details[open] summary::after { content: '−'; }
+  .faq details > *:not(summary) {
+    margin-top: 12px;
+    color: var(--vp-text-grey);
+  }
+  /* Visible date row */
+  .meta .updated {
+    color: var(--vp-text-grey);
+  }
   /* Comparison block: bad vs good headlines */
   .compare {
     display: grid;
@@ -226,7 +393,7 @@
 <link rel="stylesheet" href="/shared-chrome.css?v=3" />
 <script src="/tracking.js"></script>
 </head>
-<body>
+<body data-article-slug="brand-clarity" data-vi-dimension="brand-clarity" data-article-intent="diagnostic">
 
 <nav class="top">
   <div class="container">
@@ -244,6 +411,8 @@
       <span>9 min read</span>
       <span>·</span>
       <span>Visibility Index dimension #2</span>
+      <span>·</span>
+      <span class="updated"><time datetime="2026-05-04">Published 4 May 2026</time> · <time datetime="2026-05-11">updated 11 May 2026</time></span>
     </div>
   </div>
 </header>
@@ -251,15 +420,40 @@
 <main class="container">
   <article>
 
-    <p class="lede">Brand clarity is whether a stranger can explain what you do — and who you do it for — after 10 seconds on your LinkedIn. Most professionals fail this test. The fix takes twenty minutes of thinking and zero design work.</p>
+    <p class="lede"><dfn>Brand clarity</dfn> is whether a stranger can explain what you do — and who you do it for — after 10 seconds on your LinkedIn. Most professionals fail this test. The fix takes twenty minutes of thinking and zero design work.</p>
 
-    <h2>The 10-second test</h2>
+    <aside class="takeaways" aria-label="Key takeaways">
+      <div class="label">Key takeaways</div>
+      <ul>
+        <li>Brand clarity is the 10-second test: can a stranger explain what you do and who you do it for, after 10 seconds on your LinkedIn?</li>
+        <li>Most professionals fail because they list job titles, hedge with vague verbs, or stack identities.</li>
+        <li>The fix is the audience-and-outcome formula: <em>"I help [specific audience] [specific outcome]"</em> — plus one credibility anchor.</li>
+        <li>Specificity attracts; vagueness deflects. Narrowing your headline makes you more findable, not less.</li>
+        <li>In the <a href="/methodology">Visibility Index</a>, Brand Clarity is scored 0–3. Going from 1 to 3 is the highest-leverage move in personal branding.</li>
+      </ul>
+    </aside>
+
+    <nav class="toc" aria-label="Table of contents">
+      <div class="label">On this page</div>
+      <ol>
+        <li><a href="#ten-second-test">What is the 10-second test for brand clarity?</a></li>
+        <li><a href="#what-clarity-looks-like">What does brand clarity look like in practice?</a></li>
+        <li><a href="#examples">Examples of clear vs. vague headlines</a></li>
+        <li><a href="#why-executives-fail">Why most executives fail at brand clarity</a></li>
+        <li><a href="#how-to-fix">How to fix it in 20 minutes</a></li>
+        <li><a href="#how-its-scored">How brand clarity is scored in the Visibility Index</a></li>
+        <li><a href="#harder-question">What if I can't answer the four questions?</a></li>
+        <li><a href="#faq">Frequently asked questions</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="ten-second-test">What is the 10-second test for brand clarity?</h2>
     <p>Imagine your prospective investor, board chair, or client clicks your LinkedIn. They scan the headline, read the first line of your About section, glance at your last three posts. After ten seconds they close the tab.</p>
     <p>If you handed them a blank piece of paper and asked them to write down what you do — and who you do it for — would they get it right?</p>
     <p>Most professionals fail this test. They list job titles ("Founder | CEO | Investor"). They hedge ("I help startups grow"). They oversell ("Visionary leader transforming the future of [industry]"). None of these pass.</p>
     <p>If your headline could be copy-pasted onto twenty other people in your industry, you have a clarity problem.</p>
 
-    <h2>What clarity actually looks like</h2>
+    <h2 id="what-clarity-looks-like">What does brand clarity look like in practice?</h2>
     <p>Strong brand clarity has three components, in order of importance:</p>
     <ol>
       <li><strong>A specific audience.</strong> Not "founders" — "B2B SaaS founders." Not "executives" — "climate-tech CEOs at Series A." Specificity attracts the right opportunities.</li>
@@ -268,7 +462,7 @@
     </ol>
     <p>The format is simple: <em>"I help [audience] [outcome]."</em></p>
 
-    <h2>Examples</h2>
+    <h2 id="examples">Examples of clear vs. vague personal-brand headlines</h2>
 
     <div class="compare">
       <div class="bad">
@@ -305,7 +499,7 @@
 
     <p>Notice what the clear versions share: a real audience (mid-market HR leaders, climate-tech founders, first-time CEOs), a real outcome (cut hiring time, raise €5M, navigate the 30→100 transition), and a credibility anchor (named numbers, named transitions). The vague versions read like they could be on twenty other profiles.</p>
 
-    <h2>Why most executives fail it</h2>
+    <h2 id="why-executives-fail">Why do most executives fail at brand clarity?</h2>
     <p>The trap goes by a few names. The most common is the <em>fear of narrowing</em>: "if I'm too specific, I'll narrow my pipeline." Or, in another flavour: "I do many things, I don't want to box myself in."</p>
     <p>This is exactly backwards.</p>
     <p>Specificity attracts. Vagueness deflects. A SaaS founder hiring a CMO doesn't search "marketing leader" — they search "B2B SaaS CMO with PLG experience." The narrower your headline, the more findable you become for the people who actually want you.</p>
@@ -313,7 +507,7 @@
 
     <div class="callout">"You don't get hired because you can do many things. You get hired because someone can tell exactly which thing you do best."</div>
 
-    <h2>How to fix it in 20 minutes</h2>
+    <h2 id="how-to-fix">How do I fix my brand clarity in 20 minutes?</h2>
     <p>Open a blank page. Answer four questions:</p>
     <ol>
       <li><strong>Who do you serve?</strong> Be specific. One audience, named in two-to-five words.</li>
@@ -324,7 +518,7 @@
     <p>Combine into one sentence. Replace your LinkedIn headline. Update your website hero. Pin a post that opens with the same line.</p>
     <p>The work is in the thinking, not the wording. The thinking is uncomfortable because it forces you to commit to one audience and one outcome — and you'd rather keep your options open. The discomfort is the signal that you're doing it right.</p>
 
-    <h2>How clarity is scored in the Visibility Index</h2>
+    <h2 id="how-its-scored">How is brand clarity scored in the Visibility Index?</h2>
     <p>Brand Clarity is one of six dimensions in the <a href="/methodology">Visibility Index</a>, scored 0–3:</p>
     <ul>
       <li><strong>0</strong> — Headline lists job titles. About section is generic. No clear positioning.</li>
@@ -334,9 +528,43 @@
     </ul>
     <p>Most first-time auditees score 1 or 2. Going from 1 to 3 is the single highest-leverage change in personal branding — it costs nothing, it takes twenty minutes, and it shifts how every future prospect, investor, or recruiter perceives you.</p>
 
-    <h2>The harder question</h2>
+    <h2 id="harder-question">What if I can't even answer those four questions?</h2>
     <p>If you read this and you can't write the four answers above without flinching, the issue isn't clarity. The issue is positioning — what you actually want your career to be about, who you want to be known for helping, what you want to be uninterruptible at.</p>
     <p>That's a different conversation. Worth having with a colleague or coach. But you can't fix clarity downstream of unclear positioning. Get the positioning right first; the headline writes itself.</p>
+
+    <section class="faq" id="faq" aria-labelledby="faq-heading">
+      <h2 id="faq-heading">Frequently asked questions</h2>
+
+      <details>
+        <summary>What is brand clarity?</summary>
+        <p>Brand clarity is whether a stranger can explain what you do — and who you do it for — after 10 seconds on your LinkedIn. It is the first of six dimensions in the <a href="/methodology">Visibility Index</a>, scored 0–3, and the single highest-leverage area to improve in personal branding.</p>
+      </details>
+
+      <details>
+        <summary>Why do most executives fail the brand-clarity test?</summary>
+        <p>Most list job titles ("Founder | CEO | Investor"), hedge with vague verbs ("help startups grow"), or oversell with abstract claims ("transforming the future of work"). The result is a headline that could be copy-pasted onto twenty other people in their industry. The underlying trap is the <em>fear of narrowing</em> — a belief that specificity loses pipeline. The opposite is true: specificity attracts.</p>
+      </details>
+
+      <details>
+        <summary>How do I write a clear personal-brand headline?</summary>
+        <p>Use the <a href="/glossary#audience-and-outcome">audience-and-outcome formula</a>: <em>"I help [specific audience] [specific outcome]."</em> Add one credibility anchor (a number, a named client, a named transition). Drop everything else. Example: <em>"I coach first-time CEOs through their first 18 months. Specialty: 30→100 headcount transitions."</em></p>
+      </details>
+
+      <details>
+        <summary>How long does it take to fix brand clarity?</summary>
+        <p>About twenty minutes of focused thinking, plus the time to update your LinkedIn headline, About section, and website hero. The work is in the thinking, not the wording — committing to one audience and one outcome is uncomfortable because it forces you to close other doors. The discomfort is the signal you are doing it right.</p>
+      </details>
+
+      <details>
+        <summary>Will narrowing my positioning shrink my pipeline?</summary>
+        <p>No — and this is the most common misconception. A SaaS founder hiring a CMO does not search for "marketing leader"; they search for "B2B SaaS CMO with PLG experience." The narrower your headline, the more findable you are for the people who actually want you. Vagueness deflects; specificity attracts.</p>
+      </details>
+
+      <details>
+        <summary>How is brand clarity scored in the Visibility Index?</summary>
+        <p>Brand Clarity is scored 0–3. <strong>0</strong> — headline lists job titles, no positioning. <strong>1</strong> — some signal of expertise, drifts by audience. <strong>2</strong> — defined niche, some inconsistency between LinkedIn, website, and recent content. <strong>3</strong> — crystal-clear positioning naming audience and outcome, consistent everywhere. Most first-time auditees score 1 or 2. <a href="/">Run the free audit</a> to see your current score.</p>
+      </details>
+    </section>
 
   </article>
 
@@ -350,6 +578,9 @@
     <h2>Related</h2>
     <ul>
       <li><a href="/methodology">The full Visibility Index methodology — six dimensions, four tiers, transparent rubric.</a></li>
+      <li><a href="/articles/personal-brand-audit-framework">How to audit your personal brand — the 6-dimension framework.</a></li>
+      <li><a href="/articles/authority-signals">How to earn authority signals as a founder (without faking it).</a></li>
+      <li><a href="/glossary">Personal-brand visibility glossary — every term defined.</a></li>
       <li><a href="/">Run the free 60-second audit.</a></li>
     </ul>
   </section>

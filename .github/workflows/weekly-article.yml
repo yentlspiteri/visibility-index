@@ -1,0 +1,101 @@
+name: Weekly Article (GEO)
+
+# Drafts one GEO-optimized article from .claude/article-backlog.md every Monday
+# and opens a PR for review. Does NOT auto-merge.
+#
+# Schedule: 07:00 UTC every Monday.
+#   - Summer (CEST, UTC+2): fires at 09:00 Zurich time
+#   - Winter (CET, UTC+1):  fires at 08:00 Zurich time
+#   Accept the 1h DST drift, or split into two crons later.
+#
+# Required repo secret: CLAUDE_CODE_OAUTH_TOKEN  (preferred — Pro/Max subscription)
+#                    or ANTHROPIC_API_KEY        (pay-per-use)
+# Set via:  gh secret set CLAUDE_CODE_OAUTH_TOKEN
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  draft-article:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure git author
+        run: |
+          git config user.name  "claude-code[bot]"
+          git config user.email "claude-code[bot]@users.noreply.github.com"
+
+      - name: Run Claude Code — draft next article
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            You are running on a weekly cron job to ship one new GEO-optimized article for the Visibility Index project.
+
+            ## Step 1 — pick the next topic
+
+            Read `.claude/article-backlog.md`. The "Status" section lists articles already shipped. The "Queue" table is the ordered backlog. Find the first row in the Queue whose slug does NOT appear in the Status section. That row is your target — note the slug, query, intent, dimension, and target lander.
+
+            If every row is already in Status, stop here and exit cleanly (post a comment to the most recent closed PR saying the backlog is empty, then exit 0).
+
+            ## Step 2 — draft the article
+
+            Open `articles/brand-clarity.html` as the canonical template. The new article MUST mirror its structure exactly. Required ingredients (all are in the template — copy and adapt):
+
+            - `<body data-article-slug="<slug>" data-vi-dimension="<dimension>" data-article-intent="<intent>">`
+            - `<head>` includes `<script src="/tracking.js"></script>` (before `</head>`)
+            - JSON-LD: `Article` + `BreadcrumbList` + `FAQPage` (always); add `HowTo` when the article contains a step-by-step procedure
+            - H1 phrased as the actual user query
+            - Lede `<p class="lede">` whose first sentence follows `[Term] is [definition]` and uses `<dfn>` on the defined term
+            - `<aside class="takeaways">` with 3–5 bullets directly under the lede
+            - `<nav class="toc">` with anchor links to every H2
+            - All H2s phrased as questions, each with an `id` attribute matching the TOC
+            - 6–8 sections; at least one numbered/ordered list; one `<div class="compare">` block (bad vs. good or before vs. after); one `<div class="callout">` pull-quote
+            - Inline links to `/glossary#term` when introducing defined terms; internal links to `/methodology` and at least one sibling article
+            - A section "How [topic] is scored in the Visibility Index" with the 0–3 rubric
+            - `<aside class="cta-card">` linking to the target lander from the queue row
+            - `<section class="faq">` mirroring the `FAQPage` JSON-LD 1:1 (use `<details>`/`<summary>`)
+            - `<section class="related">` with 4–5 internal links (methodology + 2 articles + glossary + home)
+            - Visible publish + updated dates with `<time datetime="...">`
+
+            Tone matches existing articles: declarative, specific, no AI-tells, no fluff. Numbers and named examples wherever possible. ~1200–1800 words.
+
+            Save the file as `articles/<slug>.html`.
+
+            ## Step 3 — wire it up
+
+            - Add a card/row for the new article to `articles/index.html` following the existing pattern.
+            - Append a markdown link to the "Articles" section of `llms.txt` (and `llms-full.txt` if appropriate).
+            - Append a `<url>` entry to `sitemap.xml` with today's date as `<lastmod>`.
+            - Tick the queue row by adding a new line to the Status section of `.claude/article-backlog.md`: `- ✅ \`articles/<slug>.html\` — published YYYY-MM-DD`. Use today's date.
+
+            ## Step 4 — open a PR
+
+            - Create a branch named `claude/weekly-article-<slug>`.
+            - Commit all changes with a clear message: `feat: article — <query>`.
+            - Open a PR with the same title. Body should explain: target query, intent, Visibility Index dimension, target lander, and a 1-sentence summary of the article's hook.
+            - Do NOT merge. Mark it ready-for-review (not draft) unless something is ambiguous, in which case mark it draft and explain why in the PR body.
+
+            ## Constraints
+
+            - Never invent external URLs or fabricate citations. If you want to mention research, name the source generically without a link.
+            - Never use emojis in article content unless the existing template does.
+            - Never commit secrets, API keys, or anything in `.env*`.
+            - Use `gh` CLI for PR operations and `git` for commits.
+          claude_args: |
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep"
