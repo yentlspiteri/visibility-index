@@ -204,6 +204,28 @@
     return out;
   })();
 
+  /* ── Article CTA tracking ─────────────────────────────────────────────────
+     Fires `article_cta_click` whenever an audit/CTA link is clicked from an
+     article page. "Article page" is detected by the presence of the
+     data-article-slug attribute on <body> (set by the GEO article template).
+     This is the only way to prove which GEO articles drive audit traffic —
+     GA4's auto-`click` event only logs outbound links, not internal CTAs. */
+  document.addEventListener('click', function (e) {
+    var slug = document.body && document.body.getAttribute('data-article-slug');
+    if (!slug) return;
+    var cta = e.target.closest('.cta-card a, a[data-cta-source], .cta-primary, nav.top a.cta');
+    if (!cta) return;
+    if (typeof window.track === 'function') {
+      window.track('article_cta_click', {
+        article_slug:   slug,
+        vi_dimension:   document.body.getAttribute('data-vi-dimension')   || null,
+        article_intent: document.body.getAttribute('data-article-intent') || null,
+        cta_target:     cta.getAttribute('href') || null,
+        cta_label:      (cta.textContent || '').trim().slice(0, 80)
+      });
+    }
+  }, true);
+
   /* ── Cookie consent banner (CSS + HTML + handlers, injected on DOM ready) */
   var BANNER_CSS = '\
 #vi-consent{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(11,3,89,0.97);\
