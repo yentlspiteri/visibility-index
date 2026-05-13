@@ -6653,6 +6653,50 @@ fbq('track', 'PageView');
     opacity: 0.65;
     margin-top: 5px;
     letter-spacing: 0.02em;
+    transition: opacity .35s ease, color .35s ease;
+  }
+  /* Lock text has two states; only the matching one shows based on
+     whether the inline form has a valid email (toggled via .lead-ready
+     on the parent .report-strip). */
+  .report-gap-lock .lock-state-valid { display: none; }
+  .report-strip.lead-ready .report-gap-lock .lock-state-default { display: none; }
+  .report-strip.lead-ready .report-gap-lock .lock-state-valid { display: inline; }
+
+  /* ── "Wake up" state ──────────────────────────────────────────────
+     When the inline-form email is valid, the locked gap rows brighten
+     slightly: less blur on the teaser text, stronger card border, lock
+     line goes to full opacity. Single soft transition — no fireworks. */
+  .report-gap-detail {
+    transition: filter .35s ease, background .35s ease;
+  }
+  .report-gap-item {
+    transition: border-color .35s ease, background .35s ease;
+  }
+  .report-strip.lead-ready .report-gap-detail {
+    filter: blur(2.5px);
+    background: rgba(63,54,178,0.16);
+  }
+  .report-strip.lead-ready .report-gap-item {
+    border-color: rgba(63,54,178,0.28);
+    background: rgba(63,54,178,0.06);
+  }
+  .report-strip.lead-ready .report-gap-lock {
+    opacity: 1;
+  }
+  /* Button gets a soft bloom when ready - single shadow change, no loop */
+  .report-strip.lead-ready .report-strip-btn {
+    box-shadow: 0 6px 22px rgba(63,54,178,0.45);
+  }
+  /* One-shot pulse on the gap rows the moment validity flips. Class is
+     added then removed by JS after the animation completes so it doesn't
+     re-fire on every keystroke. */
+  @keyframes report-gap-ready-pulse {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.012); }
+    100% { transform: scale(1); }
+  }
+  .report-strip.lead-ready--just-flipped .report-gap-item {
+    animation: report-gap-ready-pulse .38s ease;
   }
   .report-strip-cta-col {
     flex: 0 0 auto;
@@ -6674,15 +6718,111 @@ fbq('track', 'PageView');
   }
   .report-strip-btn:hover { background: #352db5; transform: translateY(-2px); }
   .report-strip-btn:active { transform: scale(.97); }
+  .report-strip-btn:disabled { opacity: 0.65; cursor: wait; transform: none !important; }
   .report-strip-hint {
     font-family: var(--font-body); font-size: 11.5px;
     color: rgba(15,15,15,0.45);
     line-height: 1.4;
   }
+
+  /* ── Inline lead form (reused by report-strip + personal-card CTAs) ──
+     Replaces the old "Get my full report" buttons that scroll-to-fixed-bar
+     dead-ends. The user enters their email right here; the form delegates
+     to the existing #gate-form so /api/lead, the PDF download, the Meta
+     CAPI Lead event, and the gate-success toast all keep firing through
+     the same code path. On success, swaps into a confirmation strip. */
+  .lead-inline-form { margin: 0; }
+  .lead-inline-label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--vp-indigo, #3F36B2);
+    margin-bottom: 10px;
+  }
+  .lead-inline-row {
+    display: flex; gap: 8px;
+    align-items: stretch;
+    width: 100%;
+  }
+  .lead-inline-email {
+    flex: 1 1 220px;
+    min-width: 0;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(63,54,178,0.22);
+    background: rgba(252,252,252,0.96);
+    color: var(--vp-deep-black, #0c0b09);
+    font-family: var(--font-body);
+    font-size: 15px;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .lead-inline-email::placeholder { color: rgba(15,15,15,0.42); }
+  .lead-inline-email:focus {
+    outline: none;
+    border-color: var(--vp-indigo, #3F36B2);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(63,54,178,0.12);
+  }
+  .lead-inline-email:disabled { opacity: 0.7; cursor: wait; }
+  .lead-inline-email.is-invalid {
+    border-color: #d64545;
+    box-shadow: 0 0 0 4px rgba(214,69,69,0.12);
+  }
+  .lead-inline-success {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: rgba(63,54,178,0.07);
+    border: 1.5px solid rgba(63,54,178,0.22);
+    border-radius: 12px;
+    animation: lead-inline-success-in .35s ease-out;
+  }
+  @keyframes lead-inline-success-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .lead-inline-check {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--vp-indigo, #3F36B2);
+    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+  }
+  .lead-inline-success-text {
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 0;
+  }
+  .lead-inline-success-text strong {
+    font-family: var(--font-body);
+    font-size: 14px; font-weight: 700;
+    color: var(--vp-deep-black, #0c0b09);
+    word-break: break-word;
+  }
+  .lead-inline-success-text span {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: rgba(15,15,15,0.62);
+  }
+  .lead-inline-error {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: #b8364c;
+  }
+  .lead-inline-error.hidden { display: none; }
+
   @media (max-width: 600px) {
     .report-strip { flex-direction: column; gap: 18px; }
     .report-strip-cta-col { width: 100%; }
-    .report-strip-btn { width: 100%; text-align: center; }
+    /* Switch row → column on mobile and neutralize the email's flex-grow so
+       it doesn't stretch vertically to fill the column flex container above. */
+    .lead-inline-row { flex-direction: column; align-items: stretch; }
+    .lead-inline-email { flex: 0 0 auto; width: 100%; height: 48px; }
+    .report-strip-btn, .personal-cta { width: 100%; text-align: center; }
   }
 
   /* ── Sticky bar label (gate-bar-label) ── */
@@ -7526,12 +7666,15 @@ fbq('track', 'PageView');
           <!-- Populated by JS: 3 weakest dimension cards with locked detail -->
         </ul>
       </div>
-      <div class="report-strip-cta-col">
-        <button type="button" class="report-strip-btn" id="report-strip-btn">
-          Get my full report — it's free
-        </button>
+      <form class="report-strip-cta-col lead-inline-form" id="report-strip-form" data-lead-source="report_strip" novalidate>
+        <label class="lead-inline-label" for="report-strip-email">Get my full report — free</label>
+        <div class="lead-inline-row">
+          <input type="email" id="report-strip-email" class="lead-inline-email"
+                 placeholder="you@company.com" required autocomplete="email" />
+          <button type="submit" class="report-strip-btn" id="report-strip-btn">Send it &rarr;</button>
+        </div>
         <span class="report-strip-hint">Personalised PDF · 3 moves · in your inbox in minutes</span>
-      </div>
+      </form>
     </div>
 
     <!-- Personalized analysis (Claude-generated from real LinkedIn profile data) -->
@@ -7544,12 +7687,9 @@ fbq('track', 'PageView');
         <div class="personal-teasers-label">In your full report:</div>
         <ul id="personal-teasers"></ul>
       </div>
-      <div class="personal-cta-row">
-        <button type="button" class="personal-cta" id="personal-cta">
-          Get my full report
-        </button>
-        <span class="personal-cta-hint">Free · personalised PDF · in your inbox</span>
-      </div>
+      <!-- CTA removed: the report-strip above is the single primary email capture.
+           The personal-card is now pure context (Claude summary + teaser list);
+           the sticky gate-bar below acts as a fallback for users who scroll past. -->
     </div>
 
     <!-- Personal hexagon (left) + Claude-generated summary (right) - 2-col, stacks on mobile -->
@@ -8222,29 +8362,56 @@ fbq('track', 'PageView');
     });
   })();
 
-  /* ────────── STICKY GATE REVEAL — slide up the bottom email gate on first scroll after the score ──────────
-     Better UX than always-visible: the user gets to enjoy their score first, then the gate
-     "rises" once they show interest by scrolling. Triggers once per session, never re-hides. */
+  /* ────────── STICKY GATE REVEAL — fallback bar for users who scroll past the strip ──────────
+     The report-strip's inline email form is now the primary CTA. The sticky
+     bottom bar is demoted to a safety net: it only reveals once the user has
+     scrolled completely past the report-strip without converting. If they
+     submit inline, gate-card gets `.hidden` and the bar stays empty.
+     Triggers once per session, never re-hides. */
   (function () {
     let revealed = false;
-    function maybeReveal() {
+    function reveal() {
       if (revealed) return;
       if (!document.body.classList.contains('audit-complete')) return;
-      // Trigger once user has scrolled at least 80px past the top of the results page
-      if (window.scrollY > 80) {
-        document.body.classList.add('gate-revealed');
-        revealed = true;
-        window.removeEventListener('scroll', maybeReveal);
-      }
+      document.body.classList.add('gate-revealed');
+      revealed = true;
     }
-    window.addEventListener('scroll', maybeReveal, { passive: true });
-    // Also reveal after 6s of inaction so users who don't scroll still see the CTA
+    // Watch the report-strip — reveal the bar only when the strip leaves the
+    // top of the viewport (user scrolled past). IntersectionObserver fires
+    // synchronously on first attach with the current intersection state, so
+    // we check `boundingClientRect.bottom < 0` to confirm the strip is ABOVE
+    // the viewport (not just absent or below it).
+    function arm() {
+      const strip = document.getElementById('report-strip');
+      if (!strip) return false;
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting && e.boundingClientRect.bottom < 0) {
+            reveal();
+            io.disconnect();
+            break;
+          }
+        }
+      }, { threshold: 0 });
+      io.observe(strip);
+      return true;
+    }
+    // The strip is hidden until the audit completes, so re-attempt arming
+    // when audit-complete first appears (MutationObserver on body class).
+    if (!arm()) {
+      const bodyObs = new MutationObserver(() => {
+        if (document.body.classList.contains('audit-complete') && arm()) {
+          bodyObs.disconnect();
+        }
+      });
+      bodyObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+    // Failsafe: if the strip never renders (edge case) or the user truly idles,
+    // reveal the bar after 25s so they still have a path to convert. Longer
+    // than before because the inline form now carries the primary CTA load.
     setTimeout(() => {
-      if (!revealed && document.body.classList.contains('audit-complete')) {
-        document.body.classList.add('gate-revealed');
-        revealed = true;
-      }
-    }, 6000);
+      if (!revealed && document.body.classList.contains('audit-complete')) reveal();
+    }, 25000);
   })();
 
   /* ────────── GLOBAL ERROR HANDLER — auto-files a bug report on uncaught crashes ──────────
@@ -10223,7 +10390,7 @@ fbq('track', 'PageView');
         <span class="report-gap-text">
           <span class="report-gap-label">${meta.label}</span>
           <span class="report-gap-detail" aria-hidden="true">${escapeHtmlPage(teaser)}</span>
-          <span class="report-gap-lock" aria-label="Locked — get the free report to unlock">In your free report &rarr;</span>
+          <span class="report-gap-lock" aria-label="Locked — get the free report to unlock"><span class="lock-state-default">In your free report &rarr;</span><span class="lock-state-valid">Ready to unlock &rarr;</span></span>
         </span>
       `;
       gapsEl.appendChild(li);
@@ -10231,17 +10398,9 @@ fbq('track', 'PageView');
 
     // ── Show strip ──
     strip.classList.remove('hidden');
-
-    // ── CTA: scroll to gate, focus email ──
-    btn.addEventListener('click', function onStripClick() {
-      const gate  = document.querySelector('.gate-standalone') || document.getElementById('gate-standalone');
-      const email = document.getElementById('gate-email') || (gate && gate.querySelector('input[type="email"]'));
-      if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      if (email) setTimeout(() => email.focus(), 400);
-      if (window.track) window.track('report_strip_cta_click', { tier: tier.name });
-      // Remove listener after first click to avoid duplicate scrolls
-      btn.removeEventListener('click', onStripClick);
-    }, { once: true });
+    // Wire the inline form to delegate to #gate-form (idempotent)
+    const stripForm = document.getElementById('report-strip-form');
+    if (stripForm) wireInlineLeadForm(stripForm);
   }
 
   function escapeHtmlPage(s) {
@@ -10838,16 +10997,142 @@ fbq('track', 'PageView');
     wrap.classList.remove('hidden');
   }
 
-  // The "Get my full PDF report" button inside the personal-card → scroll to the gate + focus email
-  const personalCta = $('#personal-cta');
-  if (personalCta) {
-    personalCta.addEventListener('click', () => {
-      const target = $('#gate-standalone');
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => {
-        const emailField = $('#gate-email');
-        if (emailField) emailField.focus();
-      }, 700);
+  // Personal-card CTA removed — the report-strip is now the single inline form.
+
+  /* ────────── INLINE LEAD FORM DELEGATION ──────────
+     Both the report-strip and personal-card CTAs are <form data-lead-source>
+     blocks. Instead of duplicating the /api/lead + Resend + Meta CAPI logic,
+     they pipe the email into #gate-email and call gateForm.requestSubmit(),
+     reusing the canonical submission flow. While that request is in-flight we
+     watch #gate-card for `hidden` (success) or .gate-disclaimer text changing
+     to a non-default error string (failure), then swap the inline form into a
+     confirmation card or surface the error inline. Idempotent: re-wiring the
+     same form is a no-op via `data-lead-wired`. */
+  function wireInlineLeadForm(form) {
+    if (!form || form.dataset.leadWired === '1') return;
+    form.dataset.leadWired = '1';
+
+    const emailInput = form.querySelector('input[type="email"]');
+    const submitBtn  = form.querySelector('button[type="submit"]');
+    if (!emailInput || !submitBtn) return;
+
+    // ── Wake-up state on the parent .report-strip ──────────────────
+    // While the user types, toggle `.lead-ready` on the parent strip
+    // so the locked gap rows visually wake up (brightened + lock text
+    // flips to "Ready to unlock"). Pulse once on the false→true edge.
+    const stripParent = form.closest('.report-strip');
+    if (stripParent) {
+      let wasValid = false;
+      emailInput.addEventListener('input', () => {
+        const v = emailInput.value.trim();
+        const isValid = v.length > 3 && v.includes('@') && v.indexOf('@') < v.length - 1;
+        if (isValid && !wasValid) {
+          stripParent.classList.add('lead-ready', 'lead-ready--just-flipped');
+          // Strip the one-shot pulse class after the animation completes
+          setTimeout(() => stripParent.classList.remove('lead-ready--just-flipped'), 420);
+        } else if (!isValid && wasValid) {
+          stripParent.classList.remove('lead-ready', 'lead-ready--just-flipped');
+        }
+        wasValid = isValid;
+      });
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      // Local validation - same rule as the canonical gate-form
+      if (!email || !email.includes('@')) {
+        emailInput.classList.add('is-invalid');
+        emailInput.focus();
+        return;
+      }
+      emailInput.classList.remove('is-invalid');
+
+      // Clear any prior inline error
+      const priorErr = form.querySelector('.lead-inline-error');
+      if (priorErr) priorErr.remove();
+
+      // Loading state
+      const origBtn = submitBtn.textContent;
+      submitBtn.disabled = true;
+      emailInput.disabled = true;
+      submitBtn.textContent = 'Sending…';
+
+      // Track the inline conversion attempt (tier comes from the module-scope lastTier)
+      if (window.track) {
+        window.track('inline_lead_submit', {
+          source: form.dataset.leadSource || 'unknown',
+          tier:   (typeof lastTier === 'object' && lastTier && lastTier.name) || ''
+        });
+      }
+
+      // Hand off to the canonical gate-form
+      const gateEmail = document.getElementById('gate-email');
+      const gateForm  = document.getElementById('gate-form');
+      const gateCard  = document.getElementById('gate-card');
+      if (!gateEmail || !gateForm || !gateCard) {
+        // Fallback - should never happen, but fail gracefully instead of hanging
+        restore('Submission unavailable. Please refresh and try again.');
+        return;
+      }
+      gateEmail.value = email;
+
+      // Watch gate-card for the success state (the canonical handler adds .hidden)
+      let settled = false;
+      const observer = new MutationObserver(() => {
+        if (settled) return;
+        if (gateCard.classList.contains('hidden')) {
+          settled = true;
+          observer.disconnect();
+          clearTimeout(failsafe);
+          showSuccess(email);
+        }
+      });
+      observer.observe(gateCard, { attributes: true, attributeFilter: ['class'] });
+
+      // Failsafe: if the canonical handler errors (it rewrites .gate-disclaimer
+      // text + colors it #FFD6BB) we'll never see `hidden` get added. Poll once
+      // after 14s and surface a generic error inline if no success arrived.
+      const failsafe = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        observer.disconnect();
+        const disclaimer = document.querySelector('.gate-disclaimer');
+        const msg = (disclaimer && disclaimer.textContent && disclaimer.style.color)
+          ? disclaimer.textContent
+          : 'Could not send the report. Please try again.';
+        restore(msg);
+      }, 14000);
+
+      // Fire the canonical submit
+      if (typeof gateForm.requestSubmit === 'function') {
+        gateForm.requestSubmit();
+      } else {
+        // Older browsers - synthesize a submit event so the existing handler
+        // (which calls preventDefault) runs the network request path.
+        gateForm.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+
+      function restore(errMsg) {
+        submitBtn.disabled = false;
+        emailInput.disabled = false;
+        submitBtn.textContent = origBtn;
+        const err = document.createElement('span');
+        err.className = 'lead-inline-error';
+        err.textContent = errMsg;
+        form.appendChild(err);
+      }
+
+      function showSuccess(toEmail) {
+        form.innerHTML =
+          '<div class="lead-inline-success">' +
+            '<span class="lead-inline-check" aria-hidden="true">&#10003;</span>' +
+            '<div class="lead-inline-success-text">' +
+              '<strong>On its way to ' + escapeHtmlPage(toEmail) + '</strong>' +
+              '<span>Check your inbox in the next minute.</span>' +
+            '</div>' +
+          '</div>';
+      }
     });
   }
 
