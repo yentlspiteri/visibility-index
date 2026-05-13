@@ -28,6 +28,27 @@ Hosted on **Vercel**: static frontend + serverless functions on the same domain.
 - **v0.0–v0.2 (shipped)** — Single-URL UX, six-dimension scoring, four tiers, ad-optimised hero, sample-peer pills, UTM capture. All client-side mock scoring on GitHub Pages.
 - **v1 (this repo, current)** — Real backend on Vercel. ProxyCurl + SerpAPI + Claude Haiku → live scoring. Mailchimp wiring → live lead capture with attribution.
 - **v2 (planned, post-launch)** — Once 200+ leads accumulated, swap synthetic peer baselines for a real cohort DB built from opted-in profiles. Relaunch moment.
+- **Team audit (current)** — Manager-facing flow at `/team-audit`. Magic-link sign-in, paste up to 10 LinkedIn URLs, get a team scorecard, optional weekly tracking with quarterly trends and a Monday-morning digest email.
+
+## Team audit setup
+
+The team-audit feature needs Postgres + a session secret + a cron secret on top of the existing env vars.
+
+1. **Provision Postgres**: Vercel dashboard → Storage → Create Database → Postgres. Link it to the project. Vercel auto-injects `POSTGRES_URL` etc.
+2. **Generate secrets**:
+   ```bash
+   openssl rand -hex 32   # → SESSION_SECRET
+   openssl rand -hex 24   # → CRON_SECRET
+   ```
+   Add both under Project Settings → Environment Variables.
+3. **Cron is configured in `vercel.json`** — `weekly-rescore` runs Monday 09:00 UTC, `weekly-digest` runs Monday 09:30 UTC. Vercel sends `Authorization: Bearer ${CRON_SECRET}` automatically.
+4. **Schema bootstrap is automatic** — `lib/db.js` creates the tables on first request.
+5. **Transactional email** reuses `RESEND_API_KEY` (already wired for ops alerts). Override the from-line with `RESEND_FROM_TRANSACTIONAL` if you want sign-in / digest / opt-in emails to come from a different verified address than ops alerts.
+
+Routes:
+- `/team-audit` — public lander, manager enters email, gets sign-in link.
+- `/team-dashboard` — authed dashboard (paste URLs, see scores, toggle tracking, send opt-in).
+- `/team-consent` — landing page team members hit after clicking the opt-in email.
 
 ## Local development
 

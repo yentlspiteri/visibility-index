@@ -6,8 +6,12 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/*.js": {
+    "api/**/*.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/cron/weekly-rescore", "schedule": "0 9 * * 1" },
+    { "path": "/api/cron/weekly-digest",  "schedule": "30 9 * * 1" }
+  ]
 }
