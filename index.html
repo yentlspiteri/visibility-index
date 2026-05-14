@@ -11477,6 +11477,16 @@ fbq('track', 'PageView');
             fbp:        metaCookies.fbp,
             fbc:        metaCookies.fbc
           },
+          // Cookie consent state. If denied, the server fires a GA4
+          // Measurement Protocol event so the lead reaches GA reports.
+          // If granted, the browser pixel handles it and the server skips
+          // (GA MP has no native event_id dedup, so firing both = double count).
+          gaConsent: (function () {
+            try {
+              const c = JSON.parse(localStorage.getItem('__vi_consent') || 'null');
+              return c && c.granted ? 'granted' : 'denied';
+            } catch (_) { return 'denied'; }
+          })(),
           // Full payload that the backend uses to build the PDF
           profile:             lastProfile,
           executiveSummary:    lastExecutiveSummary,
@@ -11666,6 +11676,29 @@ fbq('track', 'PageView');
     var declineBtn = document.getElementById('vi-consent-decline');
     if (acceptBtn)  acceptBtn.addEventListener('click',  grantConsent);
     if (declineBtn) declineBtn.addEventListener('click', declineConsent);
+  })();
+
+  // ── Server-side pageview backstop ────────────────────────────────────────
+  // When consent is denied the GA4 browser pixel is muted (and cookieless
+  // pings don't reach standard reports at our traffic volume). Mirror a
+  // page_view via /api/pv so the visit still counts. Skip when consent is
+  // granted to avoid double-counting against the browser pixel.
+  (function () {
+    try {
+      var c = JSON.parse(localStorage.getItem('__vi_consent') || 'null');
+      if (c && c.granted) return;
+      fetch('/api/pv', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          path:        window.location.href,
+          referrer:    document.referrer || '',
+          title:       document.title || '',
+          attribution: (typeof ATTRIBUTION !== 'undefined') ? ATTRIBUTION : (window.ATTRIBUTION || {})
+        }),
+        keepalive: true
+      }).catch(function () {});
+    } catch (_) {}
   })();
 </script>
 </body>

@@ -280,4 +280,30 @@ font-size:13px;cursor:pointer;white-space:nowrap;transition:color .12s,border-co
   } else {
     injectBanner();
   }
+
+  /* ── Server-side pageview backstop ────────────────────────────────────────
+     When consent is denied, the GA4 browser pixel is muted (cookieless pings
+     don't count for low-volume sites). Mirror a page_view via /api/pv so the
+     visit still reaches GA. Skip when consent is granted to avoid double-
+     counting against the browser pixel. */
+  function firePageviewBackstop() {
+    try {
+      var c = JSON.parse(localStorage.getItem(CONSENT_KEY) || 'null');
+      if (c && c.granted) return;
+      var body = JSON.stringify({
+        path:        window.location.href,
+        referrer:    document.referrer || '',
+        title:       document.title || '',
+        attribution: window.ATTRIBUTION || {}
+      });
+      // keepalive lets the request survive a fast navigation (bounce).
+      fetch('/api/pv', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    body,
+        keepalive: true
+      }).catch(function () {});
+    } catch (_) {}
+  }
+  firePageviewBackstop();
 })();
