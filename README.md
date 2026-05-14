@@ -55,6 +55,8 @@ vercel dev             # runs frontend + functions locally
    | `MAILCHIMP_API_KEY` | Mailchimp → Account → Extras → API keys |
    | `MAILCHIMP_AUDIENCE_ID` | Audience → Settings → Audience name and defaults → "Audience ID" |
    | `MAILCHIMP_SERVER_PREFIX` | The `usX` in your Mailchimp dashboard URL (e.g. `us17`) |
+   | `GA_API_SECRET` | GA4 → Admin → Data Streams → web stream → Measurement Protocol API secrets → Create. Used by `/api/lead` to fire a server-side `lead_captured` event when the visitor declined the cookie banner (consent-mode-denied users would otherwise be invisible in GA reports). |
+   | `GA_MEASUREMENT_ID` | Optional. Defaults to `G-2MKY8VPQBF` (the production stream used in `tracking.js`). Only set if you're pointing the server-side mirror at a different GA4 property. |
 
 5. Deploy. The first deploy takes ~30 seconds.
 6. Custom domain — Project Settings → Domains → add `visibility.vonpeach.com` and follow the DNS instructions.

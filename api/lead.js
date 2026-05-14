@@ -26,6 +26,7 @@ import { createHash } from 'node:crypto';
 import { buildReportPDF } from '../lib/buildReport.js';
 import { notifyOps }    from '../lib/notify.js';
 import { upsertAuditOnLead } from '../lib/notion-audit.js';
+import { sendGAMpEvent } from '../lib/ga-mp.js';
 import { kv as _kv } from '@vercel/kv';
 
 const RESEND_API = 'https://api.resend.com/emails';
@@ -87,7 +88,8 @@ export default async function handler(req, res) {
     press, contentIdeas, writingIdeas, videoIdeas, pressTargets, // press hits + content/PR ideas (optional)
     platforms, googleRanking,                                    // multi-platform presence + Google name-position
     intent,                                                      // "email" | "walkthrough" - which CTA was clicked at score reveal
-    metaCapi                                                     // { eventId, sourceUrl, userAgent, fbp, fbc } - CAPI deduplication payload
+    metaCapi,                                                    // { eventId, sourceUrl, userAgent, fbp, fbc } - CAPI deduplication payload
+    gaConsent                                                    // "granted" | "denied" - if denied, mirror lead_captured to GA4 server-side
   } = body;
 
   if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -391,9 +393,44 @@ export default async function handler(req, res) {
   }
   })();
 
-  // ── Wait for the parallel batch (Resend + Mailchimp + Meta CAPI) before
-  // notifying Slack, which reports their combined status. ──
-  await Promise.allSettled([emailP, mailchimpP, capiP]);
+  // ── GA4 Measurement Protocol mirror (only when browser-side won't fire) ──
+  // tracking.js boots Consent Mode v2 with analytics_storage='denied', so
+  // leads from users who haven't accepted the cookie banner never reach GA4
+  // standard reports. We fire the server-side equivalent ONLY for that case
+  // — if consent was granted, the browser pixel already sent the event and
+  // a second hit here would double-count it (GA MP has no native event_id
+  // dedup like Meta CAPI). Falls back to firing when gaConsent is missing,
+  // since older sessions / non-index pages may not send the flag.
+  let gaMpOk = false;
+  const gaMpP = (async () => {
+    if (gaConsent === 'granted') return; // browser already counted it
+    const result = await sendGAMpEvent({
+      name:      'lead_captured',
+      email,
+      userAgent: metaCapi?.userAgent || req.headers['user-agent'],
+      ip,
+      params: {
+        currency:     'EUR',
+        value:        intent === 'walkthrough' ? 60 : 30,
+        score:        typeof score === 'number' ? Math.round((score / 18) * 100) : 0,
+        tier:         tier?.name || '',
+        intent:       intent || 'email',
+        role:         role || '',
+        goal:         goal || '',
+        utm_source:   String(attribution?.utm_source   || ''),
+        utm_medium:   String(attribution?.utm_medium   || ''),
+        utm_campaign: String(attribution?.utm_campaign || ''),
+        // Mirror the same event_id Meta CAPI uses, so we can correlate the
+        // two streams when reconciling numbers across GA / Meta.
+        event_id:     metaCapi?.eventId || ''
+      }
+    });
+    gaMpOk = result.ok;
+  })();
+
+  // ── Wait for the parallel batch (Resend + Mailchimp + Meta CAPI + GA MP)
+  // before notifying Slack, which reports their combined status. ──
+  await Promise.allSettled([emailP, mailchimpP, capiP, gaMpP]);
 
   // ── Slack notification - every captured lead ──
   // Set SLACK_WEBHOOK_URL on Vercel (Incoming Webhook from a Slack app) to enable.
@@ -498,6 +535,7 @@ export default async function handler(req, res) {
     mailchimpOk:    mailchimpOk,
     slackNotified:  slackNotified,
     capiOk:         capiOk,
+    gaMpOk:         gaMpOk,
     pdf:            pdfBase64,    // null if PDF build failed
     _pdfError:      pdfError,
     _emailDebug:    emailDebug,
