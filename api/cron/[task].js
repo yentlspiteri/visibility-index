@@ -12,6 +12,7 @@
  */
 
 import { ensureSchema, sql, newId, weekOf } from '../../lib/db.js';
+import { renderBrandedEmail, escapeHtml } from '../../lib/email-template.js';
 
 const RESEND_API = 'https://api.resend.com/emails';
 
@@ -142,17 +143,37 @@ async function weeklyDigest(req, res) {
     const weakest = subKeys.length ? subKeys.reduce((a, b) => subAvg[a] < subAvg[b] ? a : b) : null;
 
     const host = `https://${req.headers.host}`;
-    const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#0c0b09;max-width:560px;margin:0 auto;padding:32px 24px;line-height:1.6">
-      <h2 style="color:#3F36B2;margin:0 0 12px">Your team this week</h2>
-      <p style="color:#56556B;margin:0 0 24px">Week of ${thisWeek} · ${scored.length} tracked</p>
-      <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
-        <tr><td style="padding:10px 14px;background:#fafafa;border-radius:8px"><strong>Team average</strong></td><td style="padding:10px 14px;text-align:right;background:#fafafa;border-radius:8px"><strong>${avg} / 18</strong></td></tr>
-      </table>
-      <p style="margin:6px 0"><strong>Biggest mover:</strong> ${mover ? `${mover.name} (+${mover.delta})` : '—'}</p>
-      <p style="margin:6px 0"><strong>Biggest regression:</strong> ${regression ? `${regression.name} (${regression.delta})` : '—'}</p>
-      <p style="margin:6px 0"><strong>Weakest dimension:</strong> ${weakest || '—'}</p>
-      <p style="margin:28px 0 0"><a href="${host}/team-dashboard" style="background:#3F36B2;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">Open team dashboard</a></p>
-    </body></html>`;
+    const moverHtml      = mover      ? `${escapeHtml(mover.name)} <span style="color:#16a34a;font-weight:700">(+${mover.delta})</span>`              : '—';
+    const regressionHtml = regression ? `${escapeHtml(regression.name)} <span style="color:#b91c1c;font-weight:700">(${regression.delta})</span>`     : '—';
+    const html = renderBrandedEmail({
+      title: `Team visibility — week of ${thisWeek}`,
+      heroEyebrow: `Week of ${thisWeek}`,
+      heroHeadline: `Your team this&nbsp;week.`,
+      bodyHtml: `
+        <p style="font-size:15px;color:#56556B;margin:0 0 24px;text-align:center;">
+          ${scored.length} member${scored.length === 1 ? '' : 's'} tracked
+        </p>
+        <table style="width:100%;border-collapse:separate;border-spacing:0 8px;margin:0 0 18px;">
+          <tr>
+            <td style="padding:14px 16px;background:#f1efff;border-radius:8px;font-size:15px;color:#0c0b09;"><strong>Team average</strong></td>
+            <td style="padding:14px 16px;background:#f1efff;border-radius:8px;font-size:18px;color:#3F36B2;text-align:right;font-weight:700;">${avg} <span style="font-size:12px;color:#56556B;font-weight:400">/ 18</span></td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:8px 0 0 8px;border-right:0;font-size:14px;color:#56556B;">Biggest mover</td>
+            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:0 8px 8px 0;border-left:0;font-size:14px;color:#0c0b09;text-align:right;">${moverHtml}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:8px 0 0 8px;border-right:0;font-size:14px;color:#56556B;">Biggest regression</td>
+            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:0 8px 8px 0;border-left:0;font-size:14px;color:#0c0b09;text-align:right;">${regressionHtml}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:8px 0 0 8px;border-right:0;font-size:14px;color:#56556B;">Weakest dimension</td>
+            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:0 8px 8px 0;border-left:0;font-size:14px;color:#0c0b09;text-align:right;text-transform:capitalize;">${escapeHtml(weakest || '—')}</td>
+          </tr>
+        </table>`,
+      cta: { label: 'Open dashboard', href: `${host}/team-dashboard` },
+      bodyFootnote: 'Re-runs every Monday morning. Pause any time from the dashboard.'
+    });
 
     try {
       const r = await fetch(RESEND_API, {
