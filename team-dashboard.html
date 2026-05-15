@@ -110,7 +110,7 @@
 
   <div class="card">
     <h2>Add team members <span style="font-weight:400;font-size:13px;color:var(--vp-text-grey)" id="seat-counter"></span></h2>
-    <p class="status">Paste LinkedIn URLs (one per row). Display name and email are optional — email only needed if you want to send an opt-in for weekly tracking.</p>
+    <p class="status">Paste LinkedIn URLs (one per row). Display name and email are optional — email only needed if you want to send a member an opt-in for ongoing tracking.</p>
     <div id="add-rows"></div>
     <div class="add-actions">
       <button class="ghost" id="add-row-btn" type="button">+ Add row</button>
@@ -214,7 +214,7 @@
     const grid = document.getElementById('summary-grid');
     grid.innerHTML = `
       <div class="summary-tile"><div class="lbl">Team avg</div><div class="val">${s.avg.toFixed(1)}<span style="font-size:13px;color:var(--vp-text-grey);font-weight:400"> / 18</span></div><div class="sub">${s.count} scored</div></div>
-      <div class="summary-tile"><div class="lbl">Weekly tracking</div><div class="val">${s.tracked}<span style="font-size:13px;color:var(--vp-text-grey);font-weight:400"> / ${s.total}</span></div><div class="sub">re-scored every Monday</div></div>
+      <div class="summary-tile"><div class="lbl">Tracking</div><div class="val">${s.tracked}<span style="font-size:13px;color:var(--vp-text-grey);font-weight:400"> / ${s.total}</span></div><div class="sub">re-scored over time</div></div>
       <div class="summary-tile"><div class="lbl">Weakest dimension</div><div class="val" style="font-size:18px;text-transform:capitalize">${s.weakest || '—'}</div><div class="sub">lowest team avg</div></div>
       <div class="summary-tile"><div class="lbl">Biggest mover</div><div class="val" style="font-size:16px">${s.biggest ? s.biggest.name : '—'}</div><div class="sub">${s.biggest ? (s.biggest.delta >= 0 ? '+' : '') + s.biggest.delta.toFixed(1) + ' over series' : 'need 2+ weeks of data'}</div></div>`;
   }
@@ -244,7 +244,7 @@
       </tr>`;
     }).join('');
     wrap.innerHTML = `<table class="roster">
-      <thead><tr><th>Person</th><th>Tier</th><th>Score</th><th class="hide-sm">Trend</th><th class="hide-sm">Track weekly</th><th class="hide-sm">Actions</th></tr></thead>
+      <thead><tr><th>Person</th><th>Tier</th><th>Score</th><th class="hide-sm">Trend</th><th class="hide-sm">Track</th><th class="hide-sm">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table>`;
 
     wrap.querySelectorAll('[data-act]').forEach(el => {

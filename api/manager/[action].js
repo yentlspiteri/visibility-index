@@ -13,7 +13,7 @@
  *   me          (GET)    — return signed-in manager
  *   team        (GET/POST/DELETE) — roster CRUD
  *   snapshot    (POST)   — persist a /api/score result for a member
- *   tracking    (POST)   — toggle weekly re-scoring
+ *   tracking    (POST)   — toggle scheduled re-scoring (monthly cadence)
  *   notify      (POST)   — send opt-in email to team member
  */
 
@@ -23,7 +23,7 @@ import {
   sessionCookie, clearedCookie, requireManager
 } from '../../lib/auth.js';
 import { upsertManager as mailchimpUpsertManager } from '../../lib/mailchimp-manager.js';
-import { ensureSchema, sql, newId, weekOf } from '../../lib/db.js';
+import { ensureSchema, sql, newId, periodOf } from '../../lib/db.js';
 import { renderBrandedEmail, escapeHtml } from '../../lib/email-template.js';
 
 const RESEND_API = 'https://api.resend.com/emails';
@@ -207,13 +207,13 @@ async function snapshot(req, res) {
     SELECT id FROM team_member WHERE id = ${memberId} AND manager_id = ${manager.id}`;
   if (!owned.length) return res.status(404).json({ error: 'Member not found.' });
 
-  const week = weekOf();
+  const period = periodOf();
   await sql`
     INSERT INTO score_snapshot (id, team_member_id, week_of, total, sub_scores, tier)
-    VALUES (${newId()}, ${memberId}, ${week}, ${total}, ${JSON.stringify(subs)}::jsonb, ${tier})
+    VALUES (${newId()}, ${memberId}, ${period}, ${total}, ${JSON.stringify(subs)}::jsonb, ${tier})
     ON CONFLICT (team_member_id, week_of) DO UPDATE
       SET total = EXCLUDED.total, sub_scores = EXCLUDED.sub_scores, tier = EXCLUDED.tier, captured_at = NOW()`;
-  return res.status(200).json({ ok: true, week_of: week });
+  return res.status(200).json({ ok: true, period });
 }
 
 /* ─────────── tracking ─────────── */
@@ -272,10 +272,10 @@ async function notify(req, res) {
         <strong>${safeManager}</strong> is using the Von Peach <em>Visibility Index</em> to track their team's personal-brand strength on LinkedIn — a six-dimension score based on <strong>public signals only</strong>.
       </p>
       <p style="font-size:15px;line-height:1.6;color:#444;margin:0 0 22px;">
-        They'd like to include you in a weekly check-in so they can spot which of the team is improving, and where there might be room to support each other.
+        They'd like to include you in a periodic check-in so they can spot who's improving, and where there might be room to support each other.
       </p>
       <div style="background:#f1efff;border-left:3px solid #3F36B2;padding:16px 18px;margin:22px 0 28px;border-radius:0 8px 8px 0;">
-        <p style="font-size:14px;line-height:1.55;color:#0c0b09;margin:0 0 6px;"><strong>What gets read:</strong> your public LinkedIn profile + Google footprint. Once a week.</p>
+        <p style="font-size:14px;line-height:1.55;color:#0c0b09;margin:0 0 6px;"><strong>What gets read:</strong> your public LinkedIn profile + Google footprint. A handful of times a year.</p>
         <p style="font-size:14px;line-height:1.55;color:#0c0b09;margin:0;"><strong>Nothing private.</strong> No DMs, no clients, no inbox. We never log in as you.</p>
       </div>
       <p style="text-align:center;margin:24px 0 8px;">

@@ -11,7 +11,7 @@
     }
   },
   "crons": [
-    { "path": "/api/cron/weekly-rescore", "schedule": "0 9 * * 1" },
-    { "path": "/api/cron/weekly-digest",  "schedule": "30 9 * * 1" }
+    { "path": "/api/cron/monthly-rescore", "schedule": "0 9 1 * *" },
+    { "path": "/api/cron/monthly-digest",  "schedule": "30 9 1 * *" }
   ]
 }
