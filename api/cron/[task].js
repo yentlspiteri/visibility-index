@@ -138,37 +138,57 @@ async function monthlyDigest(req, res) {
     const weakest = subKeys.length ? subKeys.reduce((a, b) => subAvg[a] < subAvg[b] ? a : b) : null;
 
     const host = `https://${req.headers.host}`;
-    const moverHtml      = mover      ? `${escapeHtml(mover.name)} <span style="color:#16a34a;font-weight:700">(+${mover.delta})</span>`              : '—';
-    const regressionHtml = regression ? `${escapeHtml(regression.name)} <span style="color:#b91c1c;font-weight:700">(${regression.delta})</span>`     : '—';
+    // Display average as percentage out of 100 — mirrors the audit-report email
+    // (avg/18 → /100), which feels more "score-like" than 13.2/18.
+    const display = Math.round((parseFloat(avg) / 18) * 100);
     // Friendly month label, e.g. "May 2026"
     const periodLabel = new Date(thisPeriod + 'T00:00:00Z').toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+    // Personality line — matches the FutureMakers voice on the report email.
+    // Tone is honest about direction, generous about what's possible.
+    const moverDelta = mover ? mover.delta : 0;
+    const regrDelta  = regression ? regression.delta : 0;
+    const movement   = moverDelta + regrDelta; // net team movement
+    const tonedCopy =
+      !mover && !regression ? "Nothing's shifted yet — the next signal will tell us more."
+      : movement > 0          ? `The team's moving in the right direction. ${escapeHtml(mover.name)} led the way with a ${moverDelta > 0 ? '+' : ''}${moverDelta} jump.`
+      : movement < 0          ? `Quiet month — most of the team held steady. Worth a look at ${escapeHtml(regression?.name || '')} (${regrDelta}).`
+      : 'A mixed month — some moved up, some down. Net flat overall.';
+
+    const moverHtml      = mover      ? `${escapeHtml(mover.name)} <span style="color:#16a34a;font-weight:700">(+${moverDelta})</span>`        : '—';
+    const regressionHtml = regression ? `${escapeHtml(regression.name)} <span style="color:#b91c1c;font-weight:700">(${regrDelta})</span>`     : '—';
+
     const html = renderBrandedEmail({
       title: `Team visibility — ${periodLabel}`,
-      heroEyebrow: periodLabel,
-      heroHeadline: `Your team this&nbsp;month.`,
+      heroEyebrow: `Team visibility · ${periodLabel}`,
+      heroBigStat: String(display),
+      heroBigUnit: '/ 100',
+      heroHeadline: 'Team average',
+      heroSubtitle: `${scored.length} member${scored.length === 1 ? '' : 's'} tracked`,
       bodyHtml: `
-        <p style="font-size:15px;color:#56556B;margin:0 0 24px;text-align:center;">
-          ${scored.length} member${scored.length === 1 ? '' : 's'} tracked
+        <p style="font-size:18px;line-height:1.45;margin:0 0 22px;color:#0c0b09;font-weight:500;">
+          ${tonedCopy}
         </p>
-        <table style="width:100%;border-collapse:separate;border-spacing:0 8px;margin:0 0 18px;">
+
+        <p style="font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#56556B;margin:24px 0 12px;">
+          The headlines
+        </p>
+
+        <table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin:0 0 8px;">
           <tr>
-            <td style="padding:14px 16px;background:#f1efff;border-radius:8px;font-size:15px;color:#0c0b09;"><strong>Team average</strong></td>
-            <td style="padding:14px 16px;background:#f1efff;border-radius:8px;font-size:18px;color:#3F36B2;text-align:right;font-weight:700;">${avg} <span style="font-size:12px;color:#56556B;font-weight:400">/ 18</span></td>
+            <td style="padding:14px 16px;background:#f6f4ff;border-left:3px solid #3F36B2;border-radius:0 8px 8px 0;font-size:14px;color:#56556B;width:42%;">Biggest mover</td>
+            <td style="padding:14px 16px;background:#f6f4ff;border-radius:8px 0 0 8px;font-size:15px;color:#0c0b09;text-align:right;font-weight:600;">${moverHtml}</td>
           </tr>
           <tr>
-            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:8px 0 0 8px;border-right:0;font-size:14px;color:#56556B;">Biggest mover</td>
-            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:0 8px 8px 0;border-left:0;font-size:14px;color:#0c0b09;text-align:right;">${moverHtml}</td>
+            <td style="padding:14px 16px;background:#fafafa;border-left:3px solid #c4b5fd;border-radius:0 8px 8px 0;font-size:14px;color:#56556B;">Biggest regression</td>
+            <td style="padding:14px 16px;background:#fafafa;border-radius:8px 0 0 8px;font-size:15px;color:#0c0b09;text-align:right;font-weight:600;">${regressionHtml}</td>
           </tr>
           <tr>
-            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:8px 0 0 8px;border-right:0;font-size:14px;color:#56556B;">Biggest regression</td>
-            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:0 8px 8px 0;border-left:0;font-size:14px;color:#0c0b09;text-align:right;">${regressionHtml}</td>
-          </tr>
-          <tr>
-            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:8px 0 0 8px;border-right:0;font-size:14px;color:#56556B;">Weakest dimension</td>
-            <td style="padding:12px 16px;background:#fff;border:1px solid rgba(12,11,9,0.06);border-radius:0 8px 8px 0;border-left:0;font-size:14px;color:#0c0b09;text-align:right;text-transform:capitalize;">${escapeHtml(weakest || '—')}</td>
+            <td style="padding:14px 16px;background:#fafafa;border-left:3px solid #c4b5fd;border-radius:0 8px 8px 0;font-size:14px;color:#56556B;">Weakest dimension</td>
+            <td style="padding:14px 16px;background:#fafafa;border-radius:8px 0 0 8px;font-size:15px;color:#0c0b09;text-align:right;font-weight:600;text-transform:capitalize;">${escapeHtml(weakest || '—')}</td>
           </tr>
         </table>`,
-      cta: { label: 'Open dashboard', href: `${host}/team-dashboard` },
+      cta: { label: 'Open team dashboard', href: `${host}/team-dashboard` },
       bodyFootnote: 'Pause any tracked member from the dashboard at any time.'
     });
 
