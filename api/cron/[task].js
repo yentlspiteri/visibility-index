@@ -3,15 +3,16 @@
  * Consolidated to stay under the Hobby-tier serverless-function cap.
  *
  * Tasks:
- *   weekly-rescore  (GET)  — fans out one /api/cron/rescore-one per tracked member
- *   rescore-one     (POST) — scores one member, writes a snapshot
- *   weekly-digest   (GET)  — emails the manager digest
+ *   monthly-rescore  (GET)  — fans out one /api/cron/rescore-one per tracked member
+ *   rescore-one      (POST) — scores one member, writes a snapshot
+ *   monthly-digest   (GET)  — emails the manager digest
  *
  * Vercel cron always sends `Authorization: Bearer ${CRON_SECRET}`. Manual
  * triggers can use `?secret=...` instead.
  */
 
-import { ensureSchema, sql, newId, weekOf } from '../../lib/db.js';
+import { ensureSchema, sql, newId, periodOf, previousPeriodOf } from '../../lib/db.js';
+import { renderBrandedEmail, escapeHtml } from '../../lib/email-template.js';
 
 const RESEND_API = 'https://api.resend.com/emails';
 
@@ -23,30 +24,25 @@ function authed(req) {
   return header === expected || query === expected;
 }
 
-function prevWeekOf() {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() - 7);
-  return weekOf(d);
-}
-
 export default async function handler(req, res) {
   if (!authed(req)) return res.status(401).json({ error: 'Unauthorized' });
   const task = String(req.query?.task || '');
-  if (task === 'weekly-rescore') return weeklyRescore(req, res);
-  if (task === 'rescore-one')    return rescoreOne(req, res);
-  if (task === 'weekly-digest')  return weeklyDigest(req, res);
+  // Accept legacy `weekly-*` names too so any stale references still resolve.
+  if (task === 'monthly-rescore' || task === 'weekly-rescore') return monthlyRescore(req, res);
+  if (task === 'rescore-one')                                  return rescoreOne(req, res);
+  if (task === 'monthly-digest' || task === 'weekly-digest')   return monthlyDigest(req, res);
   return res.status(404).json({ error: `Unknown cron task: ${task}` });
 }
 
-/* ─────────── weekly-rescore: fan out ─────────── */
-async function weeklyRescore(req, res) {
+/* ─────────── monthly-rescore: fan out ─────────── */
+async function monthlyRescore(req, res) {
   await ensureSchema();
-  const week = weekOf();
-  const { rows: due } = await sql`
+  const period = periodOf();
+  const due = await sql`
     SELECT tm.id
     FROM team_member tm
     LEFT JOIN score_snapshot ss
-      ON ss.team_member_id = tm.id AND ss.week_of = ${week}
+      ON ss.team_member_id = tm.id AND ss.week_of = ${period}
     WHERE tm.tracking_enabled = TRUE
       AND tm.consent_state IN ('granted','none')
       AND ss.id IS NULL`;
@@ -60,7 +56,7 @@ async function weeklyRescore(req, res) {
       body: JSON.stringify({ memberId: row.id })
     }).catch(() => {});
   }
-  return res.status(200).json({ ok: true, queued: due.length, week });
+  return res.status(200).json({ ok: true, queued: due.length, period });
 }
 
 /* ─────────── rescore-one: score + persist a single member ─────────── */
@@ -70,7 +66,7 @@ async function rescoreOne(req, res) {
   const memberId = String(req.body?.memberId || '');
   if (!memberId) return res.status(400).json({ error: 'memberId required' });
 
-  const { rows } = await sql`SELECT id, linkedin_url FROM team_member WHERE id = ${memberId}`;
+  const rows = await sql`SELECT id, linkedin_url FROM team_member WHERE id = ${memberId}`;
   if (!rows.length) return res.status(404).json({ error: 'Member not found' });
 
   const host = `https://${req.headers.host}`;
@@ -83,43 +79,43 @@ async function rescoreOne(req, res) {
     const j = await r.json();
     if (!r.ok) return res.status(502).json({ error: j?.error || 'score failed' });
 
-    const week = weekOf();
+    const period = periodOf();
     await sql`
       INSERT INTO score_snapshot (id, team_member_id, week_of, total, sub_scores, tier)
-      VALUES (${newId()}, ${memberId}, ${week}, ${j.total}, ${JSON.stringify(j.subs)}::jsonb, ${j.tier?.name || ''})
+      VALUES (${newId()}, ${memberId}, ${period}, ${j.total}, ${JSON.stringify(j.subs)}::jsonb, ${j.tier?.name || ''})
       ON CONFLICT (team_member_id, week_of) DO UPDATE
         SET total = EXCLUDED.total, sub_scores = EXCLUDED.sub_scores, tier = EXCLUDED.tier, captured_at = NOW()`;
-    return res.status(200).json({ ok: true, week_of: week, total: j.total });
+    return res.status(200).json({ ok: true, period, total: j.total });
   } catch (err) {
     console.error('[rescore-one]', err);
     return res.status(500).json({ error: err?.message });
   }
 }
 
-/* ─────────── weekly-digest: email each manager ─────────── */
-async function weeklyDigest(req, res) {
+/* ─────────── monthly-digest: email each manager ─────────── */
+async function monthlyDigest(req, res) {
   await ensureSchema();
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'RESEND_API_KEY missing' });
 
-  const thisWeek = weekOf();
-  const lastWeek = prevWeekOf();
-  const { rows: managers } = await sql`
+  const thisPeriod = periodOf();
+  const lastPeriod = previousPeriodOf();
+  const managers = await sql`
     SELECT DISTINCT m.id, m.email
     FROM manager m
     JOIN team_member tm ON tm.manager_id = m.id AND tm.tracking_enabled = TRUE
-    JOIN score_snapshot ss ON ss.team_member_id = tm.id AND ss.week_of = ${thisWeek}`;
+    JOIN score_snapshot ss ON ss.team_member_id = tm.id AND ss.week_of = ${thisPeriod}`;
 
   const from = process.env.RESEND_FROM_TRANSACTIONAL || 'Von Peach <hello@vonpeach.com>';
   let sent = 0;
   for (const mgr of managers) {
-    const { rows: members } = await sql`
+    const members = await sql`
       SELECT tm.id, tm.linkedin_url, tm.display_name,
-             this_w.total AS this_total, this_w.sub_scores AS this_subs, this_w.tier AS this_tier,
-             last_w.total AS last_total
+             this_p.total AS this_total, this_p.sub_scores AS this_subs, this_p.tier AS this_tier,
+             last_p.total AS last_total
       FROM team_member tm
-      LEFT JOIN score_snapshot this_w ON this_w.team_member_id = tm.id AND this_w.week_of = ${thisWeek}
-      LEFT JOIN score_snapshot last_w ON last_w.team_member_id = tm.id AND last_w.week_of = ${lastWeek}
+      LEFT JOIN score_snapshot this_p ON this_p.team_member_id = tm.id AND this_p.week_of = ${thisPeriod}
+      LEFT JOIN score_snapshot last_p ON last_p.team_member_id = tm.id AND last_p.week_of = ${lastPeriod}
       WHERE tm.manager_id = ${mgr.id} AND tm.tracking_enabled = TRUE`;
 
     const scored = members.filter(m => m.this_total != null);
@@ -142,27 +138,69 @@ async function weeklyDigest(req, res) {
     const weakest = subKeys.length ? subKeys.reduce((a, b) => subAvg[a] < subAvg[b] ? a : b) : null;
 
     const host = `https://${req.headers.host}`;
-    const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#0c0b09;max-width:560px;margin:0 auto;padding:32px 24px;line-height:1.6">
-      <h2 style="color:#3F36B2;margin:0 0 12px">Your team this week</h2>
-      <p style="color:#56556B;margin:0 0 24px">Week of ${thisWeek} · ${scored.length} tracked</p>
-      <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
-        <tr><td style="padding:10px 14px;background:#fafafa;border-radius:8px"><strong>Team average</strong></td><td style="padding:10px 14px;text-align:right;background:#fafafa;border-radius:8px"><strong>${avg} / 18</strong></td></tr>
-      </table>
-      <p style="margin:6px 0"><strong>Biggest mover:</strong> ${mover ? `${mover.name} (+${mover.delta})` : '—'}</p>
-      <p style="margin:6px 0"><strong>Biggest regression:</strong> ${regression ? `${regression.name} (${regression.delta})` : '—'}</p>
-      <p style="margin:6px 0"><strong>Weakest dimension:</strong> ${weakest || '—'}</p>
-      <p style="margin:28px 0 0"><a href="${host}/team-dashboard" style="background:#3F36B2;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">Open team dashboard</a></p>
-    </body></html>`;
+    // Display average as percentage out of 100 — mirrors the audit-report email
+    // (avg/18 → /100), which feels more "score-like" than 13.2/18.
+    const display = Math.round((parseFloat(avg) / 18) * 100);
+    // Friendly month label, e.g. "May 2026"
+    const periodLabel = new Date(thisPeriod + 'T00:00:00Z').toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+    // Personality line — matches the FutureMakers voice on the report email.
+    // Tone is honest about direction, generous about what's possible.
+    const moverDelta = mover ? mover.delta : 0;
+    const regrDelta  = regression ? regression.delta : 0;
+    const movement   = moverDelta + regrDelta; // net team movement
+    const tonedCopy =
+      !mover && !regression ? "Nothing's shifted yet — the next signal will tell us more."
+      : movement > 0          ? `The team's moving in the right direction. ${escapeHtml(mover.name)} led the way with a ${moverDelta > 0 ? '+' : ''}${moverDelta} jump.`
+      : movement < 0          ? `Quiet month — most of the team held steady. Worth a look at ${escapeHtml(regression?.name || '')} (${regrDelta}).`
+      : 'A mixed month — some moved up, some down. Net flat overall.';
+
+    const moverHtml      = mover      ? `${escapeHtml(mover.name)} <span style="color:#16a34a;font-weight:700">(+${moverDelta})</span>`        : '—';
+    const regressionHtml = regression ? `${escapeHtml(regression.name)} <span style="color:#b91c1c;font-weight:700">(${regrDelta})</span>`     : '—';
+
+    const html = renderBrandedEmail({
+      title: `Team visibility — ${periodLabel}`,
+      heroEyebrow: `Team visibility · ${periodLabel}`,
+      heroBigStat: String(display),
+      heroBigUnit: '/ 100',
+      heroHeadline: 'Team average',
+      heroSubtitle: `${scored.length} member${scored.length === 1 ? '' : 's'} tracked`,
+      bodyHtml: `
+        <p style="font-size:18px;line-height:1.45;margin:0 0 22px;color:#0c0b09;font-weight:500;">
+          ${tonedCopy}
+        </p>
+
+        <p style="font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#56556B;margin:24px 0 12px;">
+          The headlines
+        </p>
+
+        <table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin:0 0 8px;">
+          <tr>
+            <td style="padding:14px 16px;background:#f6f4ff;border-left:3px solid #3F36B2;border-radius:0 8px 8px 0;font-size:14px;color:#56556B;width:42%;">Biggest mover</td>
+            <td style="padding:14px 16px;background:#f6f4ff;border-radius:8px 0 0 8px;font-size:15px;color:#0c0b09;text-align:right;font-weight:600;">${moverHtml}</td>
+          </tr>
+          <tr>
+            <td style="padding:14px 16px;background:#fafafa;border-left:3px solid #c4b5fd;border-radius:0 8px 8px 0;font-size:14px;color:#56556B;">Biggest regression</td>
+            <td style="padding:14px 16px;background:#fafafa;border-radius:8px 0 0 8px;font-size:15px;color:#0c0b09;text-align:right;font-weight:600;">${regressionHtml}</td>
+          </tr>
+          <tr>
+            <td style="padding:14px 16px;background:#fafafa;border-left:3px solid #c4b5fd;border-radius:0 8px 8px 0;font-size:14px;color:#56556B;">Weakest dimension</td>
+            <td style="padding:14px 16px;background:#fafafa;border-radius:8px 0 0 8px;font-size:15px;color:#0c0b09;text-align:right;font-weight:600;text-transform:capitalize;">${escapeHtml(weakest || '—')}</td>
+          </tr>
+        </table>`,
+      cta: { label: 'Open team dashboard', href: `${host}/team-dashboard` },
+      bodyFootnote: 'Pause any tracked member from the dashboard at any time.'
+    });
 
     try {
       const r = await fetch(RESEND_API, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to: [mgr.email], subject: `Team visibility — week of ${thisWeek}`, html })
+        body: JSON.stringify({ from, to: [mgr.email], subject: `Team visibility — ${periodLabel}`, html })
       });
       if (r.ok) sent++;
     } catch (err) {
-      console.error('[weekly-digest] send', mgr.email, err?.message);
+      console.error('[monthly-digest] send', mgr.email, err?.message);
     }
   }
   return res.status(200).json({ ok: true, managers: managers.length, sent });

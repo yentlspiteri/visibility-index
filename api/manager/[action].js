@@ -13,7 +13,7 @@
  *   me          (GET)    — return signed-in manager
  *   team        (GET/POST/DELETE) — roster CRUD
  *   snapshot    (POST)   — persist a /api/score result for a member
- *   tracking    (POST)   — toggle weekly re-scoring
+ *   tracking    (POST)   — toggle scheduled re-scoring (monthly cadence)
  *   notify      (POST)   — send opt-in email to team member
  */
 
@@ -23,7 +23,8 @@ import {
   sessionCookie, clearedCookie, requireManager
 } from '../../lib/auth.js';
 import { upsertManager as mailchimpUpsertManager } from '../../lib/mailchimp-manager.js';
-import { ensureSchema, sql, newId, weekOf } from '../../lib/db.js';
+import { ensureSchema, sql, newId, periodOf } from '../../lib/db.js';
+import { renderBrandedEmail, escapeHtml } from '../../lib/email-template.js';
 
 const RESEND_API = 'https://api.resend.com/emails';
 const SEAT_CAP = 10;
@@ -124,17 +125,19 @@ async function team(req, res) {
   await ensureSchema();
 
   if (req.method === 'GET') {
-    const { rows: members } = await sql`
+    const members = await sql`
       SELECT id, linkedin_url, display_name, member_email, tracking_enabled,
              consent_state, consent_sent_at, added_at
       FROM team_member WHERE manager_id = ${manager.id}
       ORDER BY added_at ASC`;
     if (!members.length) return res.status(200).json({ members: [], seatCap: SEAT_CAP });
     const ids = members.map(m => m.id);
-    const { rows: snapshots } = await sql`
+    // postgres package: `IN ${sql(arr)}` expands a JS array into a SQL list
+    // (works for any non-empty array of scalars).
+    const snapshots = await sql`
       SELECT team_member_id, week_of, total, sub_scores, tier, captured_at
       FROM score_snapshot
-      WHERE team_member_id = ANY(${ids})
+      WHERE team_member_id IN ${sql(ids)}
       ORDER BY week_of ASC`;
     const byMember = {};
     for (const s of snapshots) (byMember[s.team_member_id] = byMember[s.team_member_id] || []).push(s);
@@ -148,7 +151,7 @@ async function team(req, res) {
   if (req.method === 'POST') {
     const incoming = Array.isArray(req.body?.members) ? req.body.members : [];
     if (!incoming.length) return res.status(400).json({ error: 'No members provided.' });
-    const { rows: countRows } = await sql`SELECT COUNT(*)::int AS n FROM team_member WHERE manager_id = ${manager.id}`;
+    const countRows = await sql`SELECT COUNT(*)::int AS n FROM team_member WHERE manager_id = ${manager.id}`;
     const existing = countRows[0].n;
     const remaining = SEAT_CAP - existing;
     if (remaining <= 0) return res.status(400).json({ error: `You're at the ${SEAT_CAP}-seat cap.` });
@@ -200,17 +203,17 @@ async function snapshot(req, res) {
   if (!memberId || !Number.isFinite(total) || !subs || typeof subs !== 'object') {
     return res.status(400).json({ error: 'memberId, total and subs are required.' });
   }
-  const { rows: owned } = await sql`
+  const owned = await sql`
     SELECT id FROM team_member WHERE id = ${memberId} AND manager_id = ${manager.id}`;
   if (!owned.length) return res.status(404).json({ error: 'Member not found.' });
 
-  const week = weekOf();
+  const period = periodOf();
   await sql`
     INSERT INTO score_snapshot (id, team_member_id, week_of, total, sub_scores, tier)
-    VALUES (${newId()}, ${memberId}, ${week}, ${total}, ${JSON.stringify(subs)}::jsonb, ${tier})
+    VALUES (${newId()}, ${memberId}, ${period}, ${total}, ${JSON.stringify(subs)}::jsonb, ${tier})
     ON CONFLICT (team_member_id, week_of) DO UPDATE
       SET total = EXCLUDED.total, sub_scores = EXCLUDED.sub_scores, tier = EXCLUDED.tier, captured_at = NOW()`;
-  return res.status(200).json({ ok: true, week_of: week });
+  return res.status(200).json({ ok: true, period });
 }
 
 /* ─────────── tracking ─────────── */
@@ -222,10 +225,10 @@ async function tracking(req, res) {
   const memberId = String(req.body?.memberId || '');
   const enabled  = Boolean(req.body?.enabled);
   if (!memberId) return res.status(400).json({ error: 'memberId required' });
-  const { rowCount } = await sql`
+  const result = await sql`
     UPDATE team_member SET tracking_enabled = ${enabled}
     WHERE id = ${memberId} AND manager_id = ${manager.id}`;
-  if (!rowCount) return res.status(404).json({ error: 'Member not found.' });
+  if (!result.count) return res.status(404).json({ error: 'Member not found.' });
   return res.status(200).json({ ok: true, tracking_enabled: enabled });
 }
 
@@ -239,7 +242,7 @@ async function notify(req, res) {
   const memberId = String(req.body?.memberId || '');
   if (!memberId) return res.status(400).json({ error: 'memberId required' });
 
-  const { rows } = await sql`
+  const rows = await sql`
     SELECT id, member_email, display_name, linkedin_url
     FROM team_member WHERE id = ${memberId} AND manager_id = ${manager.id}`;
   if (!rows.length) return res.status(404).json({ error: 'Member not found.' });
@@ -258,20 +261,29 @@ async function notify(req, res) {
   const declineUrl = `${host}/api/team-consent?token=${token}&action=decline`;
   const who = m.display_name ? m.display_name.split(' ')[0] : 'there';
 
-  const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#0c0b09;max-width:540px;margin:0 auto;padding:32px 24px;line-height:1.6">
-    <h2 style="color:#3F36B2;margin:0 0 16px">Hi ${who} — quick heads-up from ${manager.email}</h2>
-    <p>${manager.email} is using the <strong>Von Peach Visibility Index</strong> to track their team's personal-brand strength on LinkedIn — a six-dimension score based on public signals only.</p>
-    <p>They'd like to include you in a weekly check-in so they can spot which of you are improving and where the team could use support.</p>
-    <p style="background:#fafafa;border-left:3px solid #3F36B2;padding:12px 16px;margin:20px 0;font-size:14px;color:#56556B">
-      <strong>What gets read:</strong> public LinkedIn data + Google footprint, once a week.<br>
-      <strong>Nothing private.</strong> No DMs, no clients, no inbox.
-    </p>
-    <p style="margin:28px 0 8px">
-      <a href="${grantUrl}" style="background:#3F36B2;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600;margin-right:8px">I'm in</a>
-      <a href="${declineUrl}" style="background:#fff;color:#3F36B2;border:1px solid #3F36B2;padding:11px 22px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600">No thanks</a>
-    </p>
-    <p style="font-size:13px;color:#56556B;margin-top:24px">Either link works once. Either way, you can change your mind later by replying to this email.</p>
-  </body></html>`;
+  const safeManager = escapeHtml(manager.email);
+  const safeWho     = escapeHtml(who);
+  const html = renderBrandedEmail({
+    title: 'A team visibility check-in',
+    heroEyebrow: 'Team visibility · opt-in',
+    heroHeadline: `Hi ${safeWho} — a quick heads-up.`,
+    bodyHtml: `
+      <p style="font-size:17px;line-height:1.55;margin:0 0 18px;color:#0c0b09;">
+        <strong>${safeManager}</strong> is using the Von Peach <em>Visibility Index</em> to track their team's personal-brand strength on LinkedIn — a six-dimension score based on <strong>public signals only</strong>.
+      </p>
+      <p style="font-size:15px;line-height:1.6;color:#444;margin:0 0 22px;">
+        They'd like to include you in a periodic check-in so they can spot who's improving, and where there might be room to support each other.
+      </p>
+      <div style="background:#f1efff;border-left:3px solid #3F36B2;padding:16px 18px;margin:22px 0 28px;border-radius:0 8px 8px 0;">
+        <p style="font-size:14px;line-height:1.55;color:#0c0b09;margin:0 0 6px;"><strong>What gets read:</strong> your public LinkedIn profile + Google footprint. A handful of times a year.</p>
+        <p style="font-size:14px;line-height:1.55;color:#0c0b09;margin:0;"><strong>Nothing private.</strong> No DMs, no clients, no inbox. We never log in as you.</p>
+      </div>
+      <p style="text-align:center;margin:24px 0 8px;">
+        <a href="${grantUrl}" style="display:inline-block;background:#0c0b09;color:#fafafa;padding:16px 28px;border-radius:999px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;margin:0 6px 8px;">I'm in</a>
+        <a href="${declineUrl}" style="display:inline-block;background:#fafafa;color:#0c0b09;border:1.5px solid #0c0b09;padding:14.5px 28px;border-radius:999px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;margin:0 6px 8px;">No thanks</a>
+      </p>`,
+    bodyFootnote: 'Either link works once. You can change your mind any time by replying to this email.'
+  });
 
   const r = await fetch(RESEND_API, {
     method: 'POST',

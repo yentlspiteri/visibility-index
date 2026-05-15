@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   }
   try {
     await ensureSchema();
-    const { rows } = await sql`SELECT team_member_id, expires_at FROM consent_token WHERE token = ${token}`;
+    const rows = await sql`SELECT team_member_id, expires_at FROM consent_token WHERE token = ${token}`;
     if (!rows.length || new Date(rows[0].expires_at).getTime() < Date.now()) {
       res.setHeader('Location', '/team-consent?state=expired');
       return res.status(302).end();

@@ -28,7 +28,7 @@ Hosted on **Vercel**: static frontend + serverless functions on the same domain.
 - **v0.0–v0.2 (shipped)** — Single-URL UX, six-dimension scoring, four tiers, ad-optimised hero, sample-peer pills, UTM capture. All client-side mock scoring on GitHub Pages.
 - **v1 (this repo, current)** — Real backend on Vercel. ProxyCurl + SerpAPI + Claude Haiku → live scoring. Mailchimp wiring → live lead capture with attribution.
 - **v2 (planned, post-launch)** — Once 200+ leads accumulated, swap synthetic peer baselines for a real cohort DB built from opted-in profiles. Relaunch moment.
-- **Team audit (current)** — Manager-facing flow at `/team-audit`. Magic-link sign-in, paste up to 10 LinkedIn URLs, get a team scorecard, optional weekly tracking with quarterly trends and a Monday-morning digest email.
+- **Team audit (current)** — Manager-facing flow at `/team-audit`. Magic-link sign-in, paste up to 10 LinkedIn URLs, get a team scorecard. Optional per-member tracking re-scores on a monthly cadence in the background (not advertised on the lander to avoid over-promising).
 
 ## Team audit setup
 
@@ -41,7 +41,7 @@ The team-audit feature needs Postgres + a session secret + a cron secret on top 
    openssl rand -hex 24   # → CRON_SECRET
    ```
    Add both under Project Settings → Environment Variables.
-3. **Cron is configured in `vercel.json`** — `weekly-rescore` runs Monday 09:00 UTC, `weekly-digest` runs Monday 09:30 UTC. Vercel sends `Authorization: Bearer ${CRON_SECRET}` automatically.
+3. **Cron is configured in `vercel.json`** — `monthly-rescore` runs at 09:00 UTC on the 1st of each month, `monthly-digest` runs 30 min later. Vercel sends `Authorization: Bearer ${CRON_SECRET}` automatically. Legacy `weekly-*` task names still resolve via the dispatcher.
 4. **Schema bootstrap is automatic** — `lib/db.js` creates the tables on first request.
 5. **Transactional email** reuses `RESEND_API_KEY` (already wired for ops alerts). Override the from-line with `RESEND_FROM_TRANSACTIONAL` if you want sign-in / digest / opt-in emails to come from a different verified address than ops alerts.
 
