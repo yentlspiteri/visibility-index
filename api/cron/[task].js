@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 async function weeklyRescore(req, res) {
   await ensureSchema();
   const week = weekOf();
-  const { rows: due } = await sql`
+  const due = await sql`
     SELECT tm.id
     FROM team_member tm
     LEFT JOIN score_snapshot ss
@@ -70,7 +70,7 @@ async function rescoreOne(req, res) {
   const memberId = String(req.body?.memberId || '');
   if (!memberId) return res.status(400).json({ error: 'memberId required' });
 
-  const { rows } = await sql`SELECT id, linkedin_url FROM team_member WHERE id = ${memberId}`;
+  const rows = await sql`SELECT id, linkedin_url FROM team_member WHERE id = ${memberId}`;
   if (!rows.length) return res.status(404).json({ error: 'Member not found' });
 
   const host = `https://${req.headers.host}`;
@@ -104,7 +104,7 @@ async function weeklyDigest(req, res) {
 
   const thisWeek = weekOf();
   const lastWeek = prevWeekOf();
-  const { rows: managers } = await sql`
+  const managers = await sql`
     SELECT DISTINCT m.id, m.email
     FROM manager m
     JOIN team_member tm ON tm.manager_id = m.id AND tm.tracking_enabled = TRUE
@@ -113,7 +113,7 @@ async function weeklyDigest(req, res) {
   const from = process.env.RESEND_FROM_TRANSACTIONAL || 'Von Peach <hello@vonpeach.com>';
   let sent = 0;
   for (const mgr of managers) {
-    const { rows: members } = await sql`
+    const members = await sql`
       SELECT tm.id, tm.linkedin_url, tm.display_name,
              this_w.total AS this_total, this_w.sub_scores AS this_subs, this_w.tier AS this_tier,
              last_w.total AS last_total

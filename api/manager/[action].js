@@ -124,17 +124,19 @@ async function team(req, res) {
   await ensureSchema();
 
   if (req.method === 'GET') {
-    const { rows: members } = await sql`
+    const members = await sql`
       SELECT id, linkedin_url, display_name, member_email, tracking_enabled,
              consent_state, consent_sent_at, added_at
       FROM team_member WHERE manager_id = ${manager.id}
       ORDER BY added_at ASC`;
     if (!members.length) return res.status(200).json({ members: [], seatCap: SEAT_CAP });
     const ids = members.map(m => m.id);
-    const { rows: snapshots } = await sql`
+    // postgres package: `IN ${sql(arr)}` expands a JS array into a SQL list
+    // (works for any non-empty array of scalars).
+    const snapshots = await sql`
       SELECT team_member_id, week_of, total, sub_scores, tier, captured_at
       FROM score_snapshot
-      WHERE team_member_id = ANY(${ids})
+      WHERE team_member_id IN ${sql(ids)}
       ORDER BY week_of ASC`;
     const byMember = {};
     for (const s of snapshots) (byMember[s.team_member_id] = byMember[s.team_member_id] || []).push(s);
@@ -148,7 +150,7 @@ async function team(req, res) {
   if (req.method === 'POST') {
     const incoming = Array.isArray(req.body?.members) ? req.body.members : [];
     if (!incoming.length) return res.status(400).json({ error: 'No members provided.' });
-    const { rows: countRows } = await sql`SELECT COUNT(*)::int AS n FROM team_member WHERE manager_id = ${manager.id}`;
+    const countRows = await sql`SELECT COUNT(*)::int AS n FROM team_member WHERE manager_id = ${manager.id}`;
     const existing = countRows[0].n;
     const remaining = SEAT_CAP - existing;
     if (remaining <= 0) return res.status(400).json({ error: `You're at the ${SEAT_CAP}-seat cap.` });
@@ -200,7 +202,7 @@ async function snapshot(req, res) {
   if (!memberId || !Number.isFinite(total) || !subs || typeof subs !== 'object') {
     return res.status(400).json({ error: 'memberId, total and subs are required.' });
   }
-  const { rows: owned } = await sql`
+  const owned = await sql`
     SELECT id FROM team_member WHERE id = ${memberId} AND manager_id = ${manager.id}`;
   if (!owned.length) return res.status(404).json({ error: 'Member not found.' });
 
@@ -222,10 +224,10 @@ async function tracking(req, res) {
   const memberId = String(req.body?.memberId || '');
   const enabled  = Boolean(req.body?.enabled);
   if (!memberId) return res.status(400).json({ error: 'memberId required' });
-  const { rowCount } = await sql`
+  const result = await sql`
     UPDATE team_member SET tracking_enabled = ${enabled}
     WHERE id = ${memberId} AND manager_id = ${manager.id}`;
-  if (!rowCount) return res.status(404).json({ error: 'Member not found.' });
+  if (!result.count) return res.status(404).json({ error: 'Member not found.' });
   return res.status(200).json({ ok: true, tracking_enabled: enabled });
 }
 
@@ -239,7 +241,7 @@ async function notify(req, res) {
   const memberId = String(req.body?.memberId || '');
   if (!memberId) return res.status(400).json({ error: 'memberId required' });
 
-  const { rows } = await sql`
+  const rows = await sql`
     SELECT id, member_email, display_name, linkedin_url
     FROM team_member WHERE id = ${memberId} AND manager_id = ${manager.id}`;
   if (!rows.length) return res.status(404).json({ error: 'Member not found.' });
