@@ -38,9 +38,13 @@ export default async function handler(req, res) {
   // per day, different user across days. No long-term cross-session ID.
   const clientId = createHash('sha256').update(`${ip}|${ua}|${day}`).digest('hex');
 
-  // Fire-and-forget — we don't make the response wait. If the MP call
-  // fails, the page load is already done; nothing to recover.
-  sendGAMpEvent({
+  // Await the MP call — on Vercel serverless, the lambda freezes the moment
+  // res.end() returns, killing any in-flight fetch. Fire-and-forget here
+  // causes most outbound calls to GA to be cancelled mid-flight (you'll see
+  // "fetch failed" or "no outgoing requests" in function logs). The client
+  // uses keepalive:true and ignores the response, so a 100-200ms wait here
+  // is invisible to the user.
+  await sendGAMpEvent({
     name: 'page_view',
     clientId,
     userAgent: ua,
