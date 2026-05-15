@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Team dashboard | Von Peach Visibility Index</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
+<link rel="stylesheet" href="/shared-chrome.css" />
+<link rel="stylesheet" href="/lander-style.css" />
+<style>
+  body { background: #fafafa; }
+  .dash { max-width: 1080px; margin: 24px auto 80px; padding: 0 24px; }
+  .dash-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px; flex-wrap:wrap; }
+  .dash-head h1 { font-size: 28px; margin: 0; }
+  .dash-head .who { font-size: 14px; color: var(--vp-text-grey); }
+  .dash-head .who a { margin-left: 12px; color: var(--vp-text-grey); text-decoration: underline; cursor: pointer; }
+  .card { background:#fff; border:1px solid rgba(12,11,9,0.08); border-radius:12px; padding:20px; margin-bottom:18px; box-shadow: 0 1px 2px rgba(12,11,9,0.04); }
+  .card h2 { font-size: 18px; margin: 0 0 14px; }
+
+  .add-grid { display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:8px; }
+  .add-grid input { padding:10px 12px; font-size:14px; font-family:inherit; border:1px solid rgba(12,11,9,0.16); border-radius:6px; background:#fafafa; }
+  .add-grid input:focus { outline:none; border-color: var(--vp-indigo); background:#fff; }
+  .add-grid button { padding:10px 16px; background: var(--vp-indigo); color:#fff; border:0; border-radius:6px; font-weight:600; font-family:inherit; cursor:pointer; font-size:14px; }
+  .add-grid button:disabled { opacity:0.5; cursor:not-allowed; }
+  .add-row + .add-row { margin-top: 6px; }
+  .add-actions { display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .add-actions .seat-info { font-size:13px; color: var(--vp-text-grey); }
+  .add-actions button.primary { background:var(--vp-indigo); color:#fff; border:0; padding:12px 22px; border-radius:8px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .add-actions button.ghost { background:#fff; color:var(--vp-indigo); border:1px solid var(--vp-indigo); padding:11px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:inherit; }
+
+  table.roster { width:100%; border-collapse: collapse; }
+  table.roster th { text-align:left; font-size:11px; color: var(--vp-text-grey); text-transform: uppercase; letter-spacing: .04em; padding: 8px 10px; border-bottom: 1px solid rgba(12,11,9,0.08); }
+  table.roster td { padding: 14px 10px; border-bottom: 1px solid rgba(12,11,9,0.05); vertical-align: middle; font-size: 14px; }
+  table.roster tr:last-child td { border-bottom: 0; }
+  .person .name { font-weight: 600; }
+  .person .url { font-size: 12px; color: var(--vp-text-grey); word-break: break-all; }
+  .tier-pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .tier-hidden { background:#fdecec; color:#b91c1c; }
+  .tier-rising { background:#fef3c7; color:#92400e; }
+  .tier-emerging { background:#e0e7ff; color:#3730a3; }
+  .tier-recognised { background:#dcfce7; color:#166534; }
+  .tier-pending { background:#f1f5f9; color: var(--vp-text-grey); font-style: italic; }
+  .score { font-weight: 600; font-size: 16px; }
+  .sparkline { display:block; width: 120px; height: 32px; }
+  .toggle { position: relative; display: inline-block; width: 38px; height: 22px; }
+  .toggle input { display:none; }
+  .toggle .slider { position:absolute; cursor:pointer; inset:0; background:#cbd5e1; border-radius:999px; transition:.2s; }
+  .toggle .slider::before { content:""; position:absolute; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; }
+  .toggle input:checked + .slider { background: var(--vp-indigo); }
+  .toggle input:checked + .slider::before { transform: translateX(16px); }
+  .consent-pill { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; margin-left:8px; }
+  .consent-none { background:#f1f5f9; color: var(--vp-text-grey); }
+  .consent-pending { background:#fef3c7; color:#92400e; }
+  .consent-granted { background:#dcfce7; color:#166534; }
+  .consent-declined { background:#fdecec; color:#b91c1c; }
+  .row-actions { display:flex; gap:8px; align-items:center; }
+  .icon-btn { background:#fff; border:1px solid rgba(12,11,9,0.16); color: var(--vp-text-grey); padding:5px 9px; border-radius:5px; font-size:12px; font-family:inherit; cursor:pointer; }
+  .icon-btn:hover { color: var(--vp-indigo); border-color: var(--vp-indigo); }
+  .icon-btn.danger:hover { color:#b91c1c; border-color:#b91c1c; }
+  .status { font-size:12px; color: var(--vp-text-grey); }
+  .status.running { color: var(--vp-indigo); }
+  .status.err { color:#b91c1c; }
+
+  .summary-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .summary-tile { background:#fafafa; border-radius:10px; padding:14px 16px; }
+  .summary-tile .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color: var(--vp-text-grey); }
+  .summary-tile .val { font-size:22px; font-weight:700; margin-top:4px; color: var(--vp-deep-black); }
+  .summary-tile .sub { font-size:12px; color: var(--vp-text-grey); margin-top:2px; }
+
+  .empty { text-align:center; padding:40px 20px; color: var(--vp-text-grey); }
+  @media (max-width: 720px) {
+    .add-grid { grid-template-columns: 1fr; }
+    table.roster th.hide-sm, table.roster td.hide-sm { display:none; }
+  }
+</style>
+<script src="/tracking.js"></script>
+</head>
+<body>
+
+<div class="dash">
+  <div class="dash-head">
+    <h1>Team dashboard</h1>
+    <div class="who" id="who">Loading…</div>
+  </div>
+
+  <div class="card" id="summary-card" hidden>
+    <h2>Team summary</h2>
+    <div class="summary-grid" id="summary-grid"></div>
+  </div>
+
+  <div class="card">
+    <h2>Add team members <span style="font-weight:400;font-size:13px;color:var(--vp-text-grey)" id="seat-counter"></span></h2>
+    <p class="status">Paste LinkedIn URLs (one per row). Display name and email are optional — email only needed if you want to send an opt-in for weekly tracking.</p>
+    <div id="add-rows"></div>
+    <div class="add-actions">
+      <button class="ghost" id="add-row-btn" type="button">+ Add row</button>
+      <button class="primary" id="save-btn" type="button">Add &amp; score</button>
+      <span class="seat-info" id="seat-info"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Your team</h2>
+    <div id="roster-wrap">
+      <div class="empty" id="empty">No team members yet — add some above.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TIERS_MAP = {
+    'The Hidden Gem':         'tier-hidden',
+    'The Rising Voice':       'tier-rising',
+    'The Emerging Authority': 'tier-emerging',
+    'The Recognised Leader':  'tier-recognised'
+  };
+  let SEAT_CAP = 10;
+  let MEMBERS = [];
+  const SCORE_STATUS = new Map(); // memberId -> 'running' | 'ok' | 'err'
+
+  async function api(path, opts = {}) {
+    const r = await fetch(path, { credentials: 'same-origin', ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }});
+    if (r.status === 401) { location.href = '/team-audit?err=link'; throw new Error('unauthed'); }
+    return r;
+  }
+
+  function buildAddRow(initial = {}) {
+    const wrap = document.createElement('div');
+    wrap.className = 'add-row add-grid';
+    wrap.innerHTML = `
+      <input type="url" data-k="linkedin_url" placeholder="linkedin.com/in/janedoe" value="${initial.linkedin_url || ''}" />
+      <input type="text" data-k="display_name" placeholder="Display name (optional)" value="${initial.display_name || ''}" />
+      <input type="email" data-k="member_email" placeholder="Their email (optional)" value="${initial.member_email || ''}" />
+      <button type="button" class="ghost" data-act="remove" style="background:#fff;color:var(--vp-text-grey);border:1px solid rgba(12,11,9,0.16);padding:8px 12px;border-radius:6px;cursor:pointer">×</button>`;
+    wrap.querySelector('[data-act="remove"]').addEventListener('click', () => wrap.remove());
+    return wrap;
+  }
+
+  function renderAdd() {
+    const host = document.getElementById('add-rows');
+    host.innerHTML = '';
+    host.appendChild(buildAddRow());
+  }
+
+  function tierClass(name) { return TIERS_MAP[name] || 'tier-pending'; }
+  function consentPill(state) {
+    const cls = { granted: 'consent-granted', declined: 'consent-declined', pending: 'consent-pending', none: 'consent-none' }[state] || 'consent-none';
+    const label = { granted: 'opt-in', declined: 'declined', pending: 'opt-in sent', none: 'not notified' }[state] || state;
+    return `<span class="consent-pill ${cls}">${label}</span>`;
+  }
+
+  function sparkline(series) {
+    if (!series || series.length < 2) return '<span style="color:var(--vp-text-grey);font-size:12px">—</span>';
+    const pts = series.map(s => s.total);
+    const w = 120, h = 32, pad = 2;
+    const min = 0, max = 18;
+    const xs = pts.map((_, i) => pad + (i * (w - 2 * pad)) / (pts.length - 1));
+    const ys = pts.map(v => h - pad - ((v - min) / (max - min)) * (h - 2 * pad));
+    const d = xs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+    const last = pts.length - 1;
+    return `<svg class="sparkline" viewBox="0 0 ${w} ${h}"><path d="${d}" fill="none" stroke="#3F36B2" stroke-width="2"/><circle cx="${xs[last].toFixed(1)}" cy="${ys[last].toFixed(1)}" r="2.5" fill="#3F36B2"/></svg>`;
+  }
+
+  function summarise(members) {
+    const scored = members.filter(m => m.latest);
+    if (!scored.length) return null;
+    const avg = scored.reduce((s, m) => s + m.latest.total, 0) / scored.length;
+    const tierCounts = {};
+    for (const m of scored) tierCounts[m.latest.tier] = (tierCounts[m.latest.tier] || 0) + 1;
+    // Biggest mover (delta between latest and earliest in series)
+    let biggest = null;
+    for (const m of scored) {
+      if (m.series.length < 2) continue;
+      const delta = m.series[m.series.length - 1].total - m.series[0].total;
+      if (!biggest || Math.abs(delta) > Math.abs(biggest.delta)) biggest = { name: m.display_name || m.linkedin_url, delta };
+    }
+    // Weakest dimension across team (lowest avg sub-score)
+    const subKeys = scored[0]?.latest?.sub_scores ? Object.keys(scored[0].latest.sub_scores) : [];
+    const subAvg = {};
+    for (const k of subKeys) {
+      const vals = scored.map(m => Number(m.latest.sub_scores?.[k]) || 0);
+      subAvg[k] = vals.reduce((a, b) => a + b, 0) / vals.length;
+    }
+    const weakest = subKeys.length ? subKeys.reduce((a, b) => subAvg[a] < subAvg[b] ? a : b) : null;
+    const tracked = members.filter(m => m.tracking_enabled).length;
+    return { avg, weakest, tracked, biggest, count: scored.length, total: members.length };
+  }
+
+  function renderSummary() {
+    const s = summarise(MEMBERS);
+    const card = document.getElementById('summary-card');
+    if (!s) { card.hidden = true; return; }
+    card.hidden = false;
+    const grid = document.getElementById('summary-grid');
+    grid.innerHTML = `
+      <div class="summary-tile"><div class="lbl">Team avg</div><div class="val">${s.avg.toFixed(1)}<span style="font-size:13px;color:var(--vp-text-grey);font-weight:400"> / 18</span></div><div class="sub">${s.count} scored</div></div>
+      <div class="summary-tile"><div class="lbl">Weekly tracking</div><div class="val">${s.tracked}<span style="font-size:13px;color:var(--vp-text-grey);font-weight:400"> / ${s.total}</span></div><div class="sub">re-scored every Monday</div></div>
+      <div class="summary-tile"><div class="lbl">Weakest dimension</div><div class="val" style="font-size:18px;text-transform:capitalize">${s.weakest || '—'}</div><div class="sub">lowest team avg</div></div>
+      <div class="summary-tile"><div class="lbl">Biggest mover</div><div class="val" style="font-size:16px">${s.biggest ? s.biggest.name : '—'}</div><div class="sub">${s.biggest ? (s.biggest.delta >= 0 ? '+' : '') + s.biggest.delta.toFixed(1) + ' over series' : 'need 2+ weeks of data'}</div></div>`;
+  }
+
+  function renderRoster() {
+    const wrap = document.getElementById('roster-wrap');
+    if (!MEMBERS.length) {
+      wrap.innerHTML = '<div class="empty">No team members yet — add some above.</div>';
+      return;
+    }
+    const rows = MEMBERS.map(m => {
+      const status = SCORE_STATUS.get(m.id);
+      const latestTier = m.latest?.tier || (status === 'running' ? 'Scoring…' : (status === 'err' ? 'Failed' : 'Pending'));
+      const tierCls = m.latest ? tierClass(m.latest.tier) : (status === 'err' ? 'tier-hidden' : 'tier-pending');
+      const score = m.latest ? `<span class="score">${m.latest.total}<span style="color:var(--vp-text-grey);font-weight:400;font-size:12px"> /18</span></span>` : `<span class="status ${status === 'err' ? 'err' : (status === 'running' ? 'running' : '')}">${status === 'running' ? 'Running…' : '—'}</span>`;
+      const name = m.display_name || (m.linkedin_url.split('/in/')[1] || m.linkedin_url);
+      const notifyBtn = m.member_email
+        ? `<button class="icon-btn" data-act="notify" data-id="${m.id}" ${m.consent_state === 'pending' ? 'disabled' : ''}>${m.consent_state === 'pending' ? 'Sent' : 'Send opt-in'}</button>`
+        : `<span class="status" title="Add an email on this row to enable opt-in">no email</span>`;
+      return `<tr>
+        <td class="person"><div class="name">${name}</div><div class="url">${m.linkedin_url}${consentPill(m.consent_state)}</div></td>
+        <td><span class="tier-pill ${tierCls}">${latestTier}</span></td>
+        <td>${score}</td>
+        <td class="hide-sm">${sparkline(m.series)}</td>
+        <td class="hide-sm"><label class="toggle"><input type="checkbox" data-act="track" data-id="${m.id}" ${m.tracking_enabled ? 'checked' : ''}/><span class="slider"></span></label></td>
+        <td class="hide-sm"><div class="row-actions">${notifyBtn}<button class="icon-btn" data-act="rescore" data-id="${m.id}">Re-score</button><button class="icon-btn danger" data-act="remove" data-id="${m.id}">Remove</button></div></td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table class="roster">
+      <thead><tr><th>Person</th><th>Tier</th><th>Score</th><th class="hide-sm">Trend</th><th class="hide-sm">Track weekly</th><th class="hide-sm">Actions</th></tr></thead>
+      <tbody>${rows}</tbody></table>`;
+
+    wrap.querySelectorAll('[data-act]').forEach(el => {
+      el.addEventListener(el.tagName === 'INPUT' ? 'change' : 'click', onAction);
+    });
+    renderSummary();
+    updateSeatCounter();
+  }
+
+  async function onAction(e) {
+    const el = e.currentTarget;
+    const act = el.dataset.act;
+    const id = el.dataset.id;
+    if (act === 'track') {
+      await api('/api/manager/tracking', { method: 'POST', body: JSON.stringify({ memberId: id, enabled: el.checked }) });
+      const m = MEMBERS.find(x => x.id === id); if (m) m.tracking_enabled = el.checked;
+      renderSummary();
+    } else if (act === 'notify') {
+      el.disabled = true; el.textContent = 'Sending…';
+      const r = await api('/api/manager/notify', { method: 'POST', body: JSON.stringify({ memberId: id }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok) { const m = MEMBERS.find(x => x.id === id); if (m) m.consent_state = 'pending'; }
+      else alert(j.error || 'Could not send.');
+      renderRoster();
+    } else if (act === 'rescore') {
+      const m = MEMBERS.find(x => x.id === id); if (!m) return;
+      scoreOne(m);
+    } else if (act === 'remove') {
+      if (!confirm('Remove this person and all their score history?')) return;
+      await api('/api/manager/team', { method: 'DELETE', body: JSON.stringify({ id }) });
+      MEMBERS = MEMBERS.filter(x => x.id !== id);
+      renderRoster();
+    }
+  }
+
+  function updateSeatCounter() {
+    document.getElementById('seat-counter').textContent = `(${MEMBERS.length} / ${SEAT_CAP} seats used)`;
+    document.getElementById('seat-info').textContent = MEMBERS.length >= SEAT_CAP ? `Seat cap reached. Email yentl@vonpeach.com for a larger team.` : `${SEAT_CAP - MEMBERS.length} seats left.`;
+  }
+
+  async function loadTeam() {
+    const r = await api('/api/manager/team');
+    const j = await r.json();
+    MEMBERS = j.members || [];
+    if (j.seatCap) SEAT_CAP = j.seatCap;
+    renderRoster();
+  }
+
+  async function scoreOne(member) {
+    SCORE_STATUS.set(member.id, 'running');
+    renderRoster();
+    try {
+      const r = await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: 'https://' + member.linkedin_url })
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Score failed');
+      await api('/api/manager/snapshot', {
+        method: 'POST',
+        body: JSON.stringify({ memberId: member.id, total: j.total, subs: j.subs, tier: j.tier?.name || '' })
+      });
+      // Refresh latest + series for this member
+      const team = await (await api('/api/manager/team')).json();
+      MEMBERS = team.members || [];
+      SCORE_STATUS.set(member.id, 'ok');
+      renderRoster();
+    } catch (err) {
+      SCORE_STATUS.set(member.id, 'err');
+      renderRoster();
+      console.error('[score]', member.linkedin_url, err);
+    }
+  }
+
+  async function addMembers() {
+    const rows = Array.from(document.querySelectorAll('#add-rows .add-row')).map(row => {
+      const data = {};
+      row.querySelectorAll('input').forEach(i => { data[i.dataset.k] = i.value.trim(); });
+      return data;
+    }).filter(r => r.linkedin_url);
+    if (!rows.length) return;
+
+    const remaining = SEAT_CAP - MEMBERS.length;
+    if (remaining <= 0) { alert('Seat cap reached.'); return; }
+
+    const r = await api('/api/manager/team', { method: 'POST', body: JSON.stringify({ members: rows }) });
+    const j = await r.json();
+    if (!r.ok) { alert(j.error || 'Add failed'); return; }
+    if (j.rejected?.length) alert(`Skipped ${j.rejected.length} invalid URL(s).`);
+    // Optimistically add to MEMBERS list, then score each in parallel.
+    const fresh = (j.accepted || []).map(a => ({ ...a, tracking_enabled: false, consent_state: 'none', series: [], latest: null }));
+    MEMBERS = MEMBERS.concat(fresh);
+    renderAdd();
+    renderRoster();
+    fresh.forEach(scoreOne);
+  }
+
+  async function loadMe() {
+    const r = await api('/api/manager/me');
+    if (!r.ok) { location.href = '/team-audit?err=link'; return; }
+    const j = await r.json();
+    document.getElementById('who').innerHTML = `Signed in as <strong>${j.email}</strong> <a id="logout-btn">Sign out</a>`;
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/manager/logout', { method: 'POST', credentials: 'same-origin' });
+      location.href = '/team-audit';
+    });
+  }
+
+  document.getElementById('add-row-btn').addEventListener('click', () => {
+    document.getElementById('add-rows').appendChild(buildAddRow());
+  });
+  document.getElementById('save-btn').addEventListener('click', addMembers);
+
+  (async () => {
+    renderAdd();
+    await loadMe();
+    await loadTeam();
+  })();
+</script>
+</body>
+</html>

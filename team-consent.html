@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your tracking preference | Von Peach</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
+<link rel="stylesheet" href="/shared-chrome.css" />
+<link rel="stylesheet" href="/lander-style.css" />
+<style>
+  body { background:#fafafa; }
+  .panel { max-width: 560px; margin: 80px auto; background:#fff; border:1px solid rgba(12,11,9,0.08); border-radius:14px; padding:40px 32px; box-shadow:0 1px 2px rgba(12,11,9,0.04); text-align:center; }
+  .panel h1 { font-size:24px; margin: 0 0 12px; color: var(--vp-indigo); }
+  .panel p { color: var(--vp-text-grey); line-height:1.6; margin: 8px 0; }
+  .panel .icon { font-size: 40px; margin-bottom: 10px; line-height: 1; }
+  .panel a.button { display:inline-block; margin-top: 22px; background: var(--vp-indigo); color:#fff; padding: 12px 22px; border-radius:8px; text-decoration:none; font-weight:600; }
+</style>
+<script src="/tracking.js"></script>
+</head>
+<body>
+<div class="panel" id="panel">
+  <h1>Loading…</h1>
+</div>
+<script>
+  const STATES = {
+    granted:  { title: "You're in.",            body: "Thanks — your manager will see your weekly score on their dashboard. Public LinkedIn data only. You can opt out any time by replying to the email." },
+    declined: { title: "Got it — you're out.",  body: "We've recorded your preference. Your score won't be tracked over time. The one-shot snapshot they already saw won't be re-run." },
+    expired:  { title: "This link has expired.", body: "Reply to the email your manager sent and we'll send a fresh link. Or ignore it — nothing will happen automatically." },
+    error:    { title: "Something went wrong.", body: "We couldn't process that link. Reply to your manager's email and we'll sort it out." }
+  };
+  const state = new URLSearchParams(location.search).get('state') || 'error';
+  const cfg = STATES[state] || STATES.error;
+  document.getElementById('panel').innerHTML = `
+    <h1>${cfg.title}</h1>
+    <p>${cfg.body}</p>
+    <a class="button" href="/">Visit the Visibility Index</a>`;
+</script>
+</body>
+</html>

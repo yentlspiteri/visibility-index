@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Team visibility audit for managers | Von Peach</title>
+<meta name="description" content="Score your whole team's LinkedIn visibility in one place. Six dimensions, one team scorecard, optional weekly tracking. Up to 10 team members, free." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://index.vonpeach.com/team-audit" />
+<meta property="og:title" content="Team visibility audit — measure your team's personal-brand strength" />
+<meta property="og:description" content="One scorecard for the whole team. Optional weekly tracking shows who's improving and where the gaps are." />
+<meta property="og:url" content="https://index.vonpeach.com/team-audit" />
+<meta property="og:image" content="https://index.vonpeach.com/img/og.jpg" />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
+<meta name="theme-color" content="#3F36B2" />
+
+<link rel="stylesheet" href="/shared-chrome.css" />
+<link rel="stylesheet" href="/lander-style.css" />
+<style>
+  .signin-card {
+    background: #fff;
+    border: 1px solid rgba(12,11,9,0.08);
+    border-radius: 14px;
+    padding: 32px;
+    margin: 24px 0 8px;
+    box-shadow: 0 1px 2px rgba(12,11,9,0.04);
+  }
+  .signin-card label { display:block; font-size:13px; font-weight:600; color: var(--vp-text-grey); margin-bottom:8px; letter-spacing: .02em; text-transform: uppercase; }
+  .signin-card input[type=email] {
+    width: 100%; padding: 14px 16px; font-size: 16px; font-family: inherit;
+    border: 1px solid rgba(12,11,9,0.16); border-radius: 8px; background: #fafafa; color: var(--vp-deep-black);
+  }
+  .signin-card input[type=email]:focus { outline: none; border-color: var(--vp-indigo); background: #fff; }
+  .signin-card .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:14px; }
+  .signin-card button {
+    background: var(--vp-indigo); color: #fff; border: 0; padding: 14px 24px; border-radius: 8px;
+    font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .signin-card button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .signin-card .hint { font-size: 13px; color: var(--vp-text-grey); margin: 0; }
+  .signin-card .msg { margin-top: 16px; padding: 12px 14px; border-radius: 8px; font-size: 14px; }
+  .signin-card .msg.ok  { background: rgba(63,54,178,0.08); color: var(--vp-indigo); }
+  .signin-card .msg.err { background: #fdecec; color: #b91c1c; }
+  .bullet-list { padding-left: 18px; margin: 18px 0; color: var(--vp-deep-black); }
+  .bullet-list li { margin: 8px 0; line-height: 1.6; }
+</style>
+<script src="/tracking.js"></script>
+</head>
+<body>
+
+<nav class="top">
+  <div class="container-wide">
+    <a href="/" class="logo" aria-label="Visibility Index — homepage">
+      <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#0c0b09"><circle cx="540" cy="540" r="300"/></g></svg>
+    </a>
+    <div class="nav-right">
+      <a href="/" class="nav-link nav-link-desktop">Individual audit</a>
+      <a href="/methodology" class="nav-link nav-link-desktop">Methodology</a>
+      <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
+    </div>
+  </div>
+</nav>
+
+<header class="lander-hero">
+  <div class="container">
+    <div class="eyebrow-row"><span class="dot"></span><span class="eyebrow">For team leaders · up to 10 seats · free</span></div>
+    <h1>Measure your team's<br/>visibility in one place.</h1>
+    <p class="lede">
+      Paste up to 10 LinkedIn URLs. Get a single team scorecard — six visibility dimensions per person,
+      tier badges, weak-spot heat map. Optional weekly tracking shows who's improving and where the gaps are.
+    </p>
+
+    <div class="signin-card">
+      <label for="email">Your work email</label>
+      <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="you@company.com" />
+      <div class="row">
+        <button id="submit" type="button">Send me the link</button>
+        <p class="hint">We'll email you a one-click sign-in link. No password.</p>
+      </div>
+      <div id="msg" class="msg" hidden></div>
+    </div>
+
+    <div class="trust-row">
+      <span>10 seats free</span>
+      <span>Weekly tracking is opt-in</span>
+      <span>Public LinkedIn data only</span>
+      <span>GDPR-compliant</span>
+    </div>
+  </div>
+</header>
+
+<section class="lander-section">
+  <div class="container">
+    <div class="eyebrow-row" style="margin-bottom:14px"><span class="dot"></span><span class="eyebrow">What you get</span></div>
+    <h2>One scorecard for the whole team.</h2>
+    <ul class="bullet-list">
+      <li><strong>Per-person tier</strong> — Hidden Gem, Rising Voice, Emerging Authority, Recognised Leader.</li>
+      <li><strong>Six sub-scores</strong> per person: footprint, clarity, authority, cadence, visual, network.</li>
+      <li><strong>Team aggregate</strong> — average score, weakest dimension across the team, biggest mover.</li>
+      <li><strong>Optional weekly tracking</strong> — toggle per person. We'll re-score every Monday and email you a Monday-morning digest.</li>
+      <li><strong>Quarterly trend lines</strong> — sparkline per person, see who's actually moving.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="lander-section" style="background:#fafafa">
+  <div class="container">
+    <div class="eyebrow-row" style="margin-bottom:14px"><span class="dot"></span><span class="eyebrow">How tracking works</span></div>
+    <h2>Tracking is off by default.</h2>
+    <p>
+      One-shot scoring uses public LinkedIn data only — same as our individual audit. Weekly tracking is something you flip on per person from the dashboard.
+      When you turn it on, you can also send the team member an opt-in email so they know what's happening.
+      Either way, we only ever read public signals — never DMs, clients, or anything behind a login.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="container-wide">
+    <p>© Von Peach GmbH · <a href="/privacy">Privacy</a> · <a href="/methodology">Methodology</a></p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    const params = new URLSearchParams(location.search);
+    const msg = document.getElementById('msg');
+    if (params.get('err') === 'link') {
+      msg.hidden = false;
+      msg.className = 'msg err';
+      msg.textContent = 'That sign-in link expired or was already used. Enter your email below to get a fresh one.';
+    } else if (params.get('err') === 'server') {
+      msg.hidden = false;
+      msg.className = 'msg err';
+      msg.textContent = 'Something went wrong on our end. Try again in a moment.';
+    }
+
+    const btn = document.getElementById('submit');
+    const input = document.getElementById('email');
+    async function submit() {
+      const email = input.value.trim();
+      if (!email) { input.focus(); return; }
+      btn.disabled = true;
+      msg.hidden = true;
+      try {
+        const r = await fetch('/api/manager/magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const j = await r.json().catch(() => ({}));
+        msg.hidden = false;
+        if (r.ok) {
+          msg.className = 'msg ok';
+          msg.textContent = `Check ${email} for a sign-in link. It works for 30 minutes.`;
+          if (window.track) window.track('team_audit_signin_requested', { email_hash_required: true });
+        } else {
+          msg.className = 'msg err';
+          msg.textContent = j.error || 'Could not send. Try again.';
+        }
+      } catch {
+        msg.hidden = false;
+        msg.className = 'msg err';
+        msg.textContent = 'Network error. Try again.';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    btn.addEventListener('click', submit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  })();
+</script>
+</body>
+</html>

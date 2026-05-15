@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@vercel/kv": "^3.0.0",
+    "@vercel/postgres": "^0.10.0",
     "pdf-lib": "^1.17.1"
   }
 }
