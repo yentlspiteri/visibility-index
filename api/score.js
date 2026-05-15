@@ -13,7 +13,7 @@
  */
 
 import { notifyOps } from '../lib/notify.js';
-import { logAuditCompleted } from '../lib/notion-audit.js';
+import { logAuditStarted, updateAuditRow, logAuditCompleted } from '../lib/notion-audit.js';
 
 // Vercel KV — shared state across function instances.
 // Falls back silently to in-memory when KV_REST_API_URL is not set
@@ -113,11 +113,28 @@ export default async function handler(req, res) {
     return res.status(200).json({ ...cachedPayload, _cached: true });
   }
 
+  // Log the submission to Notion BEFORE the Apify capacity gate, so every
+  // handle a user submits gets a row — including ones that bounce off the
+  // 503 waitlist or fail the scrape. Fire-and-forget; runs in parallel with
+  // everything below and adds zero latency to the critical path.
+  const fullUrl = `https://www.${normalised}/`;
+  const auditRowIdPromise = logAuditStarted({
+    linkedinUrl: fullUrl,
+    role:        body.role || '',
+    goal:        body.goal || '',
+    utmSource:   body.attribution?.utm_source   || '',
+    utmCampaign: body.attribution?.utm_campaign || '',
+    clickId:     body.attribution?.fbclid || body.attribution?.gclid || ''
+  }).catch(() => null);
+
   // Apify concurrency gate — prevents LinkedIn from blocking our actor token
   // when paid traffic causes many simultaneous scrapes.
   const apifySlotAcquired = await acquireApifySlot();
   if (!apifySlotAcquired) {
     console.warn(`[score] Apify at capacity (>${MAX_CONCURRENT_APIFY} in-flight) — returning waitlist`);
+    auditRowIdPromise.then(id => updateAuditRow(id, {
+      notes: '[apify-capacity] slot gate refused — user shown waitlist card'
+    })).catch(() => {});
     return res.status(503).json({
       error: 'Our scanner is at capacity right now. Leave your email and we\'ll ping you in ~10 minutes.',
       _waitlist: true
@@ -125,10 +142,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Build a fully-qualified LinkedIn URL with trailing slash - some Apify actors
-    // (e.g. supreme_coder) reject URLs without it as "not valid".
-    const fullUrl = `https://www.${normalised}/`;
-
     // Start the posts scraper immediately — it only needs the URL, not the profile.
     // Running in parallel with Stage 1 (fetchApify) removes it from the critical path
     // entirely (~8-12s saved vs. running it in Stage 2 after the profile returns).
@@ -197,6 +210,12 @@ export default async function handler(req, res) {
           }
         }).catch(() => {}); // fire-and-forget
       }
+
+      // Stamp the failure reason into the Notion row so we can see exactly which
+      // handles fail and why (404s vs. private vs. rate-limit). Fire-and-forget.
+      auditRowIdPromise.then(id => updateAuditRow(id, {
+        notes: `[${alertCategory || 'user-error'}] ${errMsg.slice(0, 500)}`
+      })).catch(() => {});
 
       return res.status(502).json({
         error:     userError,
@@ -358,10 +377,12 @@ export default async function handler(req, res) {
     const tier  = tierFor(total);
     const nextTier = TIERS.find(t => t.min > tier.max) || tier;
 
-    // Persist the audit row to Notion. Fire-and-forget - never blocks the
+    // Persist the audit results to Notion. Fire-and-forget - never blocks the
     // response, never throws. If NOTION_AUDITS_DATABASE_ID isn't set, it no-ops.
-    // Status starts at "audit_completed"; /api/lead and the Calendly webhook
-    // upsert the row to "email_submitted" / "walkthrough_booked" later.
+    // We PATCH the row created by logAuditStarted earlier (upgrading its status
+    // from audit_started to audit_completed); if that row didn't get created for
+    // any reason, fall back to a fresh CREATE.
+    // /api/lead and the Calendly webhook upsert later to email_submitted / walkthrough_booked.
     const _notionFirst = getFirstName(profile);
     const _notionLast  = getLastName(profile);
     if (!_notionFirst && !_notionLast) {
@@ -369,7 +390,7 @@ export default async function handler(req, res) {
       // which key the actor used (check Vercel function logs for "[Notion names blank]").
       console.warn('[Notion names blank] profile keys:', Object.keys(profile || {}).slice(0, 30).join(', '));
     }
-    logAuditCompleted({
+    const _auditPayload = {
       linkedinUrl: normalised ? `https://www.${normalised}/` : null,
       firstName:   _notionFirst,
       lastName:    _notionLast,
@@ -383,6 +404,10 @@ export default async function handler(req, res) {
       utmSource:   body.attribution?.utm_source   || '',
       utmCampaign: body.attribution?.utm_campaign || '',
       clickId:     body.attribution?.fbclid || body.attribution?.gclid || ''
+    };
+    auditRowIdPromise.then(async id => {
+      const patched = await updateAuditRow(id, { ..._auditPayload, status: 'audit_completed' });
+      if (!patched) await logAuditCompleted(_auditPayload);
     }).catch(() => {});
 
     const responsePayload = {
