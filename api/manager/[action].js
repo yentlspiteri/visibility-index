@@ -52,6 +52,7 @@ export default async function handler(req, res) {
   if (action === 'snapshot')    return snapshot(req, res);
   if (action === 'tracking')    return tracking(req, res);
   if (action === 'notify')      return notify(req, res);
+  if (action === 'invite')      return invite(req, res);
   return res.status(404).json({ error: `Unknown manager action: ${action}` });
 }
 
@@ -293,4 +294,36 @@ async function notify(req, res) {
   if (!r.ok) return res.status(502).json({ error: `Email sender rejected: ${r.status}` });
   await sql`UPDATE team_member SET consent_state = 'pending', consent_sent_at = NOW() WHERE id = ${m.id}`;
   return res.status(200).json({ ok: true });
+}
+
+/* ─────────── invite (shareable self-join link) ─────────── */
+async function invite(req, res) {
+  const manager = await requireManager(req, res);
+  if (!manager) return;
+  await ensureSchema();
+
+  // GET → return the manager's current invite token, creating one if absent.
+  // POST { revoke: true } → rotate the token (old links die immediately).
+  if (req.method === 'GET') {
+    const rows = await sql`SELECT invite_token FROM manager WHERE id = ${manager.id}`;
+    let token = rows[0]?.invite_token;
+    if (!token) {
+      token = newId() + newId().slice(0, 10); // ~32 chars, plenty of entropy
+      await sql`UPDATE manager SET invite_token = ${token}, invite_created_at = NOW() WHERE id = ${manager.id}`;
+    }
+    const host = `https://${req.headers.host}`;
+    return res.status(200).json({ token, url: `${host}/team-invite?token=${token}` });
+  }
+
+  if (req.method === 'POST') {
+    if (req.body?.revoke) {
+      const token = newId() + newId().slice(0, 10);
+      await sql`UPDATE manager SET invite_token = ${token}, invite_created_at = NOW() WHERE id = ${manager.id}`;
+      const host = `https://${req.headers.host}`;
+      return res.status(200).json({ token, url: `${host}/team-invite?token=${token}`, rotated: true });
+    }
+    return res.status(400).json({ error: 'Send { revoke: true } to rotate the invite token.' });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
 }
