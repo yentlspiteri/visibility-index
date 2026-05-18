@@ -38,6 +38,21 @@ export default async function handler(req, res) {
   // per day, different user across days. No long-term cross-session ID.
   const clientId = createHash('sha256').update(`${ip}|${ua}|${day}`).digest('hex');
 
+  // Stitch the original UTM params back onto page_location. GA4's automatic
+  // traffic-source attribution only kicks in when utm_* are present in the
+  // page_location URL — not from custom event params. The landing page has
+  // them, but every subsequent page navigation strips them. tracking.js
+  // captured them in localStorage on first land and replays them in every
+  // /api/pv body as the `attribution` object, so we can re-attach here.
+  let pageLocation = path;
+  try {
+    const u = new URL(path);
+    ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function (k) {
+      if (attribution[k] && !u.searchParams.get(k)) u.searchParams.set(k, attribution[k]);
+    });
+    pageLocation = u.toString();
+  } catch (_) { /* path wasn't a valid URL — fall back to the raw value */ }
+
   // Await the MP call — on Vercel serverless, the lambda freezes the moment
   // res.end() returns, killing any in-flight fetch. Fire-and-forget here
   // causes most outbound calls to GA to be cancelled mid-flight (you'll see
@@ -50,7 +65,7 @@ export default async function handler(req, res) {
     userAgent: ua,
     ip,
     params: {
-      page_location: path,
+      page_location: pageLocation,
       page_referrer: referrer,
       page_title:    title,
       utm_source:    String(attribution.utm_source   || ''),
