@@ -26,6 +26,30 @@
   var CONSENT_KEY   = '__vi_consent';
   var ATTR_KEY      = '__vi_attr';
 
+  /* ── User-facing copy (locale dictionary) ─────────────────────────────────
+     Reads <html lang> to pick a bundle. Only visible UI strings live here —
+     analytics event names, dataLayer keys, and IDs stay hardcoded above. */
+  var I18N = {
+    en: {
+      cookieBannerAria:  'Cookie consent',
+      cookieBannerBody:  'We use cookies to measure ad performance and improve your experience.',
+      cookiePrivacyLink: 'Privacy policy',
+      cookieAcceptAll:   'Accept all',
+      cookieDecline:     'Only essential',
+      privacyHref:       '/privacy'
+    },
+    de: {
+      cookieBannerAria:  'Cookie-Einwilligung',
+      cookieBannerBody:  'Wir verwenden Cookies, um die Werbeleistung zu messen und Ihr Erlebnis zu verbessern.',
+      cookiePrivacyLink: 'Datenschutzerklärung',
+      cookieAcceptAll:   'Alle akzeptieren',
+      cookieDecline:     'Nur notwendige',
+      privacyHref:       '/de/privacy'
+    }
+  };
+  var LANG = (document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
+  var t = I18N[LANG] || I18N.en;
+
   /* ── gtag stub + Consent Mode v2 defaults ─────────────────────────────── */
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -238,14 +262,14 @@ font-size:13px;cursor:pointer;white-space:nowrap;transition:color .12s,border-co
     var banner = document.createElement('div');
     banner.id = 'vi-consent';
     banner.setAttribute('role', 'dialog');
-    banner.setAttribute('aria-label', 'Cookie consent');
+    banner.setAttribute('aria-label', t.cookieBannerAria);
     banner.setAttribute('aria-live', 'polite');
     banner.innerHTML =
-      '<p>We use cookies to measure ad performance and improve your experience. ' +
-      '<a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>' +
+      '<p>' + t.cookieBannerBody + ' ' +
+      '<a href="' + t.privacyHref + '" target="_blank" rel="noopener">' + t.cookiePrivacyLink + '</a></p>' +
       '<div id="vi-consent-actions">' +
-      '<button id="vi-consent-accept" type="button">Accept all</button>' +
-      '<button id="vi-consent-decline" type="button">Only essential</button>' +
+      '<button id="vi-consent-accept" type="button">' + t.cookieAcceptAll + '</button>' +
+      '<button id="vi-consent-decline" type="button">' + t.cookieDecline + '</button>' +
       '</div>';
     document.body.appendChild(banner);
 
