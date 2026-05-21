@@ -10,8 +10,9 @@
     {
       "name": "static",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "http-server", ".", "-p", "3001", "-c-1"],
-      "port": 3001
+      "runtimeArgs": ["--yes", "http-server", ".", "-c-1"],
+      "port": 3001,
+      "autoPort": true
     }
   ]
 }

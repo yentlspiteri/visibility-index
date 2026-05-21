@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url><loc>https://index.vonpeach.com/</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
 
   <!-- Keyword-targeted SEO landing pages -->
@@ -27,4 +28,24 @@
   <url><loc>https://index.vonpeach.com/tier/rising-voice</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://index.vonpeach.com/tier/emerging-authority</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://index.vonpeach.com/tier/recognised-leader</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- Legal — bilingual -->
+  <url>
+    <loc>https://index.vonpeach.com/privacy</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/privacy"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/privacy"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/privacy</loc>
+    <lastmod>2026-05-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/privacy"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/privacy"/>
+  </url>
 </urlset>
