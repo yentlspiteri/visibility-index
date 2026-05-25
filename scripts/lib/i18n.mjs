@@ -23,8 +23,26 @@ export const PAGES = {
     de: 'de/privacy.html',
     canonical: 'https://index.vonpeach.com/de/privacy',
   },
-  // Add audit landing pages here as we onboard them:
-  // 'free-personal-brand-audit': { en: '…', de: 'de/…', canonical: '…' },
+  'free-personal-brand-audit': {
+    en: 'free-personal-brand-audit.html',
+    de: 'de/free-personal-brand-audit.html',
+    canonical: 'https://index.vonpeach.com/de/free-personal-brand-audit',
+  },
+  'executive-personal-brand-audit': {
+    en: 'executive-personal-brand-audit.html',
+    de: 'de/executive-personal-brand-audit.html',
+    canonical: 'https://index.vonpeach.com/de/executive-personal-brand-audit',
+  },
+  'linkedin-audit': {
+    en: 'linkedin-audit.html',
+    de: 'de/linkedin-audit.html',
+    canonical: 'https://index.vonpeach.com/de/linkedin-audit',
+  },
+  'personal-brand-checker': {
+    en: 'personal-brand-checker.html',
+    de: 'de/personal-brand-checker.html',
+    canonical: 'https://index.vonpeach.com/de/personal-brand-checker',
+  },
 };
 
 /*
@@ -40,19 +58,38 @@ export const PAGES = {
 export const UNITS = [
   { sel: 'title', mode: 'html', kind: 'title' },
   { sel: 'meta[name="description"]', mode: 'attr', attr: 'content', kind: 'meta' },
+  // Nav — both the simple (brand + cta) and full (links + mobile panel) variants.
   { sel: 'nav.top a.brand', mode: 'html', kind: 'a' },
   { sel: 'nav.top a.cta', mode: 'html', kind: 'a' },
+  { sel: 'nav.top a.nav-link', mode: 'html', kind: 'a' },
+  { sel: 'nav.top a.nav-cta', mode: 'html', kind: 'a' },
+  { sel: 'nav.top a.nav-mobile-link', mode: 'html', kind: 'a' },
+  { sel: 'nav.top a.nav-mobile-cta', mode: 'html', kind: 'a' },
+  // Hero — legal header (breadcrumb/eyebrow/h1/lede) and lander hero (+ cta + trust row).
   { sel: 'header .breadcrumb', mode: 'html', kind: 'breadcrumb' },
   { sel: 'header .eyebrow', mode: 'html', kind: 'eyebrow' },
   { sel: 'header h1', mode: 'html', kind: 'h1' },
   { sel: 'header .lede', mode: 'html', kind: 'lede' },
+  { sel: 'header a.cta-primary', mode: 'html', kind: 'a' },
+  { sel: 'header .trust-row span', mode: 'html', kind: 'p' },
+  // Legal article body.
   { sel: 'main article h2', mode: 'html', kind: 'h2' },
   { sel: 'main article h3', mode: 'html', kind: 'h3' },
   { sel: 'main article p', mode: 'html', kind: 'p' },
   { sel: 'main article li', mode: 'html', kind: 'li' },
+  // Landing-page sections (incl. FAQ <details>/<summary> and closing CTA).
+  { sel: 'section .eyebrow', mode: 'html', kind: 'eyebrow' },
+  { sel: 'section h2', mode: 'html', kind: 'h2' },
+  { sel: 'section h3', mode: 'html', kind: 'h3' },
+  { sel: 'section summary', mode: 'html', kind: 'p' },
+  { sel: 'section p', mode: 'html', kind: 'p' },
+  { sel: 'section li', mode: 'html', kind: 'li' },
+  { sel: 'section a.cta-primary', mode: 'html', kind: 'a' },
+  // Legal CTA aside.
   { sel: 'aside.cta-card h2', mode: 'html', kind: 'h2' },
   { sel: 'aside.cta-card p', mode: 'html', kind: 'p' },
   { sel: 'aside.cta-card a.btn', mode: 'html', kind: 'a' },
+  // Footer (shared across page types).
   { sel: 'footer .footer-col-eyebrow', mode: 'html', kind: 'eyebrow' },
   { sel: 'footer li a', mode: 'html', kind: 'a' },
   { sel: 'footer .footer-legal-row a', mode: 'html', kind: 'a' },
@@ -97,18 +134,41 @@ export function writeValue(el, unit, value) {
 }
 
 /**
- * Walk a parsed document and yield every translation unit instance in order.
+ * Walk a parsed document and yield every translation unit instance.
  * Returns [{ key, page, value, kind, unit, el }].
+ *
+ * Two safety passes:
+ *  - dedupe elements matched by more than one selector (first selector wins)
+ *  - nesting guard: drop a container element when one of its descendants is
+ *    also a unit (e.g. a <p> that only wraps an <a class="cta-primary">), so we
+ *    never translate the same text both as a whole and via its inner element.
  */
 export function collectUnits(root, page) {
-  const out = [];
+  const seen = new Set();
+  const candidates = [];
   for (const unit of UNITS) {
-    const els = root.querySelectorAll(unit.sel);
-    for (const el of els) {
-      const value = readValue(el, unit);
-      if (!normalize(value)) continue; // skip empties
-      out.push({ key: contentKey(page, value), page, value: normalize(value), kind: unit.kind, unit, el });
+    for (const el of root.querySelectorAll(unit.sel)) {
+      if (seen.has(el)) continue;
+      if (!normalize(readValue(el, unit))) continue; // skip empties
+      seen.add(el);
+      candidates.push({ unit, el });
     }
+  }
+  // Mark any candidate that is an ancestor of another candidate.
+  const elSet = new Set(candidates.map((c) => c.el));
+  const containers = new Set();
+  for (const { el } of candidates) {
+    let p = el.parentNode;
+    while (p) {
+      if (elSet.has(p)) containers.add(p);
+      p = p.parentNode;
+    }
+  }
+  const out = [];
+  for (const { unit, el } of candidates) {
+    if (containers.has(el)) continue; // it wraps a finer unit — skip
+    const value = readValue(el, unit);
+    out.push({ key: contentKey(page, value), page, value: normalize(value), kind: unit.kind, unit, el });
   }
   return out;
 }
