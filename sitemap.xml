@@ -3,11 +3,55 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url><loc>https://index.vonpeach.com/</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
 
-  <!-- Keyword-targeted SEO landing pages -->
-  <url><loc>https://index.vonpeach.com/linkedin-audit</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
-  <url><loc>https://index.vonpeach.com/personal-brand-checker</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
-  <url><loc>https://index.vonpeach.com/free-personal-brand-audit</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
-  <url><loc>https://index.vonpeach.com/executive-personal-brand-audit</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <!-- Keyword-targeted SEO landing pages (EN ↔ DE) -->
+  <url>
+    <loc>https://index.vonpeach.com/linkedin-audit</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/linkedin-audit"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/linkedin-audit"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/linkedin-audit"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/linkedin-audit</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/linkedin-audit"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/linkedin-audit"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/linkedin-audit"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/personal-brand-checker</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/personal-brand-checker"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/personal-brand-checker"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/personal-brand-checker"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/personal-brand-checker</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/personal-brand-checker"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/personal-brand-checker"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/personal-brand-checker"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/free-personal-brand-audit</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/free-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/free-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/free-personal-brand-audit"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/free-personal-brand-audit</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/free-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/free-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/free-personal-brand-audit"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/executive-personal-brand-audit</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/executive-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/executive-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/executive-personal-brand-audit"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/executive-personal-brand-audit</loc><lastmod>2026-05-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/executive-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/executive-personal-brand-audit"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/executive-personal-brand-audit"/>
+  </url>
 
   <!-- Methodology + reference -->
   <url><loc>https://index.vonpeach.com/methodology</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
