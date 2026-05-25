@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Board Journey Kickoff — Be Board-Ready</title>
+<meta name="description" content="Von Stärke zu Sichtbarkeit — dein interaktiver Board Journey Kickoff für den Weg in den Aufsichtsrat.">
+<meta name="theme-color" content="#0B0359">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0359; --accent:#3F36B2; --lilac:#8683E5; --tint:#EBF0FF;
+    --mute:#5E5C78; --bg:#F3F4FD; --card:#FFFFFF; --line:#E2E2F2;
+    --sans:'General Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.5;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px 56px;}
+  a{color:inherit;}
+
+  header{background:var(--ink);color:#fff;padding:30px 22px 26px;border-radius:0 0 22px 22px;}
+  header .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--lilac);font-weight:600;}
+  header h1{font-size:30px;font-weight:600;line-height:1.12;margin:8px 0 10px;}
+  header h1 span{color:var(--lilac);}
+  header p{font-size:13.5px;color:#C9C6EF;}
+
+  .intro{font-size:16px;margin:22px 4px 8px;font-weight:500;}
+
+  .step-label{display:flex;align-items:center;gap:10px;margin:28px 2px 4px;}
+  .step-num{background:var(--accent);color:#fff;font-size:12px;font-weight:600;
+    letter-spacing:.08em;padding:5px 10px;border-radius:7px;white-space:nowrap;}
+  .step-label h2{font-size:15px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);}
+  .hint{font-size:13.5px;color:var(--mute);margin:6px 4px 14px;}
+
+  .field{background:var(--card);border:1px solid var(--line);border-radius:13px;
+    padding:4px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+  .field .n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--tint);
+    color:var(--accent);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .field input{flex:1;border:none;background:none;font-family:var(--sans);font-size:15.5px;
+    color:var(--ink);padding:13px 0;}
+  .field input:focus{outline:none;}
+
+  .prompt{background:var(--ink);color:#fff;border-radius:16px;padding:20px;margin-bottom:13px;}
+  .prompt .pk{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--lilac);font-weight:600;}
+  .prompt .pq{font-size:18px;font-weight:600;line-height:1.35;margin:8px 0 14px;}
+  .prompt .pair{font-size:13.5px;color:#C9C6EF;border-top:1px solid rgba(255,255,255,.16);padding-top:12px;}
+  .prompt .pair b{color:#fff;}
+
+  textarea{width:100%;border:1px solid var(--line);border-radius:12px;
+    font-family:var(--sans);font-size:15px;color:var(--ink);padding:12px;resize:none;
+    background:var(--card);}
+  textarea:focus{outline:2px solid var(--lilac);outline-offset:0;}
+
+  .gap{background:var(--card);border:1px solid var(--line);border-radius:13px;
+    padding:13px 14px;margin-bottom:10px;}
+  .gap-s{font-size:15.5px;font-weight:600;margin-bottom:9px;}
+  .gap-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .gap-q{font-size:13px;color:var(--mute);}
+  .gap-btns{display:flex;gap:7px;flex:none;}
+  .gb{font-family:var(--sans);font-size:13.5px;font-weight:600;padding:8px 16px;
+    border-radius:9px;border:1.5px solid var(--line);background:#fff;color:var(--mute);cursor:pointer;}
+  .gb.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .gb.nein.on{background:var(--ink);border-color:var(--ink);}
+  .muted-hint{font-size:13.5px;color:var(--lilac);font-style:italic;padding:6px 2px;}
+
+  .tool{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 15px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    display:flex;gap:12px;align-items:flex-start;transition:.15s;}
+  .tool.on{border-color:var(--accent);background:#FBFAFF;}
+  .tool .mark{flex:none;width:22px;height:22px;border:2px solid var(--lilac);border-radius:7px;
+    margin-top:2px;display:flex;align-items:center;justify-content:center;transition:.15s;}
+  .tool .mark svg{width:12px;height:12px;opacity:0;transition:.15s;}
+  .tool.on .mark{background:var(--accent);border-color:var(--accent);}
+  .tool.on .mark svg{opacity:1;}
+  .tool .tn{font-size:16px;font-weight:600;}
+  .tool .tw{font-size:13px;color:var(--accent);font-weight:600;margin:1px 0 3px;}
+  .tool .td{font-size:13px;color:var(--mute);}
+
+  .plan{background:var(--tint);border-radius:16px;padding:20px;margin-top:22px;}
+  .plan h3{font-size:15px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:12px;}
+  .plan .row{font-size:14.5px;margin-bottom:11px;}
+  .plan .row b{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--mute);margin-bottom:2px;font-weight:600;}
+  .plan .row span.empty{color:var(--lilac);font-style:italic;}
+  .acts{display:flex;gap:9px;margin-top:14px;}
+  .acts button{flex:1;font-family:var(--sans);font-size:13.5px;font-weight:600;
+    padding:12px 8px;border-radius:11px;cursor:pointer;border:1.5px solid var(--accent);transition:.15s;}
+  .acts .primary{background:var(--accent);color:#fff;}
+  .acts .ghost{background:transparent;color:var(--accent);}
+  .acts button:active{transform:scale(.98);}
+  .toast{text-align:center;font-size:12.5px;color:var(--accent);font-weight:600;margin-top:9px;height:14px;opacity:0;transition:.2s;}
+  .toast.show{opacity:1;}
+
+  .cta{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:18px;text-align:center;}
+  .cta p{font-size:14px;color:var(--mute);margin-bottom:12px;}
+  .cta a.idx{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
+    font-size:14.5px;font-weight:600;padding:13px 22px;border-radius:30px;}
+  .honest{font-size:12.5px;color:var(--mute);margin:18px 6px 0;line-height:1.6;text-align:center;}
+  .foot{text-align:center;font-size:11.5px;color:var(--lilac);margin-top:16px;font-weight:600;letter-spacing:.04em;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Be Board-Ready · 10. Juni 2026</div>
+  <h1>Board Journey <span>Kickoff</span></h1>
+  <p>Female Leaders Network &nbsp;·&nbsp; Von Peach × Millennials4Boards</p>
+</header>
+
+<div class="wrap">
+  <p class="intro">Deine Stärken sind da. Die Frage ist, ob die richtigen Menschen sie kennen. Vier kurze Schritte.</p>
+
+  <div class="step-label"><span class="step-num">SCHRITT 1</span><h2>Deine Stärken</h2></div>
+  <p class="hint">Nenne zwei bis drei Stärken, für die ein Aufsichtsrat dich kennen soll.</p>
+  <div class="field"><div class="n">1</div><input id="str0" type="text" placeholder="Meine Stärke …"></div>
+  <div class="field"><div class="n">2</div><input id="str1" type="text" placeholder="Meine Stärke …"></div>
+  <div class="field"><div class="n">3</div><input id="str2" type="text" placeholder="Meine Stärke … (optional)"></div>
+
+  <div class="step-label"><span class="step-num">SCHRITT 2</span><h2>Die Meinungsfrage</h2></div>
+  <p class="hint">Keine richtige Antwort — eure Erfahrung zählt.</p>
+  <div class="prompt">
+    <div class="pk">Denk nach &amp; tauscht euch aus</div>
+    <div class="pq">Denk an eine Stärke, für die du heute anerkannt wirst. Wie haben die Menschen, die das wissen, eigentlich davon erfahren?</div>
+    <div class="pair"><b>Zu zweit, je 3 Minuten.</b> Hört genau hin: Was hat die Stärke sichtbar gemacht? Und — wie sollen die Menschen, die über Mandate entscheiden, davon erfahren?</div>
+  </div>
+  <textarea id="insight" rows="3" placeholder="Notiere: Wodurch werden Stärken bekannt — und wo fehlt es bei dir noch?"></textarea>
+
+  <div class="step-label"><span class="step-num">SCHRITT 3</span><h2>Die Lücke</h2></div>
+  <p class="hint">Für jede Stärke von oben: Wo könnte ein Fremder heute den Beleg dafür finden? Sei ehrlich.</p>
+  <div id="gaps"></div>
+
+  <div class="step-label"><span class="step-num">SCHRITT 4</span><h2>Der Werkzeugkasten</h2></div>
+  <p class="hint">Stärken werden nicht von selbst bekannt — sie werden sichtbar gemacht. Wähle, was deine Stärken aus dem Verborgenen holt.</p>
+  <div id="tools"></div>
+
+  <div class="plan">
+    <h3>Mein Mitnehmer</h3>
+    <div class="row"><b>Meine Stärken</b><span id="p-str" class="empty">Schritt 1 ausfüllen</span></div>
+    <div class="row"><b>So werden sie bekannt</b><span id="p-ins" class="empty">noch offen</span></div>
+    <div class="row"><b>Wo der Beleg fehlt</b><span id="p-gap" class="empty">Schritt 3 prüfen</span></div>
+    <div class="row"><b>Mein Werkzeugkasten</b><span id="p-tools" class="empty">Schritt 4 wählen</span></div>
+    <div class="acts">
+      <button class="primary" id="copyBtn">Kopieren</button>
+      <button class="ghost" id="mailBtn">Per E-Mail sichern</button>
+    </div>
+    <div class="toast" id="toast">Kopiert.</div>
+  </div>
+
+  <div class="cta">
+    <p>Du willst sehen, wie sichtbar du heute wirklich bist — gemessen, nicht geschätzt? Der kostenlose Visibility Index dauert 60 Sekunden.</p>
+    <a class="idx" href="https://index.vonpeach.com" target="_blank" rel="noopener">Visibility Index starten →</a>
+  </div>
+
+  <p class="honest">Stärken werden nicht von selbst bekannt — sie werden sichtbar gemacht. Genau das ist die Arbeit von Von Peach: aus Stärke Sichtbarkeit.</p>
+  <p class="foot">FutureMakers by Von Peach · in Partnerschaft mit Millennials4Boards</p>
+</div>
+
+<script>
+  var TOOLS=[
+    {k:"Thought Leadership",w:"macht dein Denken bekannt",d:"Beiträge, Artikel und Standpunkte zu Governance-Themen."},
+    {k:"Website / Landingpage",w:"macht dich auffindbar",d:"Deine eigene Seite — du besitzt dein erstes Google-Ergebnis."},
+    {k:"Video",w:"macht dich einprägsam",d:"Deine Ideen in Bewegung, dein Auftritt lebendig."},
+    {k:"PR & Bühne",w:"lässt andere für dich bürgen",d:"Presse, Panels und Vorträge — Anerkennung von außen."},
+    {k:"Visuelle Identität",w:"lässt dich den Part aussehen",d:"Professionelle Fotos und ein über alle Kanäle stimmiges Bild."}
+  ];
+  var TICK='<svg viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 6" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var KEY="bjk_v3";
+  var state={strengths:["","",""],insight:"",gaps:{},tools:{}};
+  try{var s=JSON.parse(localStorage.getItem(KEY));if(s)state=Object.assign(state,s);}catch(e){}
+
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  function esc(t){return (t||"").replace(/[&<>"]/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+
+  // Step 1
+  [0,1,2].forEach(function(i){
+    var el=document.getElementById("str"+i);
+    el.value=state.strengths[i]||"";
+    el.addEventListener("input",function(){
+      state.strengths[i]=el.value;renderGaps();renderPlan();save();
+    });
+  });
+
+  // Step 2
+  var ins=document.getElementById("insight");
+  ins.value=state.insight||"";
+  ins.addEventListener("input",function(){state.insight=ins.value;renderPlan();save();});
+
+  // Step 3
+  function renderGaps(){
+    var box=document.getElementById("gaps");box.innerHTML="";var any=false;
+    state.strengths.forEach(function(s,i){
+      s=(s||"").trim();if(!s)return;any=true;
+      var d=document.createElement("div");d.className="gap";
+      d.innerHTML='<div class="gap-s">'+esc(s)+'</div><div class="gap-row">'+
+        '<div class="gap-q">Beleg öffentlich auffindbar?</div><div class="gap-btns">'+
+        '<button class="gb'+(state.gaps[i]==="ja"?" on":"")+'" data-i="'+i+'" data-v="ja">Ja</button>'+
+        '<button class="gb nein'+(state.gaps[i]==="nein"?" on":"")+'" data-i="'+i+'" data-v="nein">Nein</button>'+
+        '</div></div>';
+      box.appendChild(d);
+    });
+    if(!any)box.innerHTML='<p class="muted-hint">Trag oben zuerst deine Stärken ein.</p>';
+  }
+  document.getElementById("gaps").addEventListener("click",function(e){
+    var b=e.target.closest(".gb");if(!b)return;
+    state.gaps[b.getAttribute("data-i")]=b.getAttribute("data-v");
+    renderGaps();renderPlan();save();
+  });
+
+  // Step 4
+  var toolsEl=document.getElementById("tools");
+  TOOLS.forEach(function(t,i){
+    var el=document.createElement("div");el.className="tool"+(state.tools[i]?" on":"");
+    el.setAttribute("data-i",i);
+    el.innerHTML='<div class="mark">'+TICK+'</div><div><div class="tn">'+t.k+'</div>'+
+      '<div class="tw">'+t.w+'</div><div class="td">'+t.d+'</div></div>';
+    toolsEl.appendChild(el);
+  });
+  toolsEl.addEventListener("click",function(e){
+    var el=e.target.closest(".tool");if(!el)return;
+    var i=el.getAttribute("data-i");
+    state.tools[i]=!state.tools[i];
+    el.classList.toggle("on",!!state.tools[i]);
+    renderPlan();save();
+  });
+
+  // Plan
+  function set(id,val){
+    var el=document.getElementById(id);
+    if(val){el.textContent=val;el.className="";}
+    else{el.className="empty";}
+  }
+  function renderPlan(){
+    var str=state.strengths.filter(function(s){return (s||"").trim();})
+      .map(function(s){return s.trim();});
+    set("p-str",str.join(" · "));
+    set("p-ins",(state.insight||"").trim());
+    var gaps=[];
+    state.strengths.forEach(function(s,i){
+      if((s||"").trim()&&state.gaps[i]==="nein")gaps.push(s.trim());
+    });
+    set("p-gap",gaps.join(" · "));
+    var tl=[];TOOLS.forEach(function(t,i){if(state.tools[i])tl.push(t.k);});
+    set("p-tools",tl.join(" · "));
+  }
+
+  function planText(){
+    var str=state.strengths.filter(function(s){return (s||"").trim();})
+      .map(function(s){return "- "+s.trim();}).join("\n")||"-";
+    var gaps=[];state.strengths.forEach(function(s,i){
+      if((s||"").trim()&&state.gaps[i]==="nein")gaps.push(s.trim());});
+    var tl=[];TOOLS.forEach(function(t,i){if(state.tools[i])tl.push(t.k);});
+    return "MEIN BOARD JOURNEY KICKOFF\nBe Board-Ready · 10. Juni 2026\n\n"+
+      "Meine Stärken:\n"+str+"\n\n"+
+      "So werden meine Stärken bekannt:\n"+((state.insight||"").trim()||"—")+"\n\n"+
+      "Wo der Beleg noch fehlt: "+(gaps.join(", ")||"—")+"\n\n"+
+      "Mein Werkzeugkasten: "+(tl.join(", ")||"—")+"\n\n"+
+      "Visibility Index: https://index.vonpeach.com";
+  }
+  function toast(m){var t=document.getElementById("toast");t.textContent=m;
+    t.classList.add("show");setTimeout(function(){t.classList.remove("show");},1900);}
+
+  document.getElementById("copyBtn").addEventListener("click",function(){
+    var txt=planText();
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){toast("Kopiert.");},
+        function(){toast("Kopieren nicht möglich.");});
+    }else{toast("Kopieren nicht möglich.");}
+  });
+  document.getElementById("mailBtn").addEventListener("click",function(){
+    window.location.href="mailto:?subject="+encodeURIComponent("Mein Board Journey Kickoff")+
+      "&body="+encodeURIComponent(planText());
+  });
+
+  renderGaps();renderPlan();
+</script>
+</body>
+</html>
