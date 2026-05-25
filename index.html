@@ -8724,8 +8724,14 @@ fbq('track', 'PageView');
   // Expose for the lead-submit handler
   window.__getMetaCookies = getMetaCookies;
 
+  /* ────────── LANGUAGE ──────────
+     'de' when the page is served under /de/... or when window.__LANG is set.
+     Everything below stays English unless LANG === 'de'; the German overrides
+     are applied in a single opt-in block after the constants are declared. */
+  const LANG = (window.__LANG === 'de' || (typeof location !== 'undefined' && /^\/de(\/|$)/.test(location.pathname))) ? 'de' : 'en';
+
   /* ────────── SCORING - six dimensions, 0-3 each, total 0-18 ────────── */
-  const DIMENSIONS = [
+  let DIMENSIONS = [
     { key:'footprint',  label:'Digital Footprint',
       ctxByLevel:[
         'Nearly invisible online.',
@@ -8776,7 +8782,7 @@ fbq('track', 'PageView');
     }
   ];
 
-  const TIERS = [
+  let TIERS = [
     { min:0,  max:5,  name:'The Hidden Gem',
       tagline:'Real expertise. The world just doesn’t know it yet.',
       blurb:'Your brand is nearly invisible. The good news? Everything is ahead of you. With the right foundations, you can fast-track from unknown to unmissable.',
@@ -8870,7 +8876,7 @@ fbq('track', 'PageView');
   const goalSelect     = $('#ml-goal');
 
   // Goal-specific subhead that appears in the result block - mirrors the user's stated goal back at them.
-  const GOAL_HEADLINES = {
+  let GOAL_HEADLINES = {
     clients:     "What's between you and better clients.",
     speaking:    "What's between you and the speaking circuit.",
     credibility: "What's between you and recognition.",
@@ -8880,13 +8886,13 @@ fbq('track', 'PageView');
   // Goal-aware HERO subhead - primes the value prop based on the user's role + goal selection.
   // Concrete, brand-aligned, no synthetic "4.2 points higher" stats that mean nothing to the reader.
   // Punchier subheads — short, concrete, scannable on mobile.
-  const HERO_SUBHEADS = {
+  let HERO_SUBHEADS = {
     clients:     'The clients you want already Google you. Here\'s what they find.',
     speaking:    'Bookers Google you before they pitch. Here\'s what they see.',
     credibility: 'Reporters Google you before they quote. Here\'s what they find.',
     legacy:      'Six signals decide how the world remembers you. Here\'s yours.'
   };
-  const ROLE_PLURALS = {
+  let ROLE_PLURALS = {
     ceo:        'CEOs and C-suite leaders',
     founder:    'Founders',
     investor:   'Investors',
@@ -9218,7 +9224,7 @@ fbq('track', 'PageView');
   let lastLlmVisibility = null;    // { recognized, confidence, summary, themes, citations } or null
 
   // Maps Claude's service token → human label shown on the move-card service tag
-  const SERVICE_LABELS = {
+  let SERVICE_LABELS = {
     strategy: 'Brand strategy',
     content:  'Content production',
     video:    'Video',
@@ -9227,6 +9233,122 @@ fbq('track', 'PageView');
     speaker:  'Speaking kit',
     pr:       'PR advisory'
   };
+
+  /* ────────── GERMAN OVERRIDES (opt-in) ──────────
+     Applied only when LANG === 'de'. The English code path above is untouched.
+     Keys, .key values, tier min/max, and GOAL/ROLE/SERVICE keys are kept
+     identical to English — only the human-readable display text is translated.
+     Formal "Sie", Swiss orthography (always "ss", never "ß").
+     DRAFT — pending native-speaker review. */
+  if (LANG === 'de') {
+    DIMENSIONS = [
+      { key:'footprint',  label:'Digitale Präsenz',
+        ctxByLevel:[
+          'Online so gut wie unsichtbar.',
+          'Minimal - LinkedIn und eine vereinzelte Erwähnung.',
+          'Gemischte Präsenz über mehrere Kanäle.',
+          'Starke digitale Präsenz, klares Narrativ.'
+        ]
+      },
+      { key:'clarity',    label:'Markenklarheit',
+        ctxByLevel:[
+          'Botschaft ist unklar oder fehlt.',
+          'Grobe Idee, verschiebt sich je nach Publikum.',
+          'Definiert, aber inkonsistent im Material.',
+          'Glasklar und überall konsistent.'
+        ]
+      },
+      { key:'authority',  label:'Autoritätssignale',
+        ctxByLevel:[
+          'Keine externe Anerkennung sichtbar.',
+          'Gelegentliche Erwähnungen oder Auftritte.',
+          'Stetige Frequenz übers ganze Jahr.',
+          'Anerkannte Stimme in Ihrer Branche.'
+        ]
+      },
+      { key:'cadence',    label:'Content-Frequenz',
+        ctxByLevel:[
+          'Sie posten oder publizieren nicht.',
+          'Sporadisch, wenn die Inspiration kommt.',
+          'Konsistent auf ein, zwei Plattformen.',
+          'Strategisch und konsistent, mit klarem Plan.'
+        ]
+      },
+      { key:'visual',     label:'Visuelle Identität',
+        ctxByLevel:[
+          'Altes Foto, generische Bio.',
+          'Einige Assets, untereinander inkonsistent.',
+          'Gute Assets, könnten strategischer sein.',
+          'Geschliffen, markentreu, leistet ganze Arbeit.'
+        ]
+      },
+      { key:'network',    label:'Wahrnehmung im Netzwerk',
+        ctxByLevel:[
+          'Nur als Jobtitel wahrgenommen.',
+          'Enge Kontakte verstehen es; das weitere Netzwerk nicht.',
+          'Die meisten verstehen Ihre Expertise & Werte.',
+          'Bekannt als die erste Anlaufstelle.'
+        ]
+      }
+    ];
+
+    TIERS = [
+      { min:0,  max:5,  name:'Der verborgene Schatz',
+        tagline:'Echte Expertise. Die Welt weiss es nur noch nicht.',
+        blurb:'Ihre Marke ist nahezu unsichtbar. Die gute Nachricht? Alles liegt noch vor Ihnen. Mit den richtigen Grundlagen kommen Sie im Schnellverfahren von unbekannt zu unübersehbar.',
+        cta:'Hier ist Ihr Fahrplan von unsichtbar zu unübersehbar' },
+      { min:6,  max:10, name:'Die aufsteigende Stimme',
+        tagline:'Sie bauen Schwung auf, doch Lücken bremsen Sie noch.',
+        blurb:'Sie haben etwas zu sagen, aber Ihre Marke verstärkt es noch nicht. Ein paar entscheidende Lücken zu schliessen, könnte drastisch verändern, wie die richtigen Leute Sie finden und wahrnehmen.',
+        cta:'Hier sehen Sie genau, was Sie zuerst aufbauen sollten' },
+      { min:11, max:15, name:'Die aufstrebende Autorität',
+        tagline:'Solide Grundlagen. Zeit, Ihre Reichweite zu skalieren.',
+        blurb:'Sie machen mehr richtig als die meisten. Ihre Herausforderung ist jetzt Konsistenz und Absicht - aus Aufwand eine Marke zu formen, die zuverlässig die richtigen Gelegenheiten anzieht.',
+        cta:'Hier erfahren Sie, wie Sie die Lücken schnell schliessen' },
+      { min:16, max:18, name:'Die anerkannte Führungspersönlichkeit',
+        tagline:'Starke Marke. Machen wir sie zum Vermächtnis.',
+        blurb:'Sie haben echte Autorität aufgebaut. Auf der nächsten Stufe geht es darum, Ihre Handschrift zu schärfen, Ihre Wirkung zu vertiefen und sicherzustellen, dass jedes Asset so hart arbeitet wie Sie.',
+        cta:'Hier erfahren Sie, wie Sie Ihren Vorsprung schärfen' }
+    ];
+
+    GOAL_HEADLINES = {
+      clients:     'Was zwischen Ihnen und besseren Kunden steht.',
+      speaking:    'Was zwischen Ihnen und der Speaker-Bühne steht.',
+      credibility: 'Was zwischen Ihnen und Anerkennung steht.',
+      legacy:      'Was zwischen Ihnen und einem Vermächtnis steht.'
+    };
+
+    HERO_SUBHEADS = {
+      clients:     'Die Kunden, die Sie wollen, googeln Sie längst. Das finden sie.',
+      speaking:    'Bucher googeln Sie, bevor sie anfragen. Das sehen sie.',
+      credibility: 'Journalisten googeln Sie, bevor sie zitieren. Das finden sie.',
+      legacy:      'Sechs Signale entscheiden, wie die Welt Sie in Erinnerung behält. Das sind Ihre.'
+    };
+
+    ROLE_PLURALS = {
+      ceo:        'CEOs und C-Level-Führungskräfte',
+      founder:    'Gründerinnen und Gründer',
+      investor:   'Investorinnen und Investoren',
+      board:      'Verwaltungsratsmitglieder',
+      consultant: 'Beraterinnen und Berater',
+      marketer:   'Marketing-Verantwortliche',
+      creative:   'Kreativdirektorinnen und -direktoren',
+      artist:     'Künstlerinnen und Künstler',
+      creator:    'Creator',
+      speaker:    'Speaker & Autorinnen und Autoren',
+      senior:     'Führungskräfte'
+    };
+
+    SERVICE_LABELS = {
+      strategy: 'Markenstrategie',
+      content:  'Content-Produktion',
+      video:    'Video',
+      photo:    'Fotoshooting',
+      linkedin: 'LinkedIn',
+      speaker:  'Speaker-Kit',
+      pr:       'PR-Beratung'
+    };
+  }
 
   async function startAudit(opts = {}) {
     // Capture mad-libs context (role + goal) for the result copy and the lead capture
@@ -9298,7 +9420,7 @@ fbq('track', 'PageView');
     const _fetchOpts = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal, attribution: ATTRIBUTION })
+      body: JSON.stringify({ url: normalised, role: lastRole, goal: lastGoal, attribution: ATTRIBUTION, lang: LANG })
     };
     const fetchPromise = (async () => {
       // ── attemptFetch separates two distinct failure modes:
