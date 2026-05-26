@@ -17,11 +17,14 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   html{-webkit-text-size-adjust:100%;}
   body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.5;
-    -webkit-font-smoothing:antialiased;}
-  .wrap{max-width:560px;margin:0 auto;padding:0 16px 56px;}
+    -webkit-font-smoothing:antialiased;
+    padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);}
+  .wrap{max-width:560px;margin:0 auto;
+    padding:0 16px max(56px, calc(env(safe-area-inset-bottom) + 32px));}
   a{color:inherit;}
 
-  header{background:var(--ink);color:#fff;padding:30px 22px 26px;border-radius:0 0 22px 22px;}
+  header{background:var(--ink);color:#fff;border-radius:0 0 22px 22px;
+    padding:max(30px, calc(env(safe-area-inset-top) + 18px)) 22px 26px;}
   header .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--lilac);font-weight:600;}
   header h1{font-size:30px;font-weight:600;line-height:1.12;margin:8px 0 10px;}
   header h1 span{color:var(--lilac);}
@@ -39,8 +42,8 @@
     padding:4px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
   .field .n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--tint);
     color:var(--accent);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;}
-  .field input{flex:1;border:none;background:none;font-family:var(--sans);font-size:15.5px;
-    color:var(--ink);padding:13px 0;}
+  .field input{flex:1;border:none;background:none;font-family:var(--sans);font-size:16px;
+    color:var(--ink);padding:13px 0;min-height:44px;}
   .field input:focus{outline:none;}
 
   .prompt{background:var(--ink);color:#fff;border-radius:16px;padding:20px;margin-bottom:13px;}
@@ -50,7 +53,7 @@
   .prompt .pair b{color:#fff;}
 
   textarea{width:100%;border:1px solid var(--line);border-radius:12px;
-    font-family:var(--sans);font-size:15px;color:var(--ink);padding:12px;resize:none;
+    font-family:var(--sans);font-size:16px;color:var(--ink);padding:12px;resize:none;
     background:var(--card);}
   textarea:focus{outline:2px solid var(--lilac);outline-offset:0;}
 
@@ -60,15 +63,19 @@
   .gap-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .gap-q{font-size:13px;color:var(--mute);}
   .gap-btns{display:flex;gap:7px;flex:none;}
-  .gb{font-family:var(--sans);font-size:13.5px;font-weight:600;padding:8px 16px;
-    border-radius:9px;border:1.5px solid var(--line);background:#fff;color:var(--mute);cursor:pointer;}
+  .gb{font-family:var(--sans);font-size:14px;font-weight:600;padding:11px 18px;
+    min-height:44px;-webkit-tap-highlight-color:transparent;
+    border-radius:9px;border:1.5px solid var(--line);background:#fff;color:var(--mute);
+    cursor:pointer;transition:transform .1s, background .15s, border-color .15s;}
+  .gb:active{transform:scale(.97);}
   .gb.on{background:var(--accent);border-color:var(--accent);color:#fff;}
   .gb.nein.on{background:var(--ink);border-color:var(--ink);}
   .muted-hint{font-size:13.5px;color:var(--lilac);font-style:italic;padding:6px 2px;}
 
   .tool{background:var(--card);border:1px solid var(--line);border-radius:14px;
     padding:14px 15px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;
-    display:flex;gap:12px;align-items:flex-start;transition:.15s;}
+    display:flex;gap:12px;align-items:flex-start;transition:transform .1s, background .15s, border-color .15s;}
+  .tool:active{transform:scale(.99);}
   .tool.on{border-color:var(--accent);background:#FBFAFF;}
   .tool .mark{flex:none;width:22px;height:22px;border:2px solid var(--lilac);border-radius:7px;
     margin-top:2px;display:flex;align-items:center;justify-content:center;transition:.15s;}
@@ -101,6 +108,15 @@
     font-size:14.5px;font-weight:600;padding:13px 22px;border-radius:30px;}
   .honest{font-size:12.5px;color:var(--mute);margin:18px 6px 0;line-height:1.6;text-align:center;}
   .foot{text-align:center;font-size:11.5px;color:var(--lilac);margin-top:16px;font-weight:600;letter-spacing:.04em;}
+
+  /* Narrow phones (≤360px): stack the "Beleg auffindbar?" row so the
+     Ja/Nein buttons get full width instead of being squeezed beside the label. */
+  @media (max-width:360px){
+    .gap-row{flex-direction:column;align-items:stretch;gap:10px;}
+    .gap-btns{align-self:stretch;}
+    .gap-btns .gb{flex:1;}
+    header h1{font-size:26px;}
+  }
 </style>
 </head>
 <body>
@@ -116,9 +132,9 @@
 
   <div class="step-label"><span class="step-num">SCHRITT 1</span><h2>Deine Stärken</h2></div>
   <p class="hint">Nenne zwei bis drei Stärken, für die ein Aufsichtsrat dich kennen soll.</p>
-  <div class="field"><div class="n">1</div><input id="str0" type="text" placeholder="Meine Stärke …"></div>
-  <div class="field"><div class="n">2</div><input id="str1" type="text" placeholder="Meine Stärke …"></div>
-  <div class="field"><div class="n">3</div><input id="str2" type="text" placeholder="Meine Stärke … (optional)"></div>
+  <div class="field"><div class="n">1</div><input id="str0" type="text" placeholder="Meine Stärke …" autocomplete="off" autocapitalize="sentences" autocorrect="off" spellcheck="true" enterkeyhint="next" inputmode="text"></div>
+  <div class="field"><div class="n">2</div><input id="str1" type="text" placeholder="Meine Stärke …" autocomplete="off" autocapitalize="sentences" autocorrect="off" spellcheck="true" enterkeyhint="next" inputmode="text"></div>
+  <div class="field"><div class="n">3</div><input id="str2" type="text" placeholder="Meine Stärke … (optional)" autocomplete="off" autocapitalize="sentences" autocorrect="off" spellcheck="true" enterkeyhint="done" inputmode="text"></div>
 
   <div class="step-label"><span class="step-num">SCHRITT 2</span><h2>Die Meinungsfrage</h2></div>
   <p class="hint">Keine richtige Antwort — eure Erfahrung zählt.</p>
@@ -127,7 +143,7 @@
     <div class="pq">Denk an eine Stärke, für die du heute anerkannt wirst. Wie haben die Menschen, die das wissen, eigentlich davon erfahren?</div>
     <div class="pair"><b>Zu zweit, je 3 Minuten.</b> Hört genau hin: Was hat die Stärke sichtbar gemacht? Und — wie sollen die Menschen, die über Mandate entscheiden, davon erfahren?</div>
   </div>
-  <textarea id="insight" rows="3" placeholder="Notiere: Wodurch werden Stärken bekannt — und wo fehlt es bei dir noch?"></textarea>
+  <textarea id="insight" rows="3" placeholder="Notiere: Wodurch werden Stärken bekannt — und wo fehlt es bei dir noch?" autocapitalize="sentences" spellcheck="true" enterkeyhint="done"></textarea>
 
   <div class="step-label"><span class="step-num">SCHRITT 3</span><h2>Die Lücke</h2></div>
   <p class="hint">Für jede Stärke von oben: Wo könnte ein Fremder heute den Beleg dafür finden? Sei ehrlich.</p>
