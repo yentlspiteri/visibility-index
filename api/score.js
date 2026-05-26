@@ -96,6 +96,10 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
+  // Locale signal from the frontend (window.__LANG / path). Only 'de' is
+  // recognized; anything else (missing, unknown) falls back to 'en' so the
+  // English audit pipeline is the default behavior.
+  const lang = (body.lang === 'de' ? 'de' : 'en');
   const normalised = normaliseLinkedIn(body.url);
   if (!normalised) {
     return res.status(400).json({ error: 'Please provide a valid LinkedIn profile URL.' });
@@ -104,10 +108,10 @@ export default async function handler(req, res) {
   await trackRequest(ip);
 
   // ── Result cache early-return ──
-  // If the same URL + role + goal combination was audited in the last 60 min,
-  // return the cached payload instantly. ~30-60s saved on a re-run. We log a
-  // `cached: true` flag so the frontend/analytics can distinguish cached vs fresh.
-  const cacheKey = `${normalised}::${(body.role || '').toLowerCase()}::${(body.goal || '').toLowerCase()}`;
+  // If the same URL + role + goal + lang combination was audited in the last
+  // 60 min, return the cached payload instantly. Lang is part of the key so
+  // EN and DE audits for the same profile don't collide in the cache.
+  const cacheKey = `${normalised}::${(body.role || '').toLowerCase()}::${(body.goal || '').toLowerCase()}::${lang}`;
   const cachedPayload = await getCachedResult(cacheKey);
   if (cachedPayload) {
     return res.status(200).json({ ...cachedPayload, _cached: true });
@@ -260,9 +264,9 @@ export default async function handler(req, res) {
       checkPersonalDomain(queryArgs.firstName, queryArgs.lastName),
       fetchPlatformPresence(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
       postsPromise,                            // already running since before Stage 1 — likely done
-      analyzeVisualIdentity(profile),          // moved up — runs in parallel with SerpAPI
+      analyzeVisualIdentity(profile, lang),    // moved up — runs in parallel with SerpAPI
       fetchGoogleTrends(queryArgs.firstName, queryArgs.lastName),
-      probeLLMVisibility(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName),
+      probeLLMVisibility(queryArgs.firstName, queryArgs.lastName, queryArgs.companyName, lang),
       // New enrichment signals — all run in parallel, all silent-fail to null
       fetchYouTubeVideos(queryArgs.firstName, queryArgs.lastName),
       fetchPodcastAppearances(queryArgs.firstName, queryArgs.lastName),
@@ -315,6 +319,7 @@ export default async function handler(req, res) {
     // 3) Run Claude analysis with profile + heuristic + rich context.
     //    Context unlocks goal-aware, role-aware, tier-aware move generation.
     const analysisCtx = {
+      lang,                                 // 'en' | 'de' — drives the response-language directive in analyzeProfile
       role:           body.role  || '',
       goal:           body.goal  || '',
       tier:           provisionalTier,
@@ -504,11 +509,15 @@ export default async function handler(req, res) {
    Returns structured judgments on lighting, framing, dating signals, banner
    coherence, and brand fit. This is the unlock that makes the Visual Identity
    dimension meaningfully scored - without it we only know presence/absence. */
-async function analyzeVisualIdentity(profile) {
+async function analyzeVisualIdentity(profile, lang = 'en') {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const photoUrl  = getPhotoUrl(profile);
   const bannerUrl = getBannerUrl(profile);
   if (!photoUrl && !bannerUrl) return null;
+  // Short qualitative notes are what the user sees — switch them to German
+  // when the audit was launched from /de. JSON shape (photo.score, banner.score)
+  // stays English-keyed.
+  const langDirective = lang === 'de' ? `\n\nWrite the "notes" values in formal German (Sie form, Swiss "ss" not "ß"). JSON keys stay English.` : '';
 
   // Build the multimodal content array - one image block per available URL,
   // followed by the analysis prompt.
@@ -536,7 +545,7 @@ Scoring rubric (be honest, most score 0-2):
 - Photo: 0 = missing/unprofessional/very dated; 1 = basic/iPhone-era flat; 2 = solid professional with reasonable craft; 3 = considered, recent, intentional, well-lit, framed for narrative
 - Banner: 0 = LinkedIn default or absent; 1 = stock template / generic gradient; 2 = custom but generic message; 3 = bespoke design that reinforces a clear personal-brand narrative
 
-Return JSON ONLY. No prose, no markdown fences. Be direct - skip "great photo!" praise.`
+Return JSON ONLY. No prose, no markdown fences. Be direct - skip "great photo!" praise.${langDirective}`
   });
 
   try {
@@ -747,11 +756,16 @@ async function fetchApifyPosts(linkedinUrl) {
 //
 // Failure mode is silent (returns null) — better to render the audit without
 // the GEO card than fail the whole pipeline.
-async function probeLLMVisibility(firstName, lastName, companyName) {
+async function probeLLMVisibility(firstName, lastName, companyName, lang = 'en') {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
   if (!fullName) return null;
   const companyLine = companyName ? ` They currently work at ${companyName}.` : '';
+  // Switch the user-visible "summary" + "themes" into German for DE audits.
+  // Keep web_search queries in English to maximise hit quality (sources are
+  // mostly English on LinkedIn/press), and keep topSources/citations as
+  // domain strings (unchanged by language).
+  const langDirective = lang === 'de' ? `\n\nRESPONSE LANGUAGE: Write the "summary" and "themes" values in formal German (Sie form; Swiss "ss" not "ß"). Keep your web_search queries in English. JSON keys, "recognized"/"confidence" enum values, and the topSources domain strings stay as specified.` : '';
   const prompt = `You are auditing the public AI-search footprint of a real person. Search the web and tell me what you find about "${fullName}".${companyLine}
 
 Use the web_search tool (up to 5 queries) to find recent, specific public information — their work, what they're known for, notable accomplishments, press mentions, content they've published. Distinguish them from anyone else with the same name.
@@ -771,7 +785,7 @@ Confidence rubric:
 - "vague" = generic info only ("appears to be a marketing professional"), or you can't fully disambiguate from same-name people
 - "none" = no specific public information found
 
-Return ONLY the JSON.`;
+Return ONLY the JSON.${langDirective}`;
 
   try {
     const r = await fetchWithTimeout(ANTHROPIC_API, {
@@ -1662,6 +1676,12 @@ const TIER_DIRECTIVES = {
 };
 
 async function analyzeProfile(profile, heuristic, ctx = {}) {
+  // Locale for the user-facing prose Claude generates. JSON shape stays
+  // English-keyed — only the human-readable values change language.
+  const lang = ctx.lang === 'de' ? 'de' : 'en';
+  const langDirective = lang === 'de' ? `
+
+RESPONSE LANGUAGE: Respond entirely in formal German (use the "Sie" form throughout). Use Swiss orthography — ALWAYS "ss", never "ß" (e.g. "ausschliesslich", not "ausschließlich"). Keep these terms verbatim in English: Visibility Index, Von Peach, FutureMakers, FutureMakers Circle, LinkedIn, "Personal Brand", PDF, Score, Tier, GmbH. Translate everything else into natural, confident, executive German — including the executive summary, dimension commentary, move titles + rationales + steps, outreach email drafts (subjects and body text), writing/video ideas, and press-target descriptions. CRITICAL: keep all JSON keys, "service" tokens (strategy/content/video/photo/linkedin/speaker/pr), and tier names EXACTLY as specified in English — only the human-readable values switch language.` : '';
   const firstName    = getFirstName(profile) || 'there';
   const lastName     = getLastName(profile) || '';
   const headline     = (getHeadline(profile) || '').slice(0, 400);
@@ -1971,7 +1991,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 - photo    = Personal photoshoot & visual branding
 - linkedin = LinkedIn & platform optimisation
 - speaker  = Keynote speaking kit + public-speaking coaching
-- pr       = PR advisory`;
+- pr       = PR advisory${langDirective}`;
 
   const r = await fetchWithTimeout(ANTHROPIC_API, {
     method: 'POST',
