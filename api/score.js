@@ -2027,7 +2027,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
         // the schema in ~2200-2500 tokens. The 300-token buffer prevents truncation
         // while shaving ~2-3s off the critical-path latency. If the moves array
         // ever comes back empty post-Anthropic-update, bump back to 3500.
-        max_tokens: 2800,
+        max_tokens: 3500,
         messages: [{ role: 'user', content: prompt }]
       })
     }, 45000);
