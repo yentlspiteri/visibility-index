@@ -509,10 +509,23 @@ export default async function handler(req, res) {
    Returns structured judgments on lighting, framing, dating signals, banner
    coherence, and brand fit. This is the unlock that makes the Visual Identity
    dimension meaningfully scored - without it we only know presence/absence. */
+// Defensive coercion for image URL helpers — Apify scraper results have
+// occasionally returned objects like `{ url: 'https://…', expiresAt: '…' }`
+// for photo/banner instead of a bare string. When that happens, JSON.stringify
+// on the Anthropic payload produces `source.url: { url: '…' }` and Anthropic
+// rejects it as `messages.0.content.0.image.source.url.url: should be a string`.
+// This unwraps the nested .url, allows bare strings, and returns null for
+// anything else (so the call is skipped rather than failing).
+function coerceImageUrl(v) {
+  if (typeof v === 'string' && /^https?:\/\//i.test(v)) return v;
+  if (v && typeof v === 'object' && typeof v.url === 'string' && /^https?:\/\//i.test(v.url)) return v.url;
+  return null;
+}
+
 async function analyzeVisualIdentity(profile, lang = 'en') {
   if (!process.env.ANTHROPIC_API_KEY) return null;
-  const photoUrl  = getPhotoUrl(profile);
-  const bannerUrl = getBannerUrl(profile);
+  const photoUrl  = coerceImageUrl(getPhotoUrl(profile));
+  const bannerUrl = coerceImageUrl(getBannerUrl(profile));
   if (!photoUrl && !bannerUrl) return null;
   // Short qualitative notes are what the user sees — switch them to German
   // when the audit was launched from /de. JSON shape (photo.score, banner.score)
@@ -1993,23 +2006,36 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 - speaker  = Keynote speaking kit + public-speaking coaching
 - pr       = PR advisory${langDirective}`;
 
-  const r = await fetchWithTimeout(ANTHROPIC_API, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      // Tuned to 2800. Was 3500; profile testing showed Claude reliably finishes
-      // the schema in ~2200-2500 tokens. The 300-token buffer prevents truncation
-      // while shaving ~2-3s off the critical-path latency. If the moves array
-      // ever comes back empty post-Anthropic-update, bump back to 3500.
-      max_tokens: 2800,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  }, 45000);
+  // Retry on 429 (Anthropic rate-limit). 3 total attempts with exponential
+  // backoff (~1.5s, 3s). 429 responses are immediate (no wasted budget) and
+  // burst rate-limits typically clear within seconds; this restores the core
+  // analyzeProfile prose when concurrent audits stack against Anthropic's
+  // per-org tokens-per-minute. Other status codes break out immediately and
+  // fall through to the existing throw.
+  let r;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    r = await fetchWithTimeout(ANTHROPIC_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        // Tuned to 2800. Was 3500; profile testing showed Claude reliably finishes
+        // the schema in ~2200-2500 tokens. The 300-token buffer prevents truncation
+        // while shaving ~2-3s off the critical-path latency. If the moves array
+        // ever comes back empty post-Anthropic-update, bump back to 3500.
+        max_tokens: 2800,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    }, 45000);
+    if (r.status !== 429 || attempt === 2) break;
+    const waitMs = 1500 * Math.pow(2, attempt); // 1500ms, 3000ms
+    console.warn(`[analyzeProfile] Anthropic 429 — retry ${attempt + 1}/2 in ${waitMs}ms`);
+    await new Promise((res) => setTimeout(res, waitMs));
+  }
   if (!r.ok) throw new Error(`Anthropic ${r.status}`);
   const data = await r.json();
   const text = data.content?.[0]?.text || '';
