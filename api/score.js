@@ -2009,7 +2009,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
       max_tokens: 2800,
       messages: [{ role: 'user', content: prompt }]
     })
-  }, 20000);
+  }, 45000);
   if (!r.ok) throw new Error(`Anthropic ${r.status}`);
   const data = await r.json();
   const text = data.content?.[0]?.text || '';
