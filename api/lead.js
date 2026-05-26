@@ -91,6 +91,9 @@ export default async function handler(req, res) {
     metaCapi,                                                    // { eventId, sourceUrl, userAgent, fbp, fbc } - CAPI deduplication payload
     gaConsent                                                    // "granted" | "denied" - if denied, mirror lead_captured to GA4 server-side
   } = body;
+  // Locale signal from the audit submission. Only 'de' is recognized;
+  // anything else falls back to 'en' so the live English flow is the default.
+  const lang = (body.lang === 'de' ? 'de' : 'en');
 
   if (!email || typeof email !== 'string' || !email.includes('@')) {
     return res.status(400).json({ error: 'Please provide a valid email.' });
@@ -101,6 +104,7 @@ export default async function handler(req, res) {
   let pdfError  = null;   // surfaced in the response for browser-side debugging
   try {
     const pdfBytes = await buildReportPDF({
+      lang,                                                         // 'en' | 'de' — drives the static-label map in lib/buildReport.js
       firstName:           profile?.firstName  || '',
       headline:            profile?.headline   || '',
       companyName:         profile?.companyName || '',
@@ -165,14 +169,16 @@ export default async function handler(req, res) {
     try {
       const fromAddress = emailDebug.fromUsed;
       const firstName   = profile?.firstName || '';
-      const tierName    = tier?.name || 'your tier';
-      const subject     = `${firstName ? firstName + ', y' : 'Y'}our Visibility Index report`;
+      const tierName    = tier?.name || (lang === 'de' ? 'Ihr Tier' : 'your tier');
+      const subject     = lang === 'de'
+        ? `${firstName ? firstName + ', I' : 'I'}hr Visibility Index Report`
+        : `${firstName ? firstName + ', y' : 'Y'}our Visibility Index report`;
 
       const payload = {
         from:    fromAddress,
         to:      [email],
         subject: subject,
-        html:    buildEmailHTML({ firstName, total: score, tierName, hasPdf: !!pdfBase64 })
+        html:    buildEmailHTML({ firstName, total: score, tierName, hasPdf: !!pdfBase64, lang })
       };
       if (pdfBase64) {
         payload.attachments = [{
@@ -545,46 +551,83 @@ export default async function handler(req, res) {
 
 /* ───────────── helpers ───────────── */
 
-function buildEmailHTML({ firstName, total, tierName, hasPdf }) {
-  const safeName = escapeHtml(firstName || 'there');
+function buildEmailHTML({ firstName, total, tierName, hasPdf, lang = 'en' }) {
+  const isDe     = lang === 'de';
+  const safeName = escapeHtml(firstName || (isDe ? 'zusammen' : 'there'));
   const display  = typeof total === 'number' ? Math.round((total / 18) * 100) : null;
-  const tier     = escapeHtml(tierName || 'your tier');
-
-  // Tier-aware playful translation - matches the FutureMakers brand voice ("done playing small").
-  // Honest about where they are, generous about where they're going. No corporate fluff.
+  const tier     = escapeHtml(tierName || (isDe ? 'Ihr Tier' : 'your tier'));
   const tierKey  = (tierName || '').toLowerCase();
-  const tierCopy =
-    /hidden gem/.test(tierKey)         ? "You're nearly invisible right now - and that means everything is ahead of you. The good news: foundations are the easiest part."
-    : /rising voice/.test(tierKey)     ? "You've got something to say. Your brand just isn't amplifying it yet. Three small moves and you'll feel it shift."
-    : /emerging authority/.test(tierKey) ? "You're already doing more right than most. Now it's about consistency - turning effort into recognition."
-    : /recognised leader/.test(tierKey)  ? "You've built real authority. Time to sharpen the signature and make it legacy-level."
-    : "You're on your way. Three moves stand between where you are and where you're headed.";
 
-  const lede = hasPdf
-    ? "Your full audit just landed in your inbox. Big read inside - take ten minutes when you can."
-    : "Tiny hiccup on our side - the PDF is on the way. Your headline is below.";
+  // Localized chrome + tier-aware playful body copy. Honest about where they
+  // are, generous about where they're going. Match the existing English voice
+  // in German (formal Sie, Swiss "ss" not "ß"). German strings are DRAFT —
+  // pending native-speaker review per the project rule.
+  const T = isDe ? {
+    title:        'Ihr Visibility Index Report',
+    eyebrow:      'Von Peach &middot; FutureMakers &middot; Der Visibility Index',
+    greeting:     `Hallo ${safeName} &mdash;`,
+    yourIndex:    'Ihr Visibility Index',
+    auditReady:   'Ihr Audit ist bereit.',
+    hiddenGem:    'Sie sind im Moment nahezu unsichtbar &ndash; und das heisst: Alles liegt noch vor Ihnen. Die gute Nachricht: Die Grundlagen sind der einfachste Teil.',
+    risingVoice:  'Sie haben etwas zu sagen. Ihre Marke verstärkt es nur noch nicht. Drei kleine Schritte und Sie merken, wie sich etwas bewegt.',
+    emerging:     'Sie machen schon mehr richtig als die meisten. Jetzt geht es um Konsistenz &ndash; aus Aufwand wird Anerkennung.',
+    recognised:   'Sie haben echte Autorität aufgebaut. Zeit, die Handschrift zu schärfen und auf Legacy-Niveau zu bringen.',
+    defaultCopy:  'Sie sind auf dem richtigen Weg. Drei Schritte stehen zwischen dem, wo Sie sind, und dem, wo Sie hinwollen.',
+    ledeHasPdf:   'Ihr vollständiger Audit ist soeben in Ihrem Posteingang gelandet. Eine lohnenswerte Lektüre &ndash; nehmen Sie sich zehn Minuten, wenn Sie können.',
+    ledeNoPdf:    'Bei uns gab es einen kleinen Schluckauf &ndash; das PDF ist unterwegs. Ihr Ergebnis sehen Sie unten.',
+    ctaText:      'Lassen Sie uns darüber sprechen',
+    ctaCaption:   '15 Minuten. Kein Verkaufsgespräch. Wir gehen Ihren Audit gemeinsam durch.',
+    footer:       'Von Peach GmbH &middot; FutureMakers &middot; 2026',
+    repliesPre:   'Antworten willkommen &mdash;'
+  } : {
+    title:        'Your Visibility Index Report',
+    eyebrow:      'Von Peach &middot; FutureMakers &middot; The Visibility Index',
+    greeting:     `Hey ${safeName} &mdash;`,
+    yourIndex:    'Your Visibility Index',
+    auditReady:   'Your audit is ready.',
+    hiddenGem:    "You're nearly invisible right now - and that means everything is ahead of you. The good news: foundations are the easiest part.",
+    risingVoice:  "You've got something to say. Your brand just isn't amplifying it yet. Three small moves and you'll feel it shift.",
+    emerging:     "You're already doing more right than most. Now it's about consistency - turning effort into recognition.",
+    recognised:   "You've built real authority. Time to sharpen the signature and make it legacy-level.",
+    defaultCopy:  "You're on your way. Three moves stand between where you are and where you're headed.",
+    ledeHasPdf:   'Your full audit just landed in your inbox. Big read inside - take ten minutes when you can.',
+    ledeNoPdf:    'Tiny hiccup on our side - the PDF is on the way. Your headline is below.',
+    ctaText:      "Let's talk it through",
+    ctaCaption:   "15 minutes. No pitch. We'll walk through your audit together.",
+    footer:       'Von Peach GmbH &middot; FutureMakers &middot; 2026',
+    repliesPre:   'Replies welcome &mdash;'
+  };
+
+  const tierCopy =
+    /hidden gem/.test(tierKey)           ? T.hiddenGem
+    : /rising voice/.test(tierKey)       ? T.risingVoice
+    : /emerging authority/.test(tierKey) ? T.emerging
+    : /recognised leader/.test(tierKey)  ? T.recognised
+    : T.defaultCopy;
+
+  const lede = hasPdf ? T.ledeHasPdf : T.ledeNoPdf;
 
   // Indigo-to-lavender hero gradient + cream content. Dark navy outer (won't get inverted by
   // dark-mode email clients). Inline styles only - email clients strip <style> blocks.
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>Your Visibility Index Report</title></head>
+<html lang="${isDe ? 'de' : 'en'}">
+<head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>${T.title}</title></head>
 <body style="margin:0;padding:0;background:#0B0359;font-family:Helvetica,Arial,sans-serif;color:#0c0b09;line-height:1.55;-webkit-font-smoothing:antialiased;">
   <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
 
     <!-- Brand eyebrow on dark -->
     <p style="color:#A6A4ED;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin:0 0 24px;text-align:center;">
-      Von Peach &middot; FutureMakers &middot; The Visibility Index
+      ${T.eyebrow}
     </p>
 
     <!-- Hero card with score -->
     <div style="background:linear-gradient(160deg,#3F36B2 0%,#5A50CC 60%,#8683E5 100%);border-radius:24px 24px 0 0;padding:40px 36px 36px;text-align:center;color:#fafafa;">
       <p style="font-size:14px;font-weight:600;letter-spacing:0.04em;margin:0 0 18px;opacity:0.9;">
-        Hey ${safeName} &mdash;
+        ${T.greeting}
       </p>
       ${display !== null ? `
         <p style="font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;margin:0 0 8px;color:#EBF0FF;opacity:0.75;">
-          Your Visibility Index
+          ${T.yourIndex}
         </p>
         <p style="margin:0;line-height:1;">
           <span style="font-size:88px;font-weight:900;letter-spacing:-0.04em;color:#fafafa;">${display}</span>
@@ -595,7 +638,7 @@ function buildEmailHTML({ firstName, total, tierName, hasPdf }) {
         </p>
       ` : `
         <p style="font-size:32px;font-weight:700;margin:0;color:#fafafa;">
-          Your audit is ready.
+          ${T.auditReady}
         </p>
       `}
     </div>
@@ -615,21 +658,21 @@ function buildEmailHTML({ firstName, total, tierName, hasPdf }) {
       <div style="text-align:center;margin:32px 0 12px;">
         <a href="https://calendly.com/yentl-spiteri/15-min-intro?utm_source=email&utm_medium=report-delivery&utm_campaign=audit-followup"
            style="display:inline-block;background:#0c0b09;color:#fafafa;padding:18px 32px;border-radius:999px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.04em;text-transform:uppercase;">
-          Let's talk it through
+          ${T.ctaText}
         </a>
       </div>
 
       <p style="font-size:13px;color:#666;margin:14px 0 0;text-align:center;font-style:italic;">
-        15 minutes. No pitch. We'll walk through your audit together.
+        ${T.ctaCaption}
       </p>
     </div>
 
     <!-- Outer footer on dark -->
     <p style="font-size:10px;color:#A6A4ED;letter-spacing:0.16em;text-transform:uppercase;margin:32px 0 8px;text-align:center;opacity:0.7;">
-      Von Peach GmbH &middot; FutureMakers &middot; 2026
+      ${T.footer}
     </p>
     <p style="font-size:11px;color:#A6A4ED;margin:0;text-align:center;opacity:0.6;">
-      Replies welcome &mdash; <a href="mailto:hello@vonpeach.com" style="color:#EBF0FF;text-decoration:underline;">hello@vonpeach.com</a>
+      ${T.repliesPre} <a href="mailto:hello@vonpeach.com" style="color:#EBF0FF;text-decoration:underline;">hello@vonpeach.com</a>
     </p>
   </div>
 </body>
