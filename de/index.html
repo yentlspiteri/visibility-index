@@ -7399,95 +7399,6 @@ fbq('track', 'PageView');
 </style>
 
 <script src="/lang-switcher.js" defer></script>
-<style id="de-form-label-layout">
-  /* German label layout: always show .mobile-label, always hide the inline
-     English prose connectors (.prose-text). Keep the pickers + LinkedIn
-     input fully visible. Mirrors the @media (max-width: 600px) stacked
-     layout from index.html but applies at every viewport for /de/. */
-  .input-panel .mobile-label {
-    display: block !important;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--vp-indigo, #3F36B2);
-    margin: 24px 0 8px;
-  }
-  .input-panel .mobile-label:first-of-type { margin-top: 8px; }
-  .input-panel .prose-text { display: none !important; }
-  .input-panel .audit-prose {
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    text-align: left !important;
-  }
-  .input-panel .picker {
-    display: block !important;
-    width: 100%;
-    margin: 0 !important;
-  }
-  .input-panel .picker-trigger--inline {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    min-height: 52px;
-    padding: 14px 18px !important;
-    background: var(--vp-cream, #fafafa) !important;
-    border: 1px solid rgba(15,15,15,0.12) !important;
-    border-radius: 12px !important;
-    font-size: 16px !important;
-    color: var(--vp-deep-black, #0c0b09) !important;
-    font-weight: 500 !important;
-  }
-  .input-panel .picker-trigger--inline .picker-label {
-    font-size: 16px !important;
-    font-weight: 500 !important;
-    color: var(--vp-deep-black, #0c0b09) !important;
-    letter-spacing: 0 !important;
-    flex: 1;
-    text-align: left;
-  }
-  .input-panel .audit-prose:has(.audit-input) {
-    display: flex !important;
-    align-items: stretch;
-    width: 100%;
-    min-height: 52px;
-    padding: 0 !important;
-    background: var(--vp-cream, #fafafa);
-    border: 1px solid rgba(15,15,15,0.12);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .input-panel .audit-prefix {
-    display: inline-flex !important;
-    align-items: center;
-    padding: 0 0 0 18px !important;
-    color: rgba(15,15,15,0.55);
-    font-size: 16px;
-    white-space: nowrap;
-  }
-  .input-panel .audit-input {
-    flex: 1;
-    min-width: 0;
-    padding: 14px 14px 14px 4px !important;
-    font-size: 16px !important;
-    background: transparent !important;
-    border: 0 !important;
-    outline: none;
-    color: var(--vp-deep-black, #0c0b09);
-  }
-  /* Make sure the calculate button and trust line stay below the inputs */
-  .input-panel .audit-submit { display: block; width: 100%; margin-top: 18px; }
-  /* Hide the picker dropdown caret duplication on inline trigger */
-  .input-panel .picker-trigger--inline::after {
-    content: "\25BE";
-    color: var(--vp-indigo);
-    font-size: 14px;
-    margin-left: 12px;
-  }
-</style>
 </head>
 <body>
 
@@ -9099,19 +9010,22 @@ fbq('track', 'PageView');
 
       // ── Role-specific UI updates: a/an article + opportunities-vs-clients swap ──
       if (this.root.dataset.pickerName === 'role') {
-        // Swap "I'm a/an" article based on the option's data-article attribute.
+        // Swap the prose-article connector. English uses "I'm a/an [role]" with
+        // the article driven by data-article; German uses a fixed "Ich bin"
+        // (no equivalent a/an in this construction), so the data-article
+        // attribute is ignored on /de.
         const article = opt.dataset.article || 'a';
         const proseArticleEl = document.getElementById('prose-article');
         if (proseArticleEl) {
-          proseArticleEl.innerHTML = `I'm ${article}&nbsp;`;
+          proseArticleEl.innerHTML = LANG === 'de' ? 'Ich bin&nbsp;' : `I'm ${article}&nbsp;`;
         }
         // For role values flagged data-opps="1" (artist/speaker/creator), swap the
-        // "attract better clients & investors" goal copy to "attract the right
-        // opportunities" everywhere it appears (visible label + popover option +
-        // native <select>). For all other roles, restore the default.
+        // default goal copy to an "opportunities" variant everywhere it appears
+        // (visible label + popover option + native <select>). For all other
+        // roles, restore the default. Both texts localized to match the picker.
         const wantsOpps = opt.dataset.opps === '1';
-        const oppsText  = 'attract the right opportunities';
-        const defaultText = 'attract better clients & investors';
+        const oppsText    = LANG === 'de' ? 'die richtigen Gelegenheiten gewinnen' : 'attract the right opportunities';
+        const defaultText = LANG === 'de' ? 'bessere Kunden & Investoren gewinnen' : 'attract better clients & investors';
         const goalRoot   = document.querySelector('.picker[data-picker-name="goal"]');
         if (goalRoot) {
           const clientsOpt = goalRoot.querySelector('.picker-option[data-value="clients"]');
