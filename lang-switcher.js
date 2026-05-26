@@ -49,6 +49,13 @@
     sw.setAttribute('hreflang', otherLang);
     sw.setAttribute('aria-label', otherLang === 'de' ? 'Auf Deutsch ansehen' : 'View in English');
     sw.textContent = otherLang.toUpperCase();
+    // Record the user's manual choice so i18n-detect.js doesn't bounce them
+    // back to their browser-preferred language on the next visit. Set
+    // synchronously before navigation so localStorage is written by the
+    // time the next page's <head> reads it.
+    sw.addEventListener('click', function () {
+      try { localStorage.setItem('vi-lang', otherLang); } catch (_) { /* private mode */ }
+    });
 
     // Insert before the primary CTA when present, otherwise append.
     var cta = host.querySelector('.nav-cta, .cta, .nav-burger');

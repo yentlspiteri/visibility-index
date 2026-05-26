@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
+<script>window.__LANG='de';</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
@@ -15,35 +16,34 @@
      JSON-LD structured data tells Google this is a free SaaS-style web app, which
      unlocks rich result eligibility (rating, price, sameAs links).
      ─────────────────────────────────── -->
-<title>Free LinkedIn Visibility Audit for Founders, Execs & Board Members | Von Peach</title>
-<meta name="description" content="How visible are you, really? Get a free 60-second forensic audit of your LinkedIn, Google footprint and press mentions. Personalised PDF report. No login." />
+<title>Kostenloser LinkedIn-Sichtbarkeits-Audit für Gründer, Führungskräfte & Verwaltungsräte | Von Peach</title>
+<meta name="description" content="Wie sichtbar sind Sie wirklich? Holen Sie sich einen kostenlosen 60-Sekunden-Audit Ihres LinkedIn-Profils, Ihres Google-Fussabdrucks und Ihrer Pressestimmen. Personalisierter PDF-Report. Ohne Login." />
 <meta name="keywords" content="LinkedIn audit, personal brand audit, executive visibility, founder visibility, thought leadership audit, board member personal brand, free LinkedIn checker, personal branding tool, FutureMakers, Von Peach" />
 <meta name="author" content="Von Peach GmbH" />
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-<link rel="canonical" href="https://index.vonpeach.com/" />
+<link rel="canonical" href="https://index.vonpeach.com/de" />
 <link rel="alternate" hreflang="en" href="https://index.vonpeach.com/" />
 <link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de" />
 <link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/" />
-<script src="/i18n-detect.js"></script>
 
 <!-- Open Graph / Facebook / LinkedIn -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Von Peach FutureMakers" />
-<meta property="og:locale" content="en_US" />
-<meta property="og:url" content="https://index.vonpeach.com/" />
-<meta property="og:title" content="The Visibility Index — How visible are you, really?" />
-<meta property="og:description" content="Free 60-second audit of your LinkedIn, Google footprint and press mentions. Personalised PDF report on what to fix to win clients, speaking gigs and board seats." />
+<meta property="og:locale" content="de_CH" />
+<meta property="og:url" content="https://index.vonpeach.com/de" />
+<meta property="og:title" content="Der Visibility Index — Wie sichtbar sind Sie wirklich?" />
+<meta property="og:description" content="Kostenloser 60-Sekunden-Audit Ihres LinkedIn-Profils, Ihres Google-Fussabdrucks und Ihrer Pressestimmen. Personalisierter PDF-Report zu den Hebeln, mit denen Sie Kunden, Speaking-Gigs und Verwaltungsratsmandate gewinnen." />
 <meta property="og:image" content="https://index.vonpeach.com/img/og.jpg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="The Visibility Index by Von Peach FutureMakers — free LinkedIn audit" />
+<meta property="og:image:alt" content="Der Visibility Index von Von Peach FutureMakers — kostenloser LinkedIn-Audit" />
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="The Visibility Index — How visible are you, really?" />
-<meta name="twitter:description" content="Free 60-second audit of your LinkedIn, Google footprint and press mentions. Get a personalised PDF report." />
+<meta name="twitter:title" content="Der Visibility Index — Wie sichtbar sind Sie wirklich?" />
+<meta name="twitter:description" content="Kostenloser 60-Sekunden-Audit Ihres LinkedIn-Profils, Ihres Google-Fussabdrucks und Ihrer Pressestimmen. Mit personalisiertem PDF-Report." />
 <meta name="twitter:image" content="https://index.vonpeach.com/img/og.jpg" />
-<meta name="twitter:image:alt" content="The Visibility Index — free LinkedIn audit" />
+<meta name="twitter:image:alt" content="Der Visibility Index — kostenloser LinkedIn-Audit" />
 
 <!-- ─── STRUCTURED DATA / JSON-LD ───
      Multiple schema types so both Google (rich results) and LLMs (when reading
@@ -7397,37 +7397,127 @@ fbq('track', 'PageView');
     #vi-consent-accept, #vi-consent-decline { flex: 1; text-align: center; }
   }
 </style>
+
 <script src="/lang-switcher.js" defer></script>
+<style id="de-form-label-layout">
+  /* German label layout: always show .mobile-label, always hide the inline
+     English prose connectors (.prose-text). Keep the pickers + LinkedIn
+     input fully visible. Mirrors the @media (max-width: 600px) stacked
+     layout from index.html but applies at every viewport for /de/. */
+  .input-panel .mobile-label {
+    display: block !important;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vp-indigo, #3F36B2);
+    margin: 24px 0 8px;
+  }
+  .input-panel .mobile-label:first-of-type { margin-top: 8px; }
+  .input-panel .prose-text { display: none !important; }
+  .input-panel .audit-prose {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+  .input-panel .picker {
+    display: block !important;
+    width: 100%;
+    margin: 0 !important;
+  }
+  .input-panel .picker-trigger--inline {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 52px;
+    padding: 14px 18px !important;
+    background: var(--vp-cream, #fafafa) !important;
+    border: 1px solid rgba(15,15,15,0.12) !important;
+    border-radius: 12px !important;
+    font-size: 16px !important;
+    color: var(--vp-deep-black, #0c0b09) !important;
+    font-weight: 500 !important;
+  }
+  .input-panel .picker-trigger--inline .picker-label {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: var(--vp-deep-black, #0c0b09) !important;
+    letter-spacing: 0 !important;
+    flex: 1;
+    text-align: left;
+  }
+  .input-panel .audit-prose:has(.audit-input) {
+    display: flex !important;
+    align-items: stretch;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 !important;
+    background: var(--vp-cream, #fafafa);
+    border: 1px solid rgba(15,15,15,0.12);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .input-panel .audit-prefix {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 0 0 0 18px !important;
+    color: rgba(15,15,15,0.55);
+    font-size: 16px;
+    white-space: nowrap;
+  }
+  .input-panel .audit-input {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 14px 14px 4px !important;
+    font-size: 16px !important;
+    background: transparent !important;
+    border: 0 !important;
+    outline: none;
+    color: var(--vp-deep-black, #0c0b09);
+  }
+  /* Make sure the calculate button and trust line stay below the inputs */
+  .input-panel .audit-submit { display: block; width: 100%; margin-top: 18px; }
+  /* Hide the picker dropdown caret duplication on inline trigger */
+  .input-panel .picker-trigger--inline::after {
+    content: "\25BE";
+    color: var(--vp-indigo);
+    font-size: 14px;
+    margin-left: 12px;
+  }
+</style>
 </head>
 <body>
 
 <!-- ── Cookie consent banner (Consent Mode v2 / GDPR) ─────────────────────
      Hidden on load if consent already stored in localStorage.
      Injects LinkedIn tag + updates gtag/fbq consent on accept.             -->
-<div id="vi-consent" role="dialog" aria-label="Cookie consent" aria-live="polite">
-  <p>We use cookies to measure ad performance and improve your experience.
-     <a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
+<div id="vi-consent" role="dialog" aria-label="Cookie-Zustimmung" aria-live="polite">
+  <p>Wir nutzen Cookies, um die Performance unserer Anzeigen zu messen und Ihr Erlebnis zu verbessern.
+     <a href="/de/privacy.html" target="_blank" rel="noopener">Datenschutz</a></p>
   <div id="vi-consent-actions">
-    <button id="vi-consent-accept" type="button">Accept all</button>
-    <button id="vi-consent-decline" type="button">Only essential</button>
+    <button id="vi-consent-accept" type="button">Alle akzeptieren</button>
+    <button id="vi-consent-decline" type="button">Nur notwendige</button>
   </div>
 </div>
 
 <!-- Start-over affordance - only visible after audit completes (when nav is hidden) -->
-<a href="/" class="start-over" id="start-over" aria-label="Start a new audit">New audit</a>
+<a href="/de" class="start-over" id="start-over" aria-label="Neuen Audit starten">Neuer Audit</a>
 
 <!-- Graceful fallback if JS fails to load (rare but possible: ad-blockers, network errors, CSP). -->
 <noscript>
   <div style="padding:32px;background:#0B0359;color:#fafafa;font-family:Helvetica,Arial,sans-serif;text-align:center;line-height:1.6;">
-    <p style="font-size:18px;font-weight:600;margin:0 0 8px;">JavaScript is required for the Visibility Index.</p>
-    <p style="font-size:14px;margin:0;opacity:0.8;">Enable JavaScript and refresh, or email us at <a href="mailto:hello@vonpeach.com" style="color:#A6A4ED;">hello@vonpeach.com</a> for a hand audit.</p>
+    <p style="font-size:18px;font-weight:600;margin:0 0 8px;">Für den Visibility Index ist JavaScript erforderlich.</p>
+    <p style="font-size:14px;margin:0;opacity:0.8;">Aktivieren Sie JavaScript und laden Sie neu, oder schreiben Sie uns an <a href="mailto:hello@vonpeach.com" style="color:#A6A4ED;">hello@vonpeach.com</a> für einen manuellen Audit.</p>
   </div>
 </noscript>
 
 <!-- ─────────── NAV ─────────── -->
 <nav class="top">
   <div class="container">
-    <a href="/" class="logo" aria-label="Visibility Index — homepage">
+    <a href="/de" class="logo" aria-label="Visibility Index — Startseite">
       <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <g fill="#FCFCFC">
           <path d="M298.99,614.13h-34.36c10.38-48.96,20.56-96.75,30.86-145.34,15.56,0,30.7,0,46.73,0,9.35,31.71,18.27,63.38,28.42,97.8,6.95-34.2,13.42-65.83,19.92-97.8h34.07c-10.31,49.35-19.87,96.44-30.16,145.34h-45.66c-9.62-33.84-19.33-68.24-29.03-102.37h-.85c-3.06,17.24-5.83,34.54-9.19,51.73-3.26,16.7-7.07,33.53-10.74,50.64Z"/>
@@ -7445,11 +7535,11 @@ fbq('track', 'PageView');
            (1) inline style="display:none" wins before any CSS even loads
            (2) the @media (min-width: 769px) rule promotes them to inline-flex on desktop
            (3) the post-nav <script> removes any stragglers if JS detects a mobile viewport. -->
-      <a href="#methodology" class="nav-link nav-link-desktop" style="display:none">Methodology</a>
-      <a href="#circle"      class="nav-link nav-link-desktop" style="display:none">The Circle</a>
-      <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Book a call</a>
+      <a href="#methodology" class="nav-link nav-link-desktop" style="display:none">Methodik</a>
+      <a href="#circle"      class="nav-link nav-link-desktop" style="display:none">Der Circle</a>
+      <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-cta">Gespräch buchen</a>
       <button type="button" class="nav-burger" id="nav-burger"
-              aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-panel">
+              aria-label="Menü öffnen" aria-expanded="false" aria-controls="nav-mobile-panel">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -7458,9 +7548,9 @@ fbq('track', 'PageView');
 <!-- Mobile slide-down panel — lives OUTSIDE <nav> so position:fixed is relative to
      the viewport, not the sticky nav container (sticky ancestors break fixed children). -->
 <div class="nav-mobile-panel" id="nav-mobile-panel" aria-hidden="true">
-  <a href="#methodology" class="nav-mobile-link">Methodology</a>
-  <a href="#circle"      class="nav-mobile-link">The Circle</a>
-  <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-mobile-cta">Book a call</a>
+  <a href="#methodology" class="nav-mobile-link">Methodik</a>
+  <a href="#circle"      class="nav-mobile-link">Der Circle</a>
+  <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="nav-mobile-cta">Gespräch buchen</a>
 </div>
 
 <!-- DESKTOP-ONLY NAV REVEAL - on desktop viewports we strip the inline display:none
@@ -7498,10 +7588,10 @@ fbq('track', 'PageView');
       <span class="eyebrow">FutureMakers · Visibility Index</span>
     </div>
 
-    <h1 class="display">How visible are you, really?</h1>
+    <h1 class="display">Wie sichtbar sind Sie wirklich?</h1>
 
     <!-- Goal-aware subhead - primes the value prop based on the role + goal selection -->
-    <p class="hero-subhead" id="hero-subhead">The clients you want already Google you. Here's what they find.</p>
+    <p class="hero-subhead" id="hero-subhead">Die Kunden, die Sie wollen, googeln Sie längst. Das ist, was sie finden.</p>
 
     <!-- 2-COLUMN GRID: mad-libs LEFT, preview RIGHT -->
     <!-- Single full-width action area: editorial prose form + loading panel.
@@ -7511,88 +7601,88 @@ fbq('track', 'PageView');
       <div class="input-panel" id="input-panel">
         <!-- Mobile labels (hidden on desktop), prose connectors (hidden on mobile).
              Same form, two layouts via CSS. -->
-        <label class="mobile-label" for="ml-role">I am a</label>
+        <label class="mobile-label" for="ml-role">Ich bin</label>
         <div class="audit-prose">
-          <span class="prose-text" id="prose-article">I'm a&nbsp;</span><span class="picker" data-picker-name="role">
-            <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your role">
+          <span class="prose-text" id="prose-article">Ich bin&nbsp;</span><span class="picker" data-picker-name="role">
+            <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Ihre Rolle">
               <span class="picker-label" data-picker-label>CEO</span>
             </button>
             <!-- data-prose = lowercase prose-form text shown in the audit prose
                  data-article = "a" or "an" article that precedes it
                  data-opps    = "1" if this role should swap "clients & investors" → "opportunities" -->
-            <div class="picker-popover" role="listbox" aria-label="Choose your role">
-              <button type="button" class="picker-option" role="option" data-value="ceo"        data-prose="CEO"                 data-article="a"  aria-selected="true">CEO / C-suite</button>
-              <button type="button" class="picker-option" role="option" data-value="founder"    data-prose="founder"             data-article="a">Founder</button>
-              <button type="button" class="picker-option" role="option" data-value="investor"   data-prose="investor"            data-article="an">Investor</button>
-              <button type="button" class="picker-option" role="option" data-value="board"      data-prose="board member"        data-article="a">Board member / NED</button>
-              <button type="button" class="picker-option" role="option" data-value="consultant" data-prose="consultant"          data-article="a">Consultant / Advisor</button>
-              <button type="button" class="picker-option" role="option" data-value="marketer"   data-prose="marketer"            data-article="a">Marketer</button>
-              <button type="button" class="picker-option" role="option" data-value="creative"   data-prose="creative director"   data-article="a">Creative director</button>
-              <button type="button" class="picker-option" role="option" data-value="artist"     data-prose="artist"              data-article="an" data-opps="1">Artist</button>
-              <button type="button" class="picker-option" role="option" data-value="creator"    data-prose="creator"             data-article="a"  data-opps="1">Creator / Influencer</button>
-              <button type="button" class="picker-option" role="option" data-value="speaker"    data-prose="speaker"             data-article="a"  data-opps="1">Speaker / Author</button>
-              <button type="button" class="picker-option" role="option" data-value="senior"     data-prose="senior leader"       data-article="a">Senior leader</button>
+            <div class="picker-popover" role="listbox" aria-label="Wählen Sie Ihre Rolle">
+              <button type="button" class="picker-option" role="option" data-value="ceo"        data-prose="CEO"                 data-article="a"  aria-selected="true">CEO / C-Level</button>
+              <button type="button" class="picker-option" role="option" data-value="founder"    data-prose="Gründer"             data-article="a">Gründer / Gründerin</button>
+              <button type="button" class="picker-option" role="option" data-value="investor"   data-prose="Investor"            data-article="an">Investor / Investorin</button>
+              <button type="button" class="picker-option" role="option" data-value="board"      data-prose="Verwaltungsrat"      data-article="a">Verwaltungsrat / Beirat</button>
+              <button type="button" class="picker-option" role="option" data-value="consultant" data-prose="Berater"             data-article="a">Berater / Advisor</button>
+              <button type="button" class="picker-option" role="option" data-value="marketer"   data-prose="Marketer"            data-article="a">Marketer / Marketing-Lead</button>
+              <button type="button" class="picker-option" role="option" data-value="creative"   data-prose="Creative Director"   data-article="a">Creative Director</button>
+              <button type="button" class="picker-option" role="option" data-value="artist"     data-prose="Künstler"            data-article="an" data-opps="1">Künstler / Künstlerin</button>
+              <button type="button" class="picker-option" role="option" data-value="creator"    data-prose="Creator"             data-article="a"  data-opps="1">Creator / Influencer</button>
+              <button type="button" class="picker-option" role="option" data-value="speaker"    data-prose="Speaker"             data-article="a"  data-opps="1">Speaker / Autor</button>
+              <button type="button" class="picker-option" role="option" data-value="senior"     data-prose="Senior Leader"       data-article="a">Senior Leader</button>
             </div>
             <select class="picker-native" id="ml-role" aria-hidden="true" tabindex="-1">
-              <option value="ceo">CEO / C-suite</option>
-              <option value="founder">Founder</option>
-              <option value="investor">Investor</option>
-              <option value="board">Board member / NED</option>
-              <option value="consultant">Consultant / Advisor</option>
-              <option value="marketer">Marketer</option>
-              <option value="creative">Creative director</option>
-              <option value="artist">Artist</option>
+              <option value="ceo">CEO / C-Level</option>
+              <option value="founder">Gründer / Gründerin</option>
+              <option value="investor">Investor / Investorin</option>
+              <option value="board">Verwaltungsrat / Beirat</option>
+              <option value="consultant">Berater / Advisor</option>
+              <option value="marketer">Marketer / Marketing-Lead</option>
+              <option value="creative">Creative Director</option>
+              <option value="artist">Künstler / Künstlerin</option>
               <option value="creator">Creator / Influencer</option>
-              <option value="speaker">Speaker / Author</option>
-              <option value="senior">Senior leader</option>
+              <option value="speaker">Speaker / Autor</option>
+              <option value="senior">Senior Leader</option>
             </select>
-          </span><span class="prose-text">&nbsp;who wants to&nbsp;</span><label class="mobile-label" for="ml-goal">I want to</label><span class="picker" data-picker-name="goal">
-            <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Your goal">
-              <span class="picker-label" data-picker-label>attract better clients &amp; investors</span>
+          </span><span class="prose-text">&nbsp;und möchte&nbsp;</span><label class="mobile-label" for="ml-goal">Ich möchte</label><span class="picker" data-picker-name="goal">
+            <button type="button" class="picker-trigger picker-trigger--inline" aria-haspopup="listbox" aria-expanded="false" aria-label="Ihr Ziel">
+              <span class="picker-label" data-picker-label>bessere Kunden &amp; Investoren gewinnen</span>
             </button>
-            <div class="picker-popover" role="listbox" aria-label="Choose your goal">
-              <button type="button" class="picker-option" role="option" data-value="clients" aria-selected="true">attract better clients &amp; investors</button>
-              <button type="button" class="picker-option" role="option" data-value="speaking">land speaking &amp; media coverage</button>
-              <button type="button" class="picker-option" role="option" data-value="credibility">build industry credibility</button>
-              <button type="button" class="picker-option" role="option" data-value="legacy">leave a lasting legacy</button>
+            <div class="picker-popover" role="listbox" aria-label="Wählen Sie Ihr Ziel">
+              <button type="button" class="picker-option" role="option" data-value="clients" aria-selected="true">bessere Kunden &amp; Investoren gewinnen</button>
+              <button type="button" class="picker-option" role="option" data-value="speaking">Speaking-Gigs &amp; Medienpräsenz landen</button>
+              <button type="button" class="picker-option" role="option" data-value="credibility">Branchen-Glaubwürdigkeit aufbauen</button>
+              <button type="button" class="picker-option" role="option" data-value="legacy">ein bleibendes Vermächtnis schaffen</button>
             </div>
             <select class="picker-native" id="ml-goal" aria-hidden="true" tabindex="-1">
-              <option value="clients">attract better clients &amp; investors</option>
-              <option value="speaking">land speaking &amp; media coverage</option>
-              <option value="credibility">build industry credibility</option>
-              <option value="legacy">leave a lasting legacy</option>
+              <option value="clients">bessere Kunden &amp; Investoren gewinnen</option>
+              <option value="speaking">Speaking-Gigs &amp; Medienpräsenz landen</option>
+              <option value="credibility">Branchen-Glaubwürdigkeit aufbauen</option>
+              <option value="legacy">ein bleibendes Vermächtnis schaffen</option>
             </select>
           </span>
         </div>
 
-        <label class="mobile-label" for="input-linkedin">LinkedIn</label>
+        <label class="mobile-label" for="input-linkedin">LinkedIn-Profil</label>
         <div class="audit-prose">
-          <span class="prose-text">You can find me at&nbsp;</span><span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" name="linkedin-handle" placeholder="your-handle" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" data-1p-ignore data-lpignore="true" data-form-type="other" />
+          <span class="prose-text">Sie finden mich unter&nbsp;</span><span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" name="linkedin-handle" placeholder="ihr-handle" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" data-1p-ignore data-lpignore="true" data-form-type="other" />
         </div>
 
-        <button type="button" class="audit-submit" id="btn-calculate">Calculate my score</button>
+        <button type="button" class="audit-submit" id="btn-calculate">Score berechnen</button>
 
-        <div class="audit-trust">Free · 60 seconds · No login · GDPR-compliant</div>
+        <div class="audit-trust">Kostenlos · 60 Sekunden · Kein Login · DSGVO-konform</div>
       </div>
 
       <div class="loading-panel hidden" id="loading-panel">
-        <div class="loading-title">Good things take time.</div>
-        <div class="loading-subtitle" id="loading-subtitle">Reading your public signals…</div>
+        <div class="loading-title">Gute Dinge brauchen Zeit.</div>
+        <div class="loading-subtitle" id="loading-subtitle">Wir lesen Ihre öffentlichen Signale…</div>
         <ul class="loading-list" id="loading-list">
-          <li class="loading-row" data-step="0" data-msg="Mapping your footprint across the web…"><span class="loading-icon"></span><span>Profile &amp; Footprint</span></li>
-          <li class="loading-row" data-step="1" data-msg="Weighing your authority signals…"><span class="loading-icon"></span><span>Clarity &amp; Authority</span></li>
-          <li class="loading-row" data-step="2" data-msg="Reading your content and visual identity…"><span class="loading-icon"></span><span>Cadence &amp; Visual</span></li>
-          <li class="loading-row" data-step="3" data-msg="Putting it all together…"><span class="loading-icon"></span><span>Score</span></li>
+          <li class="loading-row" data-step="0" data-msg="Wir kartieren Ihren Fussabdruck im Netz…"><span class="loading-icon"></span><span>Profil &amp; Fussabdruck</span></li>
+          <li class="loading-row" data-step="1" data-msg="Wir gewichten Ihre Autoritätssignale…"><span class="loading-icon"></span><span>Klarheit &amp; Autorität</span></li>
+          <li class="loading-row" data-step="2" data-msg="Wir lesen Ihre Inhalte und Ihre visuelle Identität…"><span class="loading-icon"></span><span>Frequenz &amp; Visuelles</span></li>
+          <li class="loading-row" data-step="3" data-msg="Wir setzen alles zusammen…"><span class="loading-icon"></span><span>Score</span></li>
         </ul>
         <!-- Slow-audit nudge: hidden until 60s elapsed. Captures email so we can
              deliver results even if the user closes the tab. -->
         <div class="slow-audit-nudge hidden" id="slow-audit-nudge" role="status" aria-live="polite">
-          <p class="slow-audit-msg">Taking a little longer than usual — leave your email and we'll send your results directly, even if you close this tab.</p>
+          <p class="slow-audit-msg">Dauert etwas länger als üblich — hinterlassen Sie Ihre E-Mail-Adresse und wir senden Ihnen das Ergebnis direkt zu, auch wenn Sie diesen Tab schliessen.</p>
           <form class="slow-audit-form" novalidate>
-            <input type="email" placeholder="you@company.com" required autocomplete="email" inputmode="email" />
-            <button type="submit">Email me my results →</button>
+            <input type="email" placeholder="ihre@firma.com" required autocomplete="email" inputmode="email" />
+            <button type="submit">Ergebnis per E-Mail →</button>
           </form>
-          <button type="button" class="slow-audit-dismiss">I'll wait</button>
+          <button type="button" class="slow-audit-dismiss">Ich warte</button>
         </div>
       </div>
 
@@ -7602,7 +7692,7 @@ fbq('track', 'PageView');
          Replace with real client logos from vonpeach.com case studies in a follow-up.) -->
 
 
-    <a href="#methodology" class="scroll-hint">How it works</a>
+    <a href="#methodology" class="scroll-hint">So funktioniert's</a>
   </div>
 </section>
 
@@ -7613,7 +7703,7 @@ fbq('track', 'PageView');
   <div class="container">
     <div class="results-eyebrow-row">
       <span class="dot"></span>
-      <span class="eyebrow">Your result</span>
+      <span class="eyebrow">Ihr Ergebnis</span>
     </div>
 
     <!-- Score reveal at the top of results (moved from preview-card; IDs preserved so JS still works) -->
@@ -7622,7 +7712,7 @@ fbq('track', 'PageView');
         <img class="score-reveal-avatar" id="preview-avatar" src="" alt="" referrerpolicy="no-referrer" />
         <span class="score-reveal-avatar-fallback hidden" id="preview-avatar-fallback" aria-hidden="true">·</span>
         <div class="score-reveal-greeting-text">
-          <span class="score-reveal-eyebrow">Your Visibility Index</span>
+          <span class="score-reveal-eyebrow">Ihr Visibility Index</span>
           <span class="score-reveal-name" id="preview-name">-</span>
         </div>
       </div>
@@ -7646,18 +7736,18 @@ fbq('track', 'PageView');
       <div class="score-reveal-tier-tagline" id="tier-tagline">-</div>
       <span class="hidden" id="tier-cta"></span>
       <!-- Share-on-LinkedIn button. Opens LinkedIn composer with prefilled text via JS. -->
-      <button type="button" class="share-linkedin" id="share-linkedin" aria-label="Share my score on LinkedIn">
+      <button type="button" class="share-linkedin" id="share-linkedin" aria-label="Score auf LinkedIn teilen">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
         </svg>
-        Share on LinkedIn
+        Auf LinkedIn teilen
       </button>
     </div>
 
     <!-- "Here's what we found" - real scraped data surfaced as concrete cards.
          Hidden until the audit completes; populated by JS from the API payload. -->
     <div class="findings hidden" id="findings">
-      <span class="findings-eyebrow">Here's what we found about you</span>
+      <span class="findings-eyebrow">Das haben wir über Sie gefunden</span>
       <div class="findings-grid" id="findings-grid"><!-- populated by JS --></div>
     </div>
 
@@ -7666,20 +7756,20 @@ fbq('track', 'PageView');
          making the gap between "I know my score" and "I know what to do" tangible. -->
     <div class="report-strip hidden" id="report-strip">
       <div class="report-strip-body">
-        <span class="report-strip-eyebrow">Your personalised report is ready</span>
-        <p class="report-strip-title" id="report-strip-title">Here's where you can move the needle most.</p>
+        <span class="report-strip-eyebrow">Ihr personalisierter Report ist bereit</span>
+        <p class="report-strip-title" id="report-strip-title">Hier können Sie am meisten bewegen.</p>
         <ul class="report-strip-gaps" id="report-strip-gaps">
           <!-- Populated by JS: 3 weakest dimension cards with locked detail -->
         </ul>
       </div>
       <form class="report-strip-cta-col lead-inline-form" id="report-strip-form" data-lead-source="report_strip" novalidate>
-        <label class="lead-inline-label" for="report-strip-email">Get my full report — free</label>
+        <label class="lead-inline-label" for="report-strip-email">Vollständigen Report erhalten — kostenlos</label>
         <div class="lead-inline-row">
           <input type="email" id="report-strip-email" class="lead-inline-email"
-                 placeholder="you@company.com" required autocomplete="email" />
-          <button type="submit" class="report-strip-btn" id="report-strip-btn">Send it &rarr;</button>
+                 placeholder="ihre@firma.com" required autocomplete="email" />
+          <button type="submit" class="report-strip-btn" id="report-strip-btn">Senden &rarr;</button>
         </div>
-        <span class="report-strip-hint">Personalised PDF · 3 moves · in your inbox in minutes</span>
+        <span class="report-strip-hint">Personalisierte PDF · 3 Hebel · in Minuten im Postfach</span>
       </form>
     </div>
 
@@ -7690,7 +7780,7 @@ fbq('track', 'PageView');
         <p class="personal-summary" id="personal-summary"></p>
       </div>
       <div class="personal-teasers" id="personal-teasers-wrap">
-        <div class="personal-teasers-label">In your full report:</div>
+        <div class="personal-teasers-label">In Ihrem vollständigen Report:</div>
         <ul id="personal-teasers"></ul>
       </div>
       <!-- CTA removed: the report-strip above is the single primary email capture.
@@ -7702,9 +7792,9 @@ fbq('track', 'PageView');
     <div class="results-split">
       <div class="subscores" id="subscores"><!-- populated by JS - renders the hexagon SVG --></div>
       <div class="results-summary" id="results-summary">
-        <span class="results-summary-eyebrow">Your shape</span>
-        <h3 class="results-summary-title" id="results-summary-title">What this means.</h3>
-        <p class="results-summary-body" id="results-summary-body">Each side of the hexagon is one of the six dimensions. The bigger your shape, the more visible you are. Your weakest sides are where the easy wins live.</p>
+        <span class="results-summary-eyebrow">Ihre Form</span>
+        <h3 class="results-summary-title" id="results-summary-title">Was das bedeutet.</h3>
+        <p class="results-summary-body" id="results-summary-body">Jede Seite des Sechsecks ist eine der sechs Dimensionen. Je grösser Ihre Form, desto sichtbarer sind Sie. Ihre schwächsten Seiten sind dort, wo die schnellen Erfolge warten.</p>
       </div>
     </div>
 
@@ -7715,24 +7805,24 @@ fbq('track', 'PageView');
              context so it reads as a benefit, not a random email form. -->
         <div class="gate-bar-label" id="gate-bar-label">
           <span class="gate-bar-icon">📄</span>
-          <span id="gate-bar-text">Your personalised report is ready — get your roadmap.</span>
+          <span id="gate-bar-text">Ihr personalisierter Report ist bereit — holen Sie sich Ihre Roadmap.</span>
         </div>
-        <div class="gate-eyebrow">Your full report</div>
-        <h3 id="gate-cta-line">Here's what to build first.</h3>
-        <p>Personalised PDF. Three moves. In your inbox.</p>
+        <div class="gate-eyebrow">Ihr vollständiger Report</div>
+        <h3 id="gate-cta-line">Das bauen Sie zuerst.</h3>
+        <p>Personalisierte PDF. Drei Hebel. In Ihrem Postfach.</p>
         <form class="gate-form" id="gate-form" novalidate>
-          <span class="gate-label">Work email</span>
-          <input type="email" id="gate-email" placeholder="you@company.com" required />
+          <span class="gate-label">Geschäftliche E-Mail</span>
+          <input type="email" id="gate-email" placeholder="ihre@firma.com" required />
           <!-- Single email CTA. The walkthrough button + on-page Calendly embed
                were removed (per user request) — the Calendly link is still in the
                PDF report and the closing CTA, so users who want a walkthrough
                can book from the report. -->
           <div class="gate-btn-row">
             <button type="submit" data-action="email"
-                    class="gate-btn gate-btn--primary">Email me the report</button>
+                    class="gate-btn gate-btn--primary">Report per E-Mail senden</button>
           </div>
         </form>
-        <div class="gate-disclaimer">One email. No lists. Unsubscribe anytime.</div>
+        <div class="gate-disclaimer">Eine E-Mail. Keine Verteilerlisten. Jederzeit abbestellbar.</div>
       </div>
 
       <!-- Success state - replaces the form once /api/lead returns ok.
@@ -7742,7 +7832,7 @@ fbq('track', 'PageView');
                                (700px tall - breaks out of the sticky bar via
                                body.walkthrough-mode CSS class) -->
       <div class="gate-success hidden" id="gate-success" role="status" aria-live="polite">
-        <button type="button" class="gate-success-close" id="gate-success-close" aria-label="Dismiss notification">
+        <button type="button" class="gate-success-close" id="gate-success-close" aria-label="Hinweis schliessen">
           <svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
@@ -7753,16 +7843,16 @@ fbq('track', 'PageView');
             <path d="M14 27 L23 36 L39 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="gs-tick"/>
           </svg>
         </div>
-        <h3 class="gate-success-title" id="gate-success-title">Report on its way.</h3>
-        <p class="gate-success-line">We sent it to <strong id="gate-success-email">your inbox</strong>.</p>
-        <p class="gate-success-hint" id="gate-success-hint">Check spam if it doesn’t land in 60 seconds.</p>
+        <h3 class="gate-success-title" id="gate-success-title">Report ist unterwegs.</h3>
+        <p class="gate-success-line">Wir haben ihn an <strong id="gate-success-email">Ihr Postfach</strong> gesendet.</p>
+        <p class="gate-success-hint" id="gate-success-hint">Prüfen Sie den Spam-Ordner, falls er nicht in 60 Sekunden ankommt.</p>
       </div>
       <!-- Inline Calendly embed - brand-coloured, mounted via Calendly.initInlineWidget()
            when the user picks the walkthrough CTA. Stays on-domain so we capture
            the booking moment without losing them to a new tab. -->
       <!-- Inline Calendly mount removed per user request. Walkthrough flow is
            still available via the Calendly link in the PDF report's closing CTA
-           and in the next-moves section's "LET US HELP YOU" button. -->
+           and in the next-moves section's "LASSEN SIE UNS HELFEN" button. -->
     </div>
   </div>
 </section>
@@ -7772,11 +7862,11 @@ fbq('track', 'PageView');
   <div class="container">
     <div class="eyebrow-row" style="justify-content: center;">
       <span class="dot"></span>
-      <span class="eyebrow">This quarter</span>
+      <span class="eyebrow">Dieses Quartal</span>
     </div>
-    <h2 class="h2" id="next-moves-title" style="text-align: center; margin: 18px auto;">Three tips to apply now.</h2>
+    <h2 class="h2" id="next-moves-title" style="text-align: center; margin: 18px auto;">Drei Hebel, die Sie jetzt umsetzen.</h2>
     <p class="lede" style="text-align: center; margin: 0 auto 56px; color: rgba(252,252,252,0.72); max-width: 540px;">
-      Pulled from your audit. Specific to you.
+      Aus Ihrem Audit. Auf Sie zugeschnitten.
     </p>
 
     <div class="moves-grid" id="moves-grid"><!-- populated by JS --></div>
@@ -7785,7 +7875,7 @@ fbq('track', 'PageView');
 
     <div class="next-cta-row next-cta-row--single">
       <a href="https://calendly.com/yentl-spiteri/15-min-intro" target="_blank" rel="noopener" class="help-cta" id="help-cta">
-        LET US HELP YOU
+        LASSEN SIE UNS HELFEN
       </a>
     </div>
   </div>
@@ -7798,15 +7888,15 @@ fbq('track', 'PageView');
      the JS in revealNextMoves() reveals it once Claude returns the arrays. -->
 <section class="content-ideas-wrap hidden" id="content-ideas">
   <div class="container" style="max-width: 1080px;">
-    <h2 class="h2" id="content-ideas-title" style="text-align: center; margin: 0 auto 36px;">What to make.</h2>
+    <h2 class="h2" id="content-ideas-title" style="text-align: center; margin: 0 auto 36px;">Was Sie produzieren.</h2>
 
     <div class="content-split">
       <div class="content-col" id="writing-col">
-        <div class="content-col-eyebrow">Write</div>
+        <div class="content-col-eyebrow">Schreiben</div>
         <div class="content-list" id="writing-list"><!-- populated by JS --></div>
       </div>
       <div class="content-col" id="video-col">
-        <div class="content-col-eyebrow">Film</div>
+        <div class="content-col-eyebrow">Filmen</div>
         <div class="content-list" id="video-list"><!-- populated by JS --></div>
       </div>
     </div>
@@ -8232,13 +8322,13 @@ fbq('track', 'PageView');
     <div class="footer-grid footer-grid--4col">
       <!-- Column 1: company links -->
       <div class="footer-col">
-        <p class="footer-col-eyebrow">Company</p>
+        <p class="footer-col-eyebrow">Unternehmen</p>
         <ul>
           <li><a href="https://www.vonpeach.com" target="_blank" rel="noopener">Von Peach</a></li>
           <li><a href="https://www.vonpeach.com/personal-branding" target="_blank" rel="noopener">FutureMakers</a></li>
-          <li><a href="https://www.vonpeach.com/about" target="_blank" rel="noopener">About</a></li>
-          <li><a href="/methodology">Methodology</a></li>
-          <li><a href="/articles">Articles</a></li>
+          <li><a href="https://www.vonpeach.com/about" target="_blank" rel="noopener">Über uns</a></li>
+          <li><a href="/methodology">Methodik</a></li>
+          <li><a href="/articles">Artikel</a></li>
         </ul>
       </div>
 
@@ -8246,27 +8336,27 @@ fbq('track', 'PageView');
       <div class="footer-col">
         <p class="footer-col-eyebrow">Tools</p>
         <ul>
-          <li><a href="/linkedin-audit">LinkedIn audit</a></li>
-          <li><a href="/personal-brand-checker">Personal brand checker</a></li>
-          <li><a href="/free-personal-brand-audit">Free brand audit</a></li>
-          <li><a href="/executive-personal-brand-audit">Executive audit</a></li>
-          <li><a href="/glossary">Glossary</a></li>
+          <li><a href="/de/linkedin-audit">LinkedIn-Audit</a></li>
+          <li><a href="/de/personal-brand-checker">Personal-Brand-Checker</a></li>
+          <li><a href="/de/free-personal-brand-audit">Kostenloser Brand-Audit</a></li>
+          <li><a href="/de/executive-personal-brand-audit">Executive-Audit</a></li>
+          <li><a href="/glossary">Glossar</a></li>
         </ul>
       </div>
 
       <!-- Column 3: contact email -->
       <div class="footer-col footer-col-center">
-        <p class="footer-col-eyebrow">Reach out to us</p>
+        <p class="footer-col-eyebrow">Kontakt</p>
         <a class="footer-email" href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>
       </div>
 
       <!-- Column 4: socials -->
       <div class="footer-col footer-col-right">
-        <p class="footer-col-eyebrow">Socials</p>
+        <p class="footer-col-eyebrow">Social Media</p>
         <ul>
           <li><a href="https://www.instagram.com/vonpeachonline/" target="_blank" rel="noopener">Instagram</a></li>
           <li><a href="https://www.linkedin.com/company/65850001/" target="_blank" rel="noopener">LinkedIn</a></li>
-          <li><a href="https://www.vonpeach.com/press" target="_blank" rel="noopener">Press</a></li>
+          <li><a href="https://www.vonpeach.com/press" target="_blank" rel="noopener">Presse</a></li>
         </ul>
       </div>
     </div>
@@ -8274,7 +8364,7 @@ fbq('track', 'PageView');
     <!-- Bottom legal strip -->
     <div class="footer-legal-row">
       <div>
-        <a href="https://www.vonpeach.com/termsandconditions" target="_blank" rel="noopener">Terms and conditions</a>
+        <a href="https://www.vonpeach.com/termsandconditions" target="_blank" rel="noopener">AGB</a>
         <a href="https://www.vonpeach.com/impressum" target="_blank" rel="noopener">Impressum</a>
       </div>
       <div>Von Peach GmbH 2026</div>
@@ -8288,20 +8378,20 @@ fbq('track', 'PageView');
      Bottom-LEFT floating bug. Click opens a modal, comments POST to /api/feedback
      which emails yentl@vonpeach.com via Resend. Hidden on mobile. -->
 <button type="button" class="bug-report" id="bug-report"
-        title="Report a bug" aria-label="Report a bug" aria-controls="bug-modal" aria-expanded="false">🐛</button>
+        title="Bug melden" aria-label="Bug melden" aria-controls="bug-modal" aria-expanded="false">🐛</button>
 
 <div class="bug-modal" id="bug-modal" role="dialog" aria-modal="true" aria-labelledby="bug-modal-title" hidden>
   <div class="bug-modal-backdrop" data-bug-close></div>
   <div class="bug-modal-card" role="document">
-    <button type="button" class="bug-modal-close" data-bug-close aria-label="Close">×</button>
-    <h2 class="bug-modal-title" id="bug-modal-title">Report a bug</h2>
-    <p class="bug-modal-sub">What went wrong? The more detail the better. We'll add page context automatically.</p>
+    <button type="button" class="bug-modal-close" data-bug-close aria-label="Schliessen">×</button>
+    <h2 class="bug-modal-title" id="bug-modal-title">Bug melden</h2>
+    <p class="bug-modal-sub">Was ist schiefgelaufen? Je mehr Details, desto besser. Den Seitenkontext fügen wir automatisch hinzu.</p>
     <form id="bug-form" class="bug-form" novalidate>
-      <textarea id="bug-message" name="message" rows="5" placeholder="What broke? What did you expect to see?" required></textarea>
-      <input id="bug-email" name="email" type="email" placeholder="Your email (optional, so we can follow up)" autocomplete="email" />
+      <textarea id="bug-message" name="message" rows="5" placeholder="Was ist kaputt? Was hätten Sie erwartet?" required></textarea>
+      <input id="bug-email" name="email" type="email" placeholder="Ihre E-Mail (optional, falls wir nachfragen müssen)" autocomplete="email" />
       <div class="bug-actions">
-        <button type="button" class="bug-cancel" data-bug-close>Cancel</button>
-        <button type="submit" class="bug-submit">Send report</button>
+        <button type="button" class="bug-cancel" data-bug-close>Abbrechen</button>
+        <button type="submit" class="bug-submit">Senden</button>
       </div>
       <div class="bug-status" id="bug-status" aria-live="polite"></div>
     </form>

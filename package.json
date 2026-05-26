@@ -9,10 +9,14 @@
   },
   "scripts": {
     "dev": "vercel dev",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "i18n:extract": "node scripts/i18n-extract.mjs",
+    "i18n:seed": "node scripts/i18n-seed.mjs",
+    "i18n:sync": "node scripts/i18n-sync.mjs"
   },
   "dependencies": {
     "@vercel/kv": "^3.0.0",
+    "node-html-parser": "^6.1.13",
     "pdf-lib": "^1.17.1",
     "postgres": "^3.4.4"
   }
