@@ -2021,7 +2021,14 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 - photo    = Personal photoshoot & visual branding
 - linkedin = LinkedIn & platform optimisation
 - speaker  = Keynote speaking kit + public-speaking coaching
-- pr       = PR advisory${langDirective}`;
+- pr       = PR advisory${langDirective}
+
+FORMAT REQUIREMENTS (very important — affects parsing):
+- Return ONLY the raw JSON object specified above. Begin directly with \`{\` and end with \`}\`.
+- Do NOT include any preamble (no "Here is the analysis:" / "Hier ist Ihre Analyse:"). Do NOT include any commentary after the JSON.
+- Do NOT wrap the output in markdown code fences. No \`\`\`json blocks.
+- All JSON keys, structural strings, and string-VALUE delimiters must use straight ASCII double quotes ("). Do not use typographic quotes („ " » «) as string delimiters; if a quoted phrase appears inside a string value, escape the internal " as \\".
+- Output must be valid JSON that JSON.parse() will accept on the first try.`;
 
   // Retry on 429 (Anthropic rate-limit). 3 total attempts with exponential
   // backoff (~1.5s, 3s). 429 responses are immediate (no wasted budget) and
@@ -2056,7 +2063,15 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
   if (!r.ok) throw new Error(`Anthropic ${r.status}`);
   const data = await r.json();
   const text = data.content?.[0]?.text || '';
-  const match = text.match(/\{[\s\S]*\}/);
+  // Strip markdown code fences before regex-extracting the JSON. Despite the
+  // prompt's explicit "no markdown fences" rule, Haiku occasionally still
+  // wraps responses in ```json ... ``` — especially under the German
+  // RESPONSE LANGUAGE directive. Stripping makes the extractor robust to
+  // either output shape; the prompt + this combine for defense in depth.
+  const cleanedText = text
+    .replace(/^[\s\S]*?```(?:json)?\s*/i, (m) => (/```/.test(m) ? '' : m))
+    .replace(/```\s*$/i, '');
+  const match = cleanedText.match(/\{[\s\S]*\}/);
   const fallback = {
     clarityScore: 1,
     clarityRationale: 'Parse fallback.',
@@ -2065,7 +2080,13 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
     moves: [],
     tierRoadmap: []
   };
-  if (!match) return fallback;
+  if (!match) {
+    // Log a short prefix of the raw text on parse-extraction failure so the
+    // next Vercel log entry shows WHAT Claude returned. Truncated to keep
+    // logs cheap; full debugging requires a dedicated dump.
+    console.warn('[analyzeProfile] no JSON braces found in Claude text. Prefix:', text.slice(0, 200));
+    return fallback;
+  }
   try {
     const p = JSON.parse(match[0]);
     return {
@@ -2145,7 +2166,12 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
           }))
         : []
     };
-  } catch {
+  } catch (err) {
+    // Log enough of the matched JSON candidate to diagnose parse failures
+    // in Vercel logs without dumping the whole response.
+    console.warn('[analyzeProfile] JSON.parse failed:', err?.message || err);
+    console.warn('[analyzeProfile] candidate head:', match[0].slice(0, 300));
+    console.warn('[analyzeProfile] candidate tail:', match[0].slice(-200));
     return fallback;
   }
 }
