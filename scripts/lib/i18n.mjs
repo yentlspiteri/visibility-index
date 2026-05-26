@@ -267,6 +267,13 @@ export function applyDeChrome(root, page) {
   if (canonical && cfg?.canonical) canonical.setAttribute('href', cfg.canonical);
   const ogLocale = root.querySelector('meta[property="og:locale"]');
   if (ogLocale) ogLocale.setAttribute('content', 'de_DE');
+  // Rewrite root-relative homepage links to the German homepage so audit CTAs
+  // (and the logo) on /de/ pages don't dump the user into the English flow.
+  // Conservative: only the exact href="/" — other paths stay as-is so a
+  // not-yet-translated page (e.g. /methodology) still resolves.
+  for (const a of root.querySelectorAll('a[href="/"]')) {
+    a.setAttribute('href', '/de');
+  }
 }
 
 // HTML void elements — re-emitted with a self-closing slash to match the
