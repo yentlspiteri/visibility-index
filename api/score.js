@@ -509,16 +509,33 @@ export default async function handler(req, res) {
    Returns structured judgments on lighting, framing, dating signals, banner
    coherence, and brand fit. This is the unlock that makes the Visual Identity
    dimension meaningfully scored - without it we only know presence/absence. */
-// Defensive coercion for image URL helpers — Apify scraper results have
-// occasionally returned objects like `{ url: 'https://…', expiresAt: '…' }`
-// for photo/banner instead of a bare string. When that happens, JSON.stringify
-// on the Anthropic payload produces `source.url: { url: '…' }` and Anthropic
-// rejects it as `messages.0.content.0.image.source.url.url: should be a string`.
-// This unwraps the nested .url, allows bare strings, and returns null for
-// anything else (so the call is skipped rather than failing).
+// Defensive coercion for image URL helpers. Apify's LinkedIn scrapers return
+// pictureUrl as a SIZE-KEYED object — e.g. `{ "400x400": "https://…",
+// "200x200": "…", "100x100": "…" }` — not a bare URL string. Banner URLs
+// can also come in a `{ url: '…' }` shape. Without normalizing these to a
+// plain string, the Anthropic payload's `source.url` becomes a nested
+// object and the API rejects it with
+// `messages.0.content.0.image.source.url.url: should be a valid string`.
+//
+// Handles, in order: bare http(s) string → { url: '…' } → LinkedIn
+// size-map (preferring larger sizes for vision quality) → any string-
+// valued property that looks like a URL. Returns null otherwise, so the
+// vision call is skipped cleanly rather than failing.
 function coerceImageUrl(v) {
   if (typeof v === 'string' && /^https?:\/\//i.test(v)) return v;
-  if (v && typeof v === 'object' && typeof v.url === 'string' && /^https?:\/\//i.test(v.url)) return v.url;
+  if (!v || typeof v !== 'object') return null;
+  if (typeof v.url === 'string' && /^https?:\/\//i.test(v.url)) return v.url;
+  // LinkedIn size-map (keys like "400x400", "200x200"). Sort largest-first.
+  const sizeKeys = Object.keys(v)
+    .filter((k) => /^\d+x\d+$/.test(k))
+    .sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+  for (const k of sizeKeys) {
+    if (typeof v[k] === 'string' && /^https?:\/\//i.test(v[k])) return v[k];
+  }
+  // Last-resort fallback: any http(s) string property at all.
+  for (const val of Object.values(v)) {
+    if (typeof val === 'string' && /^https?:\/\//i.test(val)) return val;
+  }
   return null;
 }
 
