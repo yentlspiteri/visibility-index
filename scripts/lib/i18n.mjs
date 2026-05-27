@@ -53,6 +53,49 @@ export const PAGES = {
     de: 'de/glossary.html',
     canonical: 'https://index.vonpeach.com/de/glossary',
   },
+  // Articles — SEO deep-dives keyed under /articles/ on the EN side and
+  // mirrored under /de/articles/ on the DE side. The sync script will create
+  // the de/articles directory if it doesn't exist.
+  'articles-index': {
+    en: 'articles/index.html',
+    de: 'de/articles/index.html',
+    canonical: 'https://index.vonpeach.com/de/articles',
+  },
+  'article-brand-clarity': {
+    en: 'articles/brand-clarity.html',
+    de: 'de/articles/brand-clarity.html',
+    canonical: 'https://index.vonpeach.com/de/articles/brand-clarity',
+  },
+  'article-authority-signals': {
+    en: 'articles/authority-signals.html',
+    de: 'de/articles/authority-signals.html',
+    canonical: 'https://index.vonpeach.com/de/articles/authority-signals',
+  },
+  'article-content-cadence': {
+    en: 'articles/content-cadence.html',
+    de: 'de/articles/content-cadence.html',
+    canonical: 'https://index.vonpeach.com/de/articles/content-cadence',
+  },
+  'article-digital-footprint': {
+    en: 'articles/digital-footprint.html',
+    de: 'de/articles/digital-footprint.html',
+    canonical: 'https://index.vonpeach.com/de/articles/digital-footprint',
+  },
+  'article-network-recognition': {
+    en: 'articles/network-recognition.html',
+    de: 'de/articles/network-recognition.html',
+    canonical: 'https://index.vonpeach.com/de/articles/network-recognition',
+  },
+  'article-visual-identity': {
+    en: 'articles/visual-identity.html',
+    de: 'de/articles/visual-identity.html',
+    canonical: 'https://index.vonpeach.com/de/articles/visual-identity',
+  },
+  'article-framework': {
+    en: 'articles/personal-brand-audit-framework.html',
+    de: 'de/articles/personal-brand-audit-framework.html',
+    canonical: 'https://index.vonpeach.com/de/articles/personal-brand-audit-framework',
+  },
 };
 
 /*
