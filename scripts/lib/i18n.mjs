@@ -43,6 +43,16 @@ export const PAGES = {
     de: 'de/personal-brand-checker.html',
     canonical: 'https://index.vonpeach.com/de/personal-brand-checker',
   },
+  methodology: {
+    en: 'methodology.html',
+    de: 'de/methodology.html',
+    canonical: 'https://index.vonpeach.com/de/methodology',
+  },
+  glossary: {
+    en: 'glossary.html',
+    de: 'de/glossary.html',
+    canonical: 'https://index.vonpeach.com/de/glossary',
+  },
 };
 
 /*
