@@ -83,6 +83,29 @@ const TIERS = [
     cta:"See how to sharpen" }
 ];
 
+// German tier copy. tierFor() picks this set when lang === 'de'. Tier
+// `name` values stay English so they remain the canonical key that the PDF
+// builder, the client SPA's German I18N TIERS, and the Mailchimp segment
+// can all agree on. Only the human-readable tagline/blurb/cta switch.
+const TIERS_DE = [
+  { min:0,  max:5,  name:'The Hidden Gem',
+    tagline:'Echte Expertise. Die Welt weiss es nur noch nicht.',
+    blurb:'Nahezu unsichtbar — aber alles liegt noch vor Ihnen.',
+    cta:'Den Fahrplan ansehen' },
+  { min:6,  max:10, name:'The Rising Voice',
+    tagline:'Sie bauen Schwung auf, aber ein paar Lücken bremsen Sie.',
+    blurb:'Sie haben etwas zu sagen. Ihre Marke verstärkt es nur noch nicht.',
+    cta:'Sehen, was zuerst zu bauen ist' },
+  { min:11, max:15, name:'The Emerging Authority',
+    tagline:'Solide Grundlagen. Zeit zu skalieren.',
+    blurb:'Sie machen mehr richtig als die meisten. Jetzt: Konsistenz.',
+    cta:'Die Lücken zum Schliessen sehen' },
+  { min:16, max:18, name:'The Recognised Leader',
+    tagline:'Starke Marke. Machen wir sie zum Vermächtnis.',
+    blurb:'Echte Autorität aufgebaut. Als Nächstes: die Handschrift schärfen.',
+    cta:'Sehen, wie Sie schärfen' }
+];
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -314,7 +337,7 @@ export default async function handler(req, res) {
     const provisionalTotal = (heuristic.footprint || 0) + (heuristic.authority || 0)
                            + (heuristic.cadence   || 0) + (heuristic.visual    || 0)
                            + (heuristic.network   || 0) + 1;     // +1 for placeholder clarity
-    const provisionalTier  = tierFor(provisionalTotal);
+    const provisionalTier  = tierFor(provisionalTotal, lang);
 
     // 3) Run Claude analysis with profile + heuristic + rich context.
     //    Context unlocks goal-aware, role-aware, tier-aware move generation.
@@ -379,8 +402,10 @@ export default async function handler(req, res) {
     const subTotal     = Object.values(subs).reduce((a, b) => a + b, 0);
     const trendsModifier = trendsBonus(googleTrends);
     const total = Math.min(18, subTotal + trendsModifier);
-    const tier  = tierFor(total);
-    const nextTier = TIERS.find(t => t.min > tier.max) || tier;
+    const tier  = tierFor(total, lang);
+    // nextTier reads from the same lang-aware set so its tagline/blurb match.
+    const tierSet = lang === 'de' ? TIERS_DE : TIERS;
+    const nextTier = tierSet.find(t => t.min > tier.max) || tier;
 
     // Persist the audit results to Notion. Fire-and-forget - never blocks the
     // response, never throws. If NOTION_AUDITS_DATABASE_ID isn't set, it no-ops.
@@ -1711,7 +1736,19 @@ async function analyzeProfile(profile, heuristic, ctx = {}) {
   const lang = ctx.lang === 'de' ? 'de' : 'en';
   const langDirective = lang === 'de' ? `
 
-RESPONSE LANGUAGE: Respond entirely in formal German (use the "Sie" form throughout). Use Swiss orthography — ALWAYS "ss", never "ß" (e.g. "ausschliesslich", not "ausschließlich"). Keep these terms verbatim in English: Visibility Index, Von Peach, FutureMakers, FutureMakers Circle, LinkedIn, "Personal Brand", PDF, Score, Tier, GmbH. Translate everything else into natural, confident, executive German — including the executive summary, dimension commentary, move titles + rationales + steps, outreach email drafts (subjects and body text), writing/video ideas, and press-target descriptions. CRITICAL: keep all JSON keys, "service" tokens (strategy/content/video/photo/linkedin/speaker/pr), and tier names EXACTLY as specified in English — only the human-readable values switch language.` : '';
+RESPONSE LANGUAGE: Respond entirely in formal German (use the "Sie" form throughout — never "du"/"dich"/"dein"). Use Swiss orthography — ALWAYS "ss", never "ß" (e.g. "ausschliesslich", not "ausschließlich"). Keep these terms verbatim in English: Visibility Index, Von Peach, FutureMakers, FutureMakers Circle, LinkedIn, "Personal Brand", PDF, Score, Tier, GmbH. Translate everything else into natural, confident, executive German — including the executive summary, dimension commentary, move titles + rationales + steps, outreach email drafts (subjects and body text), writing/video ideas, and press-target descriptions.
+
+LENGTH LIMITS (German tends to overflow the PDF card layout — keep titles short):
+- move.title: ≤ 45 characters. Use punchy imperatives ("Banner schärfen", "Neue Headline schreiben"), never full sentences.
+- writingIdeas[].title and videoIdeas[].title: ≤ 50 characters.
+- pressTargets[].outlet: ≤ 25 characters.
+If you can't fit the German idea in the budget, simplify the concept, don't extend.
+
+ALSO TRANSLATE THESE STRING FIELDS to German (they were being missed):
+- move.timeToInvest: use German time units, e.g. "20 Min", "1 Std", "wöchentlich 1 Std", "30 Min", "2 Std" — not "20 MIN", "1 HOUR", "WEEKLY HOUR".
+- videoIdeas[].format and videoIdeas[].shotIn: write in German, e.g. format "60 Sek Talking Head", shotIn "15 Min, ohne Schnitt" — not "60s talking head" / "15 min, no edit".
+
+CRITICAL: keep all JSON keys, "service" tokens (strategy/content/video/photo/linkedin/speaker/pr), the "type" enum on outreach (press/podcast/speaker/board/advisor/partner/investor), and tier "name" values EXACTLY as specified in English — only the human-readable values switch language.` : '';
   const firstName    = getFirstName(profile) || 'there';
   const lastName     = getLastName(profile) || '';
   const headline     = (getHeadline(profile) || '').slice(0, 400);
@@ -2676,8 +2713,9 @@ function scoreNetwork(profile, presence) {
   return clamp03(Math.round(pts));
 }
 
-function tierFor(score) {
-  return TIERS.find(t => score >= t.min && score <= t.max) || TIERS[0];
+function tierFor(score, lang = 'en') {
+  const set = lang === 'de' ? TIERS_DE : TIERS;
+  return set.find(t => score >= t.min && score <= t.max) || set[0];
 }
 
 /* ═══════════════════════════ HELPERS ═══════════════════════════ */
