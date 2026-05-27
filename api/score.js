@@ -92,18 +92,19 @@ const TIERS_DE = [
     tagline:'Echte Expertise. Die Welt weiss es nur noch nicht.',
     blurb:'Nahezu unsichtbar — aber alles liegt noch vor Ihnen.',
     cta:'Den Fahrplan ansehen' },
+
   { min:6,  max:10, name:'The Rising Voice',
     tagline:'Sie bauen Schwung auf, aber ein paar Lücken bremsen Sie.',
     blurb:'Sie haben etwas zu sagen. Ihre Marke verstärkt es nur noch nicht.',
-    cta:'Sehen, was zuerst zu bauen ist' },
+    cta:'Sehen, was Sie zuerst aufbauen sollten' },
   { min:11, max:15, name:'The Emerging Authority',
     tagline:'Solide Grundlagen. Zeit zu skalieren.',
     blurb:'Sie machen mehr richtig als die meisten. Jetzt: Konsistenz.',
-    cta:'Die Lücken zum Schliessen sehen' },
+    cta:'Sehen, welche Lücken zu schliessen sind' },
   { min:16, max:18, name:'The Recognised Leader',
     tagline:'Starke Marke. Machen wir sie zum Vermächtnis.',
     blurb:'Echte Autorität aufgebaut. Als Nächstes: die Handschrift schärfen.',
-    cta:'Sehen, wie Sie schärfen' }
+    cta:'Sehen, wie Sie Ihre Handschrift schärfen' }
 ];
 
 export default async function handler(req, res) {
