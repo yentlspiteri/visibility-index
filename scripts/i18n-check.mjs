@@ -2,10 +2,15 @@
 /*
  * scripts/i18n-check.mjs — automated style checks for German content.
  *
- * Gates the rules established for this repo's DE rollout:
- *   - Swiss orthography: ALWAYS "ss", never "ß" anywhere in DE-only files.
- *   - Formal Sie: no leaking "du"/"dich"/"dein"/"dir" outside English source
- *     (these slip in when Claude under the German directive drifts informal).
+ * Gates the rules established for this repo's DE rollout (target audience
+ * is Germany, not Switzerland):
+ *   - Standard German orthography: words requiring "ß" after long vowels /
+ *     diphthongs must use "ß", not Swiss "ss". We don't ban "ß" itself —
+ *     instead we ban a curated list of Swiss-spelled common words that
+ *     would otherwise drift back in if Claude under the German directive
+ *     reverts (ausschliesslich, grösser, schliessen, weiss, Strasse,
+ *     Massnahme, regelmässig, etc.).
+ *   - Formal Sie: no leaking "du"/"dich"/"dein"/"dir" outside English source.
  *   - Brand names preserved verbatim: Visibility Index, Von Peach,
  *     FutureMakers, LinkedIn, "Personal Brand".
  *
@@ -30,7 +35,33 @@ const args = new Set(process.argv.slice(2));
 const QUIET = args.has('--quiet');
 
 const BRAND_TERMS = ['Visibility Index', 'Von Peach', 'FutureMakers', 'LinkedIn'];
-const SS_FORBIDDEN = /ß/g;
+// Swiss-spelled words that should always be German-spelled in target-DE
+// content. Words where the German rule keeps "ss" (after short vowels) are
+// NOT in this list — only words where standard German requires "ß".
+const SWISS_FORBIDDEN_WORDS = [
+  'ausschliesslich', 'ausschliessen', 'ausschliesst', 'ausschliessend',
+  'grösser', 'grössere', 'grösseren', 'grösserer', 'grösseres',
+  'grösste', 'grössten', 'grösstes', 'grösster',
+  'Grösse', 'Grössen',
+  'schliesslich', 'schliessen', 'schliesst',
+  'abschliessend', 'anschliessend', 'erschliessen', 'entschliessen',
+  'heisst', 'heissen',
+  'weiss', 'Weiss', 'weisse', 'weissen', 'weisser',
+  'Strasse', 'Strassen',
+  'dreissig', 'Fuss', 'Füsse',
+  'draussen', 'ausserhalb', 'ausserdem',
+  'äusserst', 'äussert', 'äussern',
+  'süss', 'süsse',
+  'beissen', 'beisst', 'fliessen', 'fliesst', 'fliessend',
+  'giessen', 'giesst', 'geniessen', 'geniesst',
+  'schiessen', 'schiesst',
+  'stossen', 'stösst', 'Stoss',
+  'reissen', 'reisst',
+  'Massnahme', 'Massnahmen', 'Massstab',
+  'regelmässig', 'regelmässige', 'regelmässigen', 'unregelmässig',
+  'mässig', 'gemäss',
+];
+const SWISS_REGEX = new RegExp('\\b(' + SWISS_FORBIDDEN_WORDS.join('|') + ')\\b', 'g');
 const DU_FORBIDDEN = /\b(du|dich|dein(?:e[mnrs]?)?|dir)\b/gi;
 // English words that may legitimately contain "ß" or look like "du" in
 // code (very narrow allow-list — only used to suppress JS code lines).
@@ -62,9 +93,9 @@ async function scanHtmlFiles() {
       .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '<!-- style -->');
 
     // 1. ß forbidden in user-facing text — Swiss orthography
-    const eszett = [...scrubbed.matchAll(SS_FORBIDDEN)].map((m) => m.index);
+    const eszett = [...scrubbed.matchAll(SWISS_REGEX)].map((m) => m.index);
     if (eszett.length) {
-      record(file, 'ss-not-ß', eszett.map((i) => contextOf(scrubbed, i, 30)));
+      record(file, 'swiss-not-german', eszett.map((i) => contextOf(scrubbed, i, 30)));
     }
 
     // 2. Informal du forbidden in user-facing text
@@ -118,9 +149,9 @@ async function scanBuildReportLabels() {
     return;
   }
   const de = text.slice(startMatch.index + startMatch[0].length, end);
-  const eszett = [...de.matchAll(SS_FORBIDDEN)].map((mm) => mm.index);
+  const eszett = [...de.matchAll(SWISS_REGEX)].map((mm) => mm.index);
   if (eszett.length) {
-    record(file, 'ss-not-ß (LABELS.de)', eszett.map((i) => contextOf(de, i, 40)));
+    record(file, 'swiss-not-german (LABELS.de)', eszett.map((i) => contextOf(de, i, 40)));
   }
   const du = [...de.matchAll(DU_FORBIDDEN)];
   if (du.length) {
@@ -135,8 +166,8 @@ async function scanScore() {
   // Extract TIERS_DE array
   const t = text.match(/const TIERS_DE\s*=\s*\[([\s\S]*?)\n\];/);
   if (t) {
-    const eszett = [...t[1].matchAll(SS_FORBIDDEN)].map((mm) => mm.index);
-    if (eszett.length) record(file, 'ss-not-ß (TIERS_DE)', eszett.map((i) => contextOf(t[1], i, 40)));
+    const eszett = [...t[1].matchAll(SWISS_REGEX)].map((mm) => mm.index);
+    if (eszett.length) record(file, 'swiss-not-german (TIERS_DE)', eszett.map((i) => contextOf(t[1], i, 40)));
     const du = [...t[1].matchAll(DU_FORBIDDEN)];
     if (du.length) record(file, 'no-du-form (TIERS_DE)', du.slice(0, 6).map((mm) => contextOf(t[1], mm.index, 50)));
   }
@@ -148,8 +179,8 @@ async function scanLead() {
   const text = await readFile(file, 'utf8');
   const m = text.match(/const T = isDe \? \{([\s\S]*?)\n {2}\} : \{/);
   if (m) {
-    const eszett = [...m[1].matchAll(SS_FORBIDDEN)].map((mm) => mm.index);
-    if (eszett.length) record(file, 'ss-not-ß (email T.de)', eszett.map((i) => contextOf(m[1], i, 40)));
+    const eszett = [...m[1].matchAll(SWISS_REGEX)].map((mm) => mm.index);
+    if (eszett.length) record(file, 'swiss-not-german (email T.de)', eszett.map((i) => contextOf(m[1], i, 40)));
     const du = [...m[1].matchAll(DU_FORBIDDEN)];
     if (du.length) record(file, 'no-du-form (email T.de)', du.slice(0, 6).map((mm) => contextOf(m[1], mm.index, 50)));
   }
@@ -161,8 +192,8 @@ async function scanIndexOverride() {
   const text = await readFile(file, 'utf8');
   const m = text.match(/if \(LANG === 'de'\)\s*\{([\s\S]*?)\n {2}\}/);
   if (m) {
-    const eszett = [...m[1].matchAll(SS_FORBIDDEN)].map((mm) => mm.index);
-    if (eszett.length) record(file, 'ss-not-ß (LANG=de override)', eszett.map((i) => contextOf(m[1], i, 40)));
+    const eszett = [...m[1].matchAll(SWISS_REGEX)].map((mm) => mm.index);
+    if (eszett.length) record(file, 'swiss-not-german (LANG=de override)', eszett.map((i) => contextOf(m[1], i, 40)));
     const du = [...m[1].matchAll(DU_FORBIDDEN)];
     if (du.length) record(file, 'no-du-form (LANG=de override)', du.slice(0, 6).map((mm) => contextOf(m[1], mm.index, 50)));
   }
@@ -181,7 +212,7 @@ await scanLead();
 await scanIndexOverride();
 
 if (totalIssues === 0) {
-  if (!QUIET) console.log('✅ i18n style check passed — no ß, no du-form leaks.');
+  if (!QUIET) console.log('✅ i18n style check passed — standard German orthography, no du-form leaks.');
   process.exit(0);
 }
 

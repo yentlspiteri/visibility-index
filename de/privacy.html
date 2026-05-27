@@ -62,7 +62,7 @@
       <li>Ihr Profilfoto und die Banner-URLs an <strong>Anthropic's Claude API</strong> (Vision-Modell) zu senden, für eine qualitative Einschätzung Ihrer visuellen Identität.</li>
       <li>Eine strukturierte Zusammenfassung der oben genannten Daten an <strong>Anthropic's Claude API</strong> zu senden, für eine schriftliche Executive Summary, Dimensionskommentare und personalisierte Empfehlungen.</li>
     </ul>
-    <p>Für all das ist keine E-Mail-Adresse erforderlich. Es ist auch kein Login nötig. Wir greifen ausschliesslich auf Informationen zu, die ohnehin öffentlich im Internet einsehbar sind.</p>
+    <p>Für all das ist keine E-Mail-Adresse erforderlich. Es ist auch kein Login nötig. Wir greifen ausschließlich auf Informationen zu, die ohnehin öffentlich im Internet einsehbar sind.</p>
 
     <h3>2. Das Audit-Protokoll</h3>
     <p>Am Ende jedes Audit-Durchlaufs protokollieren wir einen Datensatz in unserer internen Datenbank (Notion), bestehend aus: LinkedIn-URL, Vorname, Nachname, Headline, Unternehmen, Score (0–100), Tier, Rolle, Ziel, UTM-Quelle/Kampagne (falls Sie über eine Anzeige zu uns gelangt sind) und gegebenenfalls einer Click-ID (fbclid/gclid). Die Rechtsgrundlage ist das <strong>berechtigte Interesse</strong> — wir verwenden dieses Protokoll, um das Tool zu verbessern, Fehler zu beheben und warme Leads für die Nachverfolgung zu identifizieren.</p>
@@ -73,7 +73,7 @@
     <ul>
       <li>Ihnen den personalisierten PDF-Report über <strong>Resend</strong> (unseren E-Mail-Versanddienstleister) zuzustellen.</li>
       <li>Sie unserer Audience in <strong>Mailchimp</strong> hinzuzufügen, mit Merge-Tags für Ihr Tier, Ziel und Ihre UTM-Daten, sodass wir Ihnen die 48-Stunden-Nachfass-E-Mail und (falls relevant) künftige Visibility-Index-bezogene E-Mails senden können.</li>
-      <li>Die Audit-Daten an die <strong>Conversions API von Meta</strong> als serverseitiges <code>Lead</code>-Event weiterzuleiten, mit Ihrer E-Mail-Adresse gehasht (SHA-256) gemäss Meta-Spezifikation, damit bezahlte Werbekampagnen anhand echter Signale optimiert werden können.</li>
+      <li>Die Audit-Daten an die <strong>Conversions API von Meta</strong> als serverseitiges <code>Lead</code>-Event weiterzuleiten, mit Ihrer E-Mail-Adresse gehasht (SHA-256) gemäß Meta-Spezifikation, damit bezahlte Werbekampagnen anhand echter Signale optimiert werden können.</li>
       <li>Unser internes Team via <strong>Slack</strong> zu benachrichtigen, dass ein neuer Lead eingegangen ist.</li>
       <li>Ihren Eintrag im Audit-Protokoll auf den Status <code>email_submitted</code> zu aktualisieren.</li>
     </ul>
@@ -89,15 +89,15 @@
       <li><strong>Google-Analytics-Cookies</strong> (<code>_ga</code>, <code>_ga_*</code>): dienen der Nutzungsanalyse. Lebensdauer: bis zu 24 Monate.</li>
       <li><strong>localStorage</strong>: wir speichern Ihre UTM-/Click-ID-Attributionsdaten sowie ein kleines Flag, das anzeigt, mit welchem CTA Sie zuletzt interagiert haben, damit die Attribution einen erneuten Besuch übersteht.</li>
     </ul>
-    <p>Wenn Sie kein Tracking wünschen, verwenden Sie einen datenschutzfreundlichen Browser (Brave, Safari mit ITP, Firefox mit Enhanced Tracking Protection) oder einen Ad-Blocker. Wir zeigen derzeit kein Cookie-Consent-Banner, da unsere Tracker auf die oben aufgeführten beschränkt sind und die Rechtsgrundlage gemäss DSGVO das berechtigte Interesse an Werbeattribution und Lead-Generierung ist.</p>
+    <p>Wenn Sie kein Tracking wünschen, verwenden Sie einen datenschutzfreundlichen Browser (Brave, Safari mit ITP, Firefox mit Enhanced Tracking Protection) oder einen Ad-Blocker. Wir zeigen derzeit kein Cookie-Consent-Banner, da unsere Tracker auf die oben aufgeführten beschränkt sind und die Rechtsgrundlage gemäß DSGVO das berechtigte Interesse an Werbeattribution und Lead-Generierung ist.</p>
 
     <h3>6. Bug-Reports</h3>
-    <p>Wenn Sie auf der Seite den Button „Bug melden" verwenden, erfassen wir: Ihre Nachricht, gegebenenfalls Ihre E-Mail-Adresse, die URL der Seite, auf der der Fehler aufgetreten ist, Ihren Browser, Ihren Viewport und Ihre IP-Adresse. Wir verwenden diese Daten ausschliesslich zur Fehlerbehebung. Bug-Report-Daten werden nicht für Marketingzwecke genutzt.</p>
+    <p>Wenn Sie auf der Seite den Button „Bug melden" verwenden, erfassen wir: Ihre Nachricht, gegebenenfalls Ihre E-Mail-Adresse, die URL der Seite, auf der der Fehler aufgetreten ist, Ihren Browser, Ihren Viewport und Ihre IP-Adresse. Wir verwenden diese Daten ausschließlich zur Fehlerbehebung. Bug-Report-Daten werden nicht für Marketingzwecke genutzt.</p>
 
     <h2>Wohin Ihre Daten gelangen</h2>
     <p>Die Dienstleister, die Ihre Daten in unserem Auftrag verarbeiten:</p>
     <ul>
-      <li><strong>Apify</strong> — betreibt die LinkedIn-Scraper. Daten werden ausschliesslich aus öffentlichen Profilen abgerufen. <a href="https://apify.com/privacy-policy" target="_blank" rel="noopener">Apify-Datenschutz</a></li>
+      <li><strong>Apify</strong> — betreibt die LinkedIn-Scraper. Daten werden ausschließlich aus öffentlichen Profilen abgerufen. <a href="https://apify.com/privacy-policy" target="_blank" rel="noopener">Apify-Datenschutz</a></li>
       <li><strong>SerpAPI</strong> — führt die Google-Suchen aus. <a href="https://serpapi.com/legal/privacy-policy" target="_blank" rel="noopener">SerpAPI-Datenschutz</a></li>
       <li><strong>Anthropic</strong> (Claude) — führt die KI-Analyse durch (Vision + Text). Anthropic verwendet im Rahmen unseres API-Plans keine Eingaben für Trainingszwecke. <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Anthropic-Datenschutz</a></li>
       <li><strong>Resend</strong> — versendet die Report-E-Mail. <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">Resend-Datenschutz</a></li>
@@ -138,7 +138,7 @@
     <ul>
       <li>Der Audit „wie besehen" („as is") bereitgestellt wird. Wir bemühen uns nach besten Kräften um eine treffende Bewertung, das Ergebnis ist jedoch eine fachliche Einschätzung und ersetzt keine professionelle Markenberatung.</li>
       <li>Der personalisierte PDF-Report und sämtliche KI-generierten Inhalte für Ihren persönlichen Gebrauch bestimmt sind. Sie dürfen Auszüge gerne teilen, aber bitte verbreiten Sie den vollständigen Report nicht als eigene Arbeit weiter.</li>
-      <li>Sie den Audit ausschliesslich für <strong>Ihr eigenes LinkedIn-Profil</strong> oder für Profile durchführen, für die Sie eine entsprechende Berechtigung haben. Führen Sie den Audit nicht für Dritte ohne deren Wissen durch.</li>
+      <li>Sie den Audit ausschließlich für <strong>Ihr eigenes LinkedIn-Profil</strong> oder für Profile durchführen, für die Sie eine entsprechende Berechtigung haben. Führen Sie den Audit nicht für Dritte ohne deren Wissen durch.</li>
       <li>Wir uns vorbehalten, abusiven oder automatisierten Datenverkehr zu drosseln, zu sperren oder den Audit zu verweigern.</li>
       <li>Nichts in diesem Audit eine Rechts-, Finanz- oder Fachberatung darstellt.</li>
     </ul>
@@ -147,7 +147,7 @@
     <p>Der Visibility Index ist nicht für Nutzerinnen und Nutzer unter 18 Jahren bestimmt. Wir erfassen wissentlich keine Daten von Minderjährigen. Sollten wir Kenntnis davon erlangen, dass uns Daten einer minderjährigen Person vorliegen, werden wir diese löschen.</p>
 
     <h2>Internationale Datenübermittlungen</h2>
-    <p>Einige der von uns eingesetzten Drittanbieter speichern Daten ausserhalb der Schweiz und der EU (insbesondere in den USA). Wir stützen uns dabei auf Standardvertragsklauseln oder Angemessenheitsbeschlüsse, soweit anwendbar. Mit der Nutzung des Audits stimmen Sie der Übermittlung Ihrer Daten in die unter „Wohin Ihre Daten gelangen" aufgeführten Rechtsräume zu.</p>
+    <p>Einige der von uns eingesetzten Drittanbieter speichern Daten außerhalb der Schweiz und der EU (insbesondere in den USA). Wir stützen uns dabei auf Standardvertragsklauseln oder Angemessenheitsbeschlüsse, soweit anwendbar. Mit der Nutzung des Audits stimmen Sie der Übermittlung Ihrer Daten in die unter „Wohin Ihre Daten gelangen" aufgeführten Rechtsräume zu.</p>
 
     <h2>Änderungen dieser Seite</h2>
     <p>Wir können diese Seite aktualisieren, wenn sich unsere Datenverarbeitungspraxis ändert. Wesentliche Änderungen werden oben unter „Zuletzt aktualisiert" vermerkt. Die fortgesetzte Nutzung des Audits nach einer Aktualisierung gilt als Annahme der angepassten Bedingungen.</p>

@@ -89,7 +89,7 @@ const TIERS = [
 // can all agree on. Only the human-readable tagline/blurb/cta switch.
 const TIERS_DE = [
   { min:0,  max:5,  name:'The Hidden Gem',
-    tagline:'Echte Expertise. Die Welt weiss es nur noch nicht.',
+    tagline:'Echte Expertise. Die Welt weiß es nur noch nicht.',
     blurb:'Nahezu unsichtbar — aber alles liegt noch vor Ihnen.',
     cta:'Den Fahrplan ansehen' },
 
@@ -100,7 +100,7 @@ const TIERS_DE = [
   { min:11, max:15, name:'The Emerging Authority',
     tagline:'Solide Grundlagen. Zeit zu skalieren.',
     blurb:'Sie machen mehr richtig als die meisten. Jetzt: Konsistenz.',
-    cta:'Sehen, welche Lücken zu schliessen sind' },
+    cta:'Sehen, welche Lücken zu schließen sind' },
   { min:16, max:18, name:'The Recognised Leader',
     tagline:'Starke Marke. Machen wir sie zum Vermächtnis.',
     blurb:'Echte Autorität aufgebaut. Als Nächstes: die Handschrift schärfen.',
@@ -573,7 +573,7 @@ async function analyzeVisualIdentity(profile, lang = 'en') {
   // Short qualitative notes are what the user sees — switch them to German
   // when the audit was launched from /de. JSON shape (photo.score, banner.score)
   // stays English-keyed.
-  const langDirective = lang === 'de' ? `\n\nWrite the "notes" values in formal German (Sie form, Swiss "ss" not "ß"). JSON keys stay English.` : '';
+  const langDirective = lang === 'de' ? `\n\nWrite the "notes" values in formal German (Sie form, standard German orthography — use "ß" after long vowels/diphthongs, "ss" after short vowels). JSON keys stay English.` : '';
 
   // Build the multimodal content array - one image block per available URL,
   // followed by the analysis prompt.
@@ -821,7 +821,7 @@ async function probeLLMVisibility(firstName, lastName, companyName, lang = 'en')
   // Keep web_search queries in English to maximise hit quality (sources are
   // mostly English on LinkedIn/press), and keep topSources/citations as
   // domain strings (unchanged by language).
-  const langDirective = lang === 'de' ? `\n\nRESPONSE LANGUAGE: Write the "summary" and "themes" values in formal German (Sie form; Swiss "ss" not "ß"). Keep your web_search queries in English. JSON keys, "recognized"/"confidence" enum values, and the topSources domain strings stay as specified.` : '';
+  const langDirective = lang === 'de' ? `\n\nRESPONSE LANGUAGE: Write the "summary" and "themes" values in formal German (Sie form; standard German orthography — use "ß" after long vowels/diphthongs, "ss" after short vowels). Keep your web_search queries in English. JSON keys, "recognized"/"confidence" enum values, and the topSources domain strings stay as specified.` : '';
   const prompt = `You are auditing the public AI-search footprint of a real person. Search the web and tell me what you find about "${fullName}".${companyLine}
 
 Use the web_search tool (up to 5 queries) to find recent, specific public information — their work, what they're known for, notable accomplishments, press mentions, content they've published. Distinguish them from anyone else with the same name.
@@ -1737,7 +1737,7 @@ async function analyzeProfile(profile, heuristic, ctx = {}) {
   const lang = ctx.lang === 'de' ? 'de' : 'en';
   const langDirective = lang === 'de' ? `
 
-RESPONSE LANGUAGE: Respond entirely in formal German (use the "Sie" form throughout — never "du"/"dich"/"dein"). Use Swiss orthography — ALWAYS "ss", never "ß" (e.g. "ausschliesslich", not "ausschließlich"). Keep these terms verbatim in English: Visibility Index, Von Peach, FutureMakers, FutureMakers Circle, LinkedIn, "Personal Brand", PDF, Score, Tier, GmbH. Translate everything else into natural, confident, executive German — including the executive summary, dimension commentary, move titles + rationales + steps, outreach email drafts (subjects and body text), writing/video ideas, and press-target descriptions.
+RESPONSE LANGUAGE: Respond entirely in formal German (use the "Sie" form throughout — never "du"/"dich"/"dein"). Use STANDARD German orthography (target audience is Germany, not Switzerland): write "ß" after long vowels and diphthongs (Straße, groß, größer, weiß, heißt, schließlich, ausschließlich, Maßnahme, regelmäßig, gemäß, draußen), but "ss" after short vowels (muss, dass, Fluss, Anschluss, lassen, wissen). Keep these terms verbatim in English: Visibility Index, Von Peach, FutureMakers, FutureMakers Circle, LinkedIn, "Personal Brand", PDF, Score, Tier, GmbH. Translate everything else into natural, confident, executive German — including the executive summary, dimension commentary, move titles + rationales + steps, outreach email drafts (subjects and body text), writing/video ideas, and press-target descriptions.
 
 LENGTH LIMITS (German tends to overflow the PDF card layout — keep titles short):
 - move.title: ≤ 45 characters. Use punchy imperatives ("Banner schärfen", "Neue Headline schreiben"), never full sentences.
