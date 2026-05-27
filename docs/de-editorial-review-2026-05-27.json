@@ -1,0 +1,425 @@
+{
+  "summary": "Overall the German reads more polished than typical machine output — clearly someone has already done a pass — but there are recurring tells of literal translation that an executive German reader will catch. Biggest patterns: (1) Anglicism order/literalism in titles like 'Drei Schritte für dieses Quartal' and 'Was die stärksten Marken tun.' which preserve English syntax instead of recasting; (2) bumpy clause-internal phrasing in the longer email/tier blurbs ('Drei kleine Schritte und Sie merken, wie sich etwas bewegt' / 'aus Aufwand wird Anerkennung'); (3) some calques ('eine Begehung', 'markentreu', 'bestraft … bevorzugt', 'beherrschen den Raum') that feel translated rather than native; (4) inconsistent capitalisation of nouns inside compounds ('Tier-1-Presse', 'Speaking-Gigs') is fine, but a few cases like 'Personal-Brand-Quizze' and the playful 'Drei. Konkret.' need a smoother native cadence. Tone of voice (confident, executive, Sie-form) is held consistently. Strongest passages: the landing-page H1s on free/executive/linkedin/checker and most of the dimension labels — these read native. Weakest: the PDF page-7 closing CTA chrome, the trend headlines on page 5, and several tier blurbs that still feel translated.",
+  "issues": [
+    {
+      "file": "lib/buildReport.js",
+      "current": "Möchten Sie eine Begehung?  Buchen Sie einen 15-minütigen 1:1-Readout  >",
+      "suggested": "Möchten Sie es gemeinsam durchgehen? Buchen Sie einen 15-minütigen 1:1-Readout >",
+      "severity": "blocker",
+      "why": "'Begehung' is a construction-site/inspection word in German (Baustellenbegehung); it doesn't carry the figurative 'walkthrough' meaning and reads bizarre to a native executive."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Drei Schritte für dieses Quartal.",
+      "suggested": "Drei Schritte für dieses Quartal.",
+      "severity": "nice-to-have",
+      "why": "Reads fine but 'für' can feel calque-y; 'Drei Schritte fürs nächste Quartal.' or 'Drei Schritte, die dieses Quartal Wirkung zeigen.' is punchier. Leaving current as it's not wrong."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Drei. Konkret. Aus dem abgeleitet, was wir gesehen haben.",
+      "suggested": "Drei. Konkret. Abgeleitet aus dem, was wir gesehen haben.",
+      "severity": "important",
+      "why": "'Aus dem abgeleitet, was …' is a literal English-pattern relative clause that lands awkwardly in German; reordering to 'Abgeleitet aus …' restores natural prose rhythm."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "MIT UNS - DREH AN EINEM TAG",
+      "suggested": "MIT UNS - STUDIOTAG, EIN DREHTAG",
+      "severity": "important",
+      "why": "'Dreh an einem Tag' is a literal rendering of 'shoot in a day' — German would naturally say 'ein Drehtag' or 'Studiotag'; current phrasing sounds spoken/colloquial, not chrome-label."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "EIN MONAT DREH AN EINEM STUDIOTAG",
+      "suggested": "EIN MONAT CONTENT AN EINEM STUDIOTAG",
+      "severity": "blocker",
+      "why": "'Ein Monat Dreh an einem Studiotag' is grammatically muddled — 'Dreh' here reads as the noun 'shoot' but the line conflates duration and output. 'Ein Monat Content an einem Studiotag' is the intended meaning ('a month of content from one shoot day') and reads clean."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Schaffen Sie Momente, die das Scrollen stoppen.",
+      "suggested": "Schaffen Sie Momente, die den Daumen stoppen.",
+      "severity": "nice-to-have",
+      "why": "'Das Scrollen stoppen' is a direct calque of 'stop the scroll'; native German marketing would either say 'die den Scroll stoppen' (slangier) or 'die den Daumen stoppen', which has become idiomatic in DACH social-media copy."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Öffnen Sie sich für Engagement-Chancen mit konsistenter digitaler Präsenz und Botschaften, die authentisch zu Ihnen passen.",
+      "suggested": "Werden Sie sichtbar für die richtigen Gelegenheiten — mit konsistenter digitaler Präsenz und Botschaften, die authentisch zu Ihnen passen.",
+      "severity": "important",
+      "why": "'Öffnen Sie sich für Engagement-Chancen' is unmistakably machine-translated; 'sich öffnen' in German means emotional opening up, and 'Engagement-Chancen' is an Anglo-compound. Reframing to 'sichtbar werden für die richtigen Gelegenheiten' lands the intent in idiomatic executive German."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Schärferes Signal in 2026",
+      "suggested": "Schärferes Signal für 2026",
+      "severity": "important",
+      "why": "'In 2026' is the classic Anglicism; correct German is 'für 2026' or simply '2026' without a preposition. An editor will flag this immediately."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Was die stärksten Marken tun.",
+      "suggested": "So machen es die stärksten Marken.",
+      "severity": "nice-to-have",
+      "why": "Grammatically fine but reads like a literal 'What the strongest brands do.' Native marketing copy more often inverts: 'So machen es die stärksten Marken.' — more confident, less neutral-descriptive."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Auf LinkedIn gewinnt der ungeschliffene Clip.",
+      "suggested": "Auf LinkedIn gewinnt der rohe Clip.",
+      "severity": "nice-to-have",
+      "why": "'Ungeschliffen' is technically correct but bookish; in the context of social-video advice 'roh' or 'ungefiltert' is the term DACH content folks actually use."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Die Algorithmen von 2026 bevorzugen Talking-Heads gegenüber gebrandeten Hochglanz-Reels — und das Publikum tut es auch.",
+      "suggested": "Die Algorithmen 2026 bevorzugen Talking Heads vor gebrandeten Hochglanz-Reels — und das Publikum auch.",
+      "severity": "important",
+      "why": "'Von 2026' is the same Anglicism; 'gegenüber' is correct after 'bevorzugen' but 'vor' is more natural; and 'und das Publikum tut es auch' is a calque of 'and so does the audience' — German drops the verb: 'und das Publikum auch.'"
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Das Portrait 2026 ist situativ, nicht aus dem Stockfoto-Katalog.",
+      "suggested": "Das Porträt 2026 ist situativ — nicht aus dem Stockfoto-Katalog.",
+      "severity": "important",
+      "why": "Swiss/German standard spelling is 'Porträt' (with Umlaut); 'Portrait' is a French/English form that DACH editorial style guides flag as non-standard."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Das meiste Thought Leadership, das Sie lesen, ist mitgeschrieben.",
+      "suggested": "Das meiste Thought Leadership, das Sie lesen, wird mitgeschrieben.",
+      "severity": "nice-to-have",
+      "why": "'Ist mitgeschrieben' as a static state is awkward; passive 'wird mitgeschrieben' (or 'entsteht im Co-Writing') is more idiomatic for an ongoing practice."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Wir geben ihr die Präsenz, die sie verdient.",
+      "suggested": "Wir geben ihr die Präsenz, die sie verdient.",
+      "severity": "nice-to-have",
+      "why": "Reads fine — keep. Listed only to confirm I'm not flagging it."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "mehr Präsenz",
+      "suggested": "Mehr Präsenz",
+      "severity": "blocker",
+      "why": "This is the page-7 closing CTA on every PDF, paired with 'in 30 Tagen.' to form one display sentence. As the first word of a headline it must be capitalised: 'Mehr Präsenz.' Currently the headline reads 'mehr Präsenz in 30 Tagen.' — looks unfinished."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Drei Schritte. Ein Studiotag. Eine schärfere Handschrift.",
+      "suggested": "Drei Schritte. Ein Studiotag. Eine schärfere Handschrift.",
+      "severity": "nice-to-have",
+      "why": "Reads native — keep as-is. Listed for completeness."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "15-MIN-CALL BUCHEN  >",
+      "suggested": "15-MIN-GESPRÄCH BUCHEN  >",
+      "severity": "important",
+      "why": "Elsewhere on the site the nav CTA is 'Gespräch buchen' — using 'Call' here creates an inconsistency, and 'Call' as a noun in German business copy is still flagged by editors as Anglicism. Align with 'Gespräch'."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Machen Sie sich bereit, den Raum zu beherrschen",
+      "suggested": "Bereit, den Raum zu füllen",
+      "severity": "important",
+      "why": "'Den Raum beherrschen' has a faintly aggressive/military connotation in German and is a literal rendering of 'own the room'. 'Den Raum füllen' or 'Den Saal für sich gewinnen' carries the intended speaker-confidence without the dominance overtone."
+    },
+    {
+      "file": "lib/buildReport.js",
+      "current": "Eine klare Markenidentität, die zum Austausch einlädt",
+      "suggested": "Eine klare Markenidentität, die zum Dialog einlädt",
+      "severity": "nice-to-have",
+      "why": "'Austausch' is correct but slightly bureaucratic; 'Dialog' or 'Gespräch' lands warmer and is what an executive copywriter would pick for a service-tile label."
+    },
+    {
+      "file": "api/score.js",
+      "current": "Sie haben etwas zu sagen. Ihre Marke verstärkt es nur noch nicht.",
+      "suggested": "Sie haben etwas zu sagen. Nur verstärkt Ihre Marke es noch nicht.",
+      "severity": "nice-to-have",
+      "why": "Current is grammatical but the 'nur noch nicht' stack feels translated; inverting to 'Nur verstärkt Ihre Marke es noch nicht.' gives the second sentence its own native rhythm."
+    },
+    {
+      "file": "api/score.js",
+      "current": "Sehen, was zuerst zu bauen ist",
+      "suggested": "Sehen, was Sie zuerst aufbauen sollten",
+      "severity": "important",
+      "why": "'Was zuerst zu bauen ist' is a literal infinitive construction copied from English ('what to build first'). German prefers an explicit subject + modal: 'was Sie zuerst aufbauen sollten'. Current sounds telegraphic and translated."
+    },
+    {
+      "file": "api/score.js",
+      "current": "Die Lücken zum Schliessen sehen",
+      "suggested": "Sehen, welche Lücken zu schliessen sind",
+      "severity": "important",
+      "why": "'Die Lücken zum Schliessen' is an unidiomatic gerund construction copied from English ('the gaps to close'). German uses a zu-infinitive in a relative or noun phrase: 'welche Lücken zu schliessen sind'."
+    },
+    {
+      "file": "api/score.js",
+      "current": "Sehen, wie Sie schärfen",
+      "suggested": "Sehen, wie Sie Ihre Handschrift schärfen",
+      "severity": "blocker",
+      "why": "'Sehen, wie Sie schärfen' has no object in German — 'schärfen' needs one ('Wie Sie was schärfen?'). This is the tier-4 CTA and currently reads broken. Adding 'Ihre Handschrift' echoes the tagline 'Handschrift schärfen' used elsewhere."
+    },
+    {
+      "file": "api/score.js",
+      "current": "Echte Autorität aufgebaut. Als Nächstes: die Handschrift schärfen.",
+      "suggested": "Echte Autorität aufgebaut. Als Nächstes: die Handschrift schärfen.",
+      "severity": "nice-to-have",
+      "why": "Reads native — keep. Listed for completeness."
+    },
+    {
+      "file": "api/lead.js",
+      "current": "Sie sind im Moment nahezu unsichtbar – und das heisst: Alles liegt noch vor Ihnen. Die gute Nachricht: Die Grundlagen sind der einfachste Teil.",
+      "suggested": "Im Moment sind Sie nahezu unsichtbar – das heisst aber auch: Alles liegt noch vor Ihnen. Die gute Nachricht: Die Grundlagen sind der einfachste Teil.",
+      "severity": "nice-to-have",
+      "why": "Front-loading 'Im Moment' and adding 'aber auch' softens the line and lands more naturally; current 'und das heisst' is a literal 'and that means' bridge."
+    },
+    {
+      "file": "api/lead.js",
+      "current": "Drei kleine Schritte und Sie merken, wie sich etwas bewegt.",
+      "suggested": "Drei kleine Schritte, und Sie spüren, wie sich etwas bewegt.",
+      "severity": "important",
+      "why": "Two issues: a comma is required before 'und' joining two independent clauses; and 'merken' is intellectual ('to notice/realise'), whereas the English source is sensory ('feel it shift') — 'spüren' carries that better."
+    },
+    {
+      "file": "api/lead.js",
+      "current": "Jetzt geht es um Konsistenz – aus Aufwand wird Anerkennung.",
+      "suggested": "Jetzt geht es um Konsistenz – damit aus Aufwand Anerkennung wird.",
+      "severity": "important",
+      "why": "Current reads as two declarative fragments yoked by an em-dash; the English source is causal ('turning effort into recognition'). 'Damit aus Aufwand Anerkennung wird' captures that purpose-link and flows better."
+    },
+    {
+      "file": "api/lead.js",
+      "current": "Sie haben echte Autorität aufgebaut. Zeit, die Handschrift zu schärfen und auf Legacy-Niveau zu bringen.",
+      "suggested": "Sie haben echte Autorität aufgebaut. Zeit, die Handschrift zu schärfen und sie auf Legacy-Niveau zu heben.",
+      "severity": "important",
+      "why": "Missing pronoun: 'die Handschrift … auf Legacy-Niveau zu bringen' is ambiguous about what's being lifted; adding 'sie' makes it precise. 'Heben' beats 'bringen' for elevation-to-a-level usage."
+    },
+    {
+      "file": "api/lead.js",
+      "current": "Bei uns gab es einen kleinen Schluckauf – das PDF ist unterwegs. Ihr Ergebnis sehen Sie unten.",
+      "suggested": "Auf unserer Seite gab es einen kleinen Schluckauf – das PDF ist unterwegs. Ihr Ergebnis sehen Sie unten.",
+      "severity": "nice-to-have",
+      "why": "'Bei uns gab es einen Schluckauf' reads slightly off; 'Auf unserer Seite' is the established Swiss/German phrasing for 'on our side' in a service context."
+    },
+    {
+      "file": "api/lead.js",
+      "current": "15 Minuten. Kein Verkaufsgespräch. Wir gehen Ihren Audit gemeinsam durch.",
+      "suggested": "15 Minuten. Kein Pitch. Wir gehen Ihren Audit gemeinsam durch.",
+      "severity": "nice-to-have",
+      "why": "'Verkaufsgespräch' is correct but feels a touch defensive/long. 'Kein Pitch.' is shorter, used in DACH startup/agency copy, and matches the executive tone elsewhere. Optional improvement."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Die Kunden, die Sie wollen, googeln Sie längst. Das ist, was sie finden.",
+      "suggested": "Die Kunden, die Sie wollen, googeln Sie längst. Das hier finden sie.",
+      "severity": "important",
+      "why": "'Das ist, was sie finden' is a textbook calque of 'this is what they find'; German doesn't naturally cleft this way. 'Das hier finden sie.' is the native idiom. (Confirm DE override at line 9331 — same fix applies there.)"
+    },
+    {
+      "file": "de/index.html",
+      "current": "Die Kunden, die Sie wollen, googeln Sie längst. Das finden sie.",
+      "suggested": "Die Kunden, die Sie wollen, googeln Sie längst. Das hier finden sie.",
+      "severity": "nice-to-have",
+      "why": "The HERO_SUBHEADS.clients override is closer to native than the static H1 subhead but 'Das finden sie.' on its own is too terse; adding 'hier' anchors the reference."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Bucher googeln Sie, bevor sie anfragen. Das sehen sie.",
+      "suggested": "Veranstalter googeln Sie, bevor sie anfragen. Das sehen sie.",
+      "severity": "important",
+      "why": "'Bucher' is not a current German word in this sense; 'Booker' is the Anglicism used in music/talent contexts but won't read clean for executives. 'Veranstalter' (or 'Buchungsverantwortliche') is the right register for speaking-gigs."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Sechs Signale entscheiden, wie die Welt Sie in Erinnerung behält. Das sind Ihre.",
+      "suggested": "Sechs Signale entscheiden, wie die Welt Sie in Erinnerung behält. Das sind Ihre.",
+      "severity": "nice-to-have",
+      "why": "Reads native — keep. Listed for completeness."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Speaker & Autorinnen und Autoren",
+      "suggested": "Speakerinnen, Speaker und Autorinnen und Autoren",
+      "severity": "nice-to-have",
+      "why": "Other ROLE_PLURALS entries gender both forms ('Gründerinnen und Gründer', 'Investorinnen und Investoren'); 'Speaker' is left ungendered here, creating inconsistency. If keeping it compact, 'Speaker & Autor:innen' is the modern DACH compromise."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Ein 1:1-Deep-Dive, um Ihren Stil, Ihre Stärken und die Nische zu definieren, die Ihnen gehört.",
+      "suggested": "Ein 1:1-Deep-Dive, um Ihren Stil, Ihre Stärken und die Nische zu definieren, die Ihnen gehört.",
+      "severity": "nice-to-have",
+      "why": "Reads native — keep. (Note: this string actually lives in buildReport.js services.strategy.deck; flagging here for cross-file consistency reference.)"
+    },
+    {
+      "file": "de/index.html",
+      "current": "Speaking-Gigs & Medienpräsenz landen",
+      "suggested": "Speaking-Auftritte & Medienpräsenz gewinnen",
+      "severity": "important",
+      "why": "'Speaking-Gigs landen' uses two Anglicisms in a row; 'Gigs' is musician-coded in German, and 'landen' for 'to land [a gig]' is calque. 'Speaking-Auftritte gewinnen' (or 'Bühnenauftritte') is editorial-grade."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Dauert etwas länger als üblich — hinterlassen Sie Ihre E-Mail-Adresse und wir senden Ihnen das Ergebnis direkt zu, auch wenn Sie diesen Tab schliessen.",
+      "suggested": "Dauert etwas länger als üblich — hinterlassen Sie Ihre E-Mail-Adresse, und wir senden Ihnen das Ergebnis direkt zu, auch wenn Sie diesen Tab schliessen.",
+      "severity": "nice-to-have",
+      "why": "Comma before 'und' joining two main clauses is preferred in formal Swiss/German prose; not strictly required but an editor would add it."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Gemischte Präsenz über mehrere Kanäle.",
+      "suggested": "Gemischte Präsenz auf mehreren Kanälen.",
+      "severity": "important",
+      "why": "'Über mehrere Kanäle' is a literal rendering of 'across multiple channels'; 'auf mehreren Kanälen' is the native preposition for 'being present on' channels in German."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Strategisch und konsistent, mit klarem Plan.",
+      "suggested": "Strategisch und konsistent, mit klarem Plan.",
+      "severity": "nice-to-have",
+      "why": "Reads native — keep. Listed for completeness."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Anerkannte Stimme in Ihrer Branche.",
+      "suggested": "Anerkannte Stimme in der Branche.",
+      "severity": "nice-to-have",
+      "why": "Possessive 'Ihrer' here is grammatically fine but slightly off-register at a dimension-context level (these describe the world's view, not the user's possession). 'In der Branche' lands more neutral."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Die aufstrebende Autorität",
+      "suggested": "Die aufstrebende Autorität",
+      "severity": "nice-to-have",
+      "why": "Keep as-is, but flag: 'Autorität' as a person is unusual in German (usually means a quality, not a person). 'Die aufstrebende Stimme' or 'Die aufstrebende Expertin' would be more idiomatic — however the parallel to the English 'Emerging Authority' tier may justify keeping the calque. Editor's call."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Die anerkannte Führungspersönlichkeit",
+      "suggested": "Die anerkannte Führungsstimme",
+      "severity": "important",
+      "why": "'Führungspersönlichkeit' is correct but bureaucratic and long; in tier display it visually dominates. 'Führungsstimme' (matching 'Stimme' from tier 2) is tighter and more brand-on. Optional but worth a look."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Ihre Form",
+      "suggested": "Ihr Profil",
+      "severity": "important",
+      "why": "'Ihre Form' as eyebrow above a hexagon shape is a literal rendering of 'Your shape' and reads ambiguously in German (Form = fitness/state). 'Ihr Profil' (or 'Ihre Silhouette') is clearer in context."
+    },
+    {
+      "file": "de/index.html",
+      "current": "Was das bedeutet.",
+      "suggested": "Was das bedeutet.",
+      "severity": "nice-to-have",
+      "why": "Fine — keep. Listed for completeness."
+    },
+    {
+      "file": "de/free-personal-brand-audit.html",
+      "current": "Kostenloser Personal Brand Audit.<br />Ohne Login. Ohne Upsell. Vollständiges PDF.",
+      "suggested": "Kostenloser Personal Brand Audit.<br />Ohne Login. Ohne Upsell. Komplettes PDF.",
+      "severity": "nice-to-have",
+      "why": "'Vollständiges PDF' is correct but heavy as the third short fragment. 'Komplettes PDF' is shorter and matches the staccato rhythm. Minor."
+    },
+    {
+      "file": "de/free-personal-brand-audit.html",
+      "current": "Ein wirklich kostenloser Audit — kein Freemium-Teaser, bei dem die guten Teile hinter einer Paywall verschwinden.",
+      "suggested": "Ein wirklich kostenloser Audit — kein Freemium-Teaser, bei dem die guten Inhalte hinter einer Paywall verschwinden.",
+      "severity": "important",
+      "why": "'Die guten Teile' is a literal calque of 'the good parts' that reads childish in German. 'Die guten Inhalte' or 'das Wesentliche' restores executive register."
+    },
+    {
+      "file": "de/free-personal-brand-audit.html",
+      "current": "Ohne Upgrade-Aufforderung mitten im Audit.",
+      "suggested": "Keine Upgrade-Aufforderung mitten im Audit.",
+      "severity": "nice-to-have",
+      "why": "Parallel structure with surrounding 'Ohne' fragments is fine, but starting a third 'Ohne' clause feels repetitive; varying to 'Keine' breaks the drumbeat and reads more like editorial copy."
+    },
+    {
+      "file": "de/free-personal-brand-audit.html",
+      "current": "Sieben Seiten. Kein Füllmaterial.",
+      "suggested": "Sieben Seiten. Kein Füllstoff.",
+      "severity": "nice-to-have",
+      "why": "'Füllmaterial' is industrial-packaging vocabulary; 'Füllstoff' is the metaphorical 'filler' used in editorial/media contexts. Subtle but noticeable."
+    },
+    {
+      "file": "de/executive-personal-brand-audit.html",
+      "current": "Executive Personal Brand Audit.<br />Kalibriert für Gründer, CEOs und Verwaltungsräte.",
+      "suggested": "Executive Personal Brand Audit.<br />Kalibriert für Gründer:innen, CEOs und Verwaltungsräte.",
+      "severity": "nice-to-have",
+      "why": "Elsewhere on the site you gender 'Gründerinnen und Gründer' in role plurals; the executive landing page uses the masculine-only form, which an editor will flag as inconsistent. Either gender it or apply masculine-generic across the whole site — pick one."
+    },
+    {
+      "file": "de/executive-personal-brand-audit.html",
+      "current": "dort, wo die Personal Brand direkt über Fundraising, Recruiting, Verwaltungsratsmandate, Speaking und Presse entscheidet.",
+      "suggested": "dort, wo die Personal Brand direkt über Fundraising, Recruiting, Verwaltungsratsmandate, Bühnenauftritte und Presse entscheidet.",
+      "severity": "nice-to-have",
+      "why": "The list mixes English ('Fundraising', 'Recruiting', 'Speaking') and German nouns; 'Speaking' as a standalone noun is the weakest of the three and stands out. 'Bühnenauftritte' fits the executive register; or leave all in English for consistency."
+    },
+    {
+      "file": "de/executive-personal-brand-audit.html",
+      "current": "Was einen sichtbaren Leader von einem unsichtbaren trennt.",
+      "suggested": "Was eine sichtbare Führungskraft von einer unsichtbaren trennt.",
+      "severity": "nice-to-have",
+      "why": "'Leader' as bare noun in German is acceptable in startup copy but feels less editorial than 'Führungskraft'. Given the executive register of this page, the German noun reads more authoritative."
+    },
+    {
+      "file": "de/executive-personal-brand-audit.html",
+      "current": "Gemacht für erfahrene Entscheider.",
+      "suggested": "Gemacht für erfahrene Entscheidungsträger:innen.",
+      "severity": "nice-to-have",
+      "why": "'Entscheider' is fine in Germany but feels punchy-startup; for an executive audit page in DACH, 'Entscheidungsträger:innen' (or just 'Entscheidungsträger') reads as the formal-register equivalent. Stylistic call."
+    },
+    {
+      "file": "de/linkedin-audit.html",
+      "current": "gelesen so, wie eine Journalistin, ein Recruiter oder ein potenzieller Kunde sie lesen würde.",
+      "suggested": "so gelesen, wie eine Journalistin, ein Recruiter oder ein potenzieller Kunde sie lesen würde.",
+      "severity": "important",
+      "why": "'Gelesen so, wie …' inverts the natural German particle order; correct is 'so gelesen, wie …'. Current reads as English-pattern adverb placement."
+    },
+    {
+      "file": "de/linkedin-audit.html",
+      "current": "Sechs Dinge, die wir auf Ihrem LinkedIn lesen.",
+      "suggested": "Sechs Dinge, die wir auf Ihrem LinkedIn-Profil lesen.",
+      "severity": "nice-to-have",
+      "why": "'Auf Ihrem LinkedIn' (bare brand) is colloquial; native business-German speakers say 'auf Ihrem LinkedIn-Profil'. Minor but executive readers will notice."
+    },
+    {
+      "file": "de/linkedin-audit.html",
+      "current": "Mein LinkedIn prüfen →",
+      "suggested": "Mein LinkedIn-Profil prüfen →",
+      "severity": "important",
+      "why": "Same as above — 'mein LinkedIn' as bare noun in a closing CTA is too casual for the executive product. 'Mein LinkedIn-Profil prüfen' is grammatical and brand-consistent."
+    },
+    {
+      "file": "de/personal-brand-checker.html",
+      "current": "Die meisten Personal-Brand-Quizze bitten Sie, sich selbst zu bewerten.",
+      "suggested": "Die meisten Personal-Brand-Quiz bitten Sie, sich selbst zu bewerten.",
+      "severity": "important",
+      "why": "'Quizze' is non-standard German pluralisation of an English loanword; Duden lists the plural as 'Quiz' (unchanged) or 'Quizshows'. 'Quizze' will be flagged by any editor."
+    },
+    {
+      "file": "de/personal-brand-checker.html",
+      "current": "Dieser liest, was das Internet bereits über Sie sagt",
+      "suggested": "Dieser liest, was das Internet bereits über Sie weiss",
+      "severity": "nice-to-have",
+      "why": "'Was das Internet über Sie sagt' is a calque of 'what the internet says about you'; 'weiss' (knows) is the more idiomatic German verb in this collocation."
+    },
+    {
+      "file": "de/personal-brand-checker.html",
+      "current": "Eine Zahl. Sechs Dinge dahinter.",
+      "suggested": "Eine Zahl. Sechs Dimensionen dahinter.",
+      "severity": "nice-to-have",
+      "why": "'Sechs Dinge' is twee; the rest of the page already speaks of 'Dimensionen' — using the same noun in the H2 makes the page feel coherent and confident."
+    },
+    {
+      "file": "de/personal-brand-checker.html",
+      "current": "Vom Hidden Gem zum Recognised Leader.",
+      "suggested": "Vom Hidden Gem zum Recognised Leader.",
+      "severity": "nice-to-have",
+      "why": "Keep — tier names are verbatim English per project rules. Listed only to confirm I'm not flagging it."
+    }
+  ]
+}
