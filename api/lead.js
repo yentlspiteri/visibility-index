@@ -568,7 +568,7 @@ function buildEmailHTML({ firstName, total, tierName, hasPdf, lang = 'en' }) {
     greeting:     `Hallo ${safeName} &mdash;`,
     yourIndex:    'Ihr Visibility Index',
     auditReady:   'Ihr Audit ist bereit.',
-    hiddenGem:    'Sie sind im Moment nahezu unsichtbar &ndash; und das heisst: Alles liegt noch vor Ihnen. Die gute Nachricht: Die Grundlagen sind der einfachste Teil.',
+    hiddenGem:    'Sie sind im Moment nahezu unsichtbar &ndash; und das heißt: Alles liegt noch vor Ihnen. Die gute Nachricht: Die Grundlagen sind der einfachste Teil.',
     risingVoice:  'Sie haben etwas zu sagen. Ihre Marke verstärkt es nur noch nicht. Drei kleine Schritte, und Sie spüren, wie sich etwas bewegt.',
     emerging:     'Sie machen schon mehr richtig als die meisten. Jetzt geht es um Konsistenz &ndash; damit aus Aufwand Anerkennung wird.',
     recognised:   'Sie haben echte Autorität aufgebaut. Zeit, die Handschrift zu schärfen und sie auf Legacy-Niveau zu heben.',
