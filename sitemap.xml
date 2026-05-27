@@ -79,15 +79,103 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/glossary"/>
   </url>
 
-  <!-- Articles -->
-  <url><loc>https://index.vonpeach.com/articles</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/digital-footprint</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/brand-clarity</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/authority-signals</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/content-cadence</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/visual-identity</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/network-recognition</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://index.vonpeach.com/articles/personal-brand-audit-framework</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <!-- Articles (EN ↔ DE) -->
+  <url>
+    <loc>https://index.vonpeach.com/articles</loc><lastmod>2026-05-27</lastmod><changefreq>weekly</changefreq><priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles</loc><lastmod>2026-05-27</lastmod><changefreq>weekly</changefreq><priority>0.65</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/articles/digital-footprint</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/digital-footprint"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/digital-footprint"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/digital-footprint"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles/digital-footprint</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/digital-footprint"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/digital-footprint"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/digital-footprint"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/articles/brand-clarity</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/brand-clarity"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/brand-clarity"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/brand-clarity"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles/brand-clarity</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/brand-clarity"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/brand-clarity"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/brand-clarity"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/articles/authority-signals</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/authority-signals"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/authority-signals"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/authority-signals"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles/authority-signals</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/authority-signals"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/authority-signals"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/authority-signals"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/articles/content-cadence</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/content-cadence"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/content-cadence"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/content-cadence"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles/content-cadence</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/content-cadence"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/content-cadence"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/content-cadence"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/articles/visual-identity</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/visual-identity"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/visual-identity"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/visual-identity"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles/visual-identity</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/visual-identity"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/visual-identity"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/visual-identity"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/articles/network-recognition</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/network-recognition"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/network-recognition"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/network-recognition"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles/network-recognition</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/network-recognition"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/network-recognition"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/network-recognition"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/articles/personal-brand-audit-framework</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/personal-brand-audit-framework"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/personal-brand-audit-framework"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/personal-brand-audit-framework"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/articles/personal-brand-audit-framework</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.75</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/articles/personal-brand-audit-framework"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/articles/personal-brand-audit-framework"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/articles/personal-brand-audit-framework"/>
+  </url>
 
   <!-- Tier landing pages -->
   <url><loc>https://index.vonpeach.com/tier/hidden-gem</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
