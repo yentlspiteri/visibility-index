@@ -53,9 +53,31 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/executive-personal-brand-audit"/>
   </url>
 
-  <!-- Methodology + reference -->
-  <url><loc>https://index.vonpeach.com/methodology</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://index.vonpeach.com/glossary</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <!-- Methodology + reference (EN ↔ DE) -->
+  <url>
+    <loc>https://index.vonpeach.com/methodology</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/methodology"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/methodology"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/methodology"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/methodology</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/methodology"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/methodology"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/methodology"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/glossary</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/glossary"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/glossary"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/glossary"/>
+  </url>
+  <url>
+    <loc>https://index.vonpeach.com/de/glossary</loc><lastmod>2026-05-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://index.vonpeach.com/glossary"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/glossary"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/glossary"/>
+  </url>
 
   <!-- Articles -->
   <url><loc>https://index.vonpeach.com/articles</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
