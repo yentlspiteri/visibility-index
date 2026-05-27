@@ -96,6 +96,15 @@ export const PAGES = {
     de: 'de/articles/personal-brand-audit-framework.html',
     canonical: 'https://index.vonpeach.com/de/articles/personal-brand-audit-framework',
   },
+  // Team-flow manager landing page. The three dynamic team-* pages
+  // (team-consent, team-invite, team-dashboard) need JS-string
+  // localization (state machines in inline scripts), not just CMS
+  // sync — tracked as a separate follow-up.
+  'team-audit': {
+    en: 'team-audit.html',
+    de: 'de/team-audit.html',
+    canonical: 'https://index.vonpeach.com/de/team-audit',
+  },
 };
 
 /*
