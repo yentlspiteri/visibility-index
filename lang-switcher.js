@@ -65,15 +65,29 @@
       host.appendChild(sw);
     }
 
+    // Visual: secondary action — not the primary CTA. Uses brand lavender
+    // (#8683E5) as an explicit color so it stays visible on BOTH the dark-
+    // navy hero AND the light/white sticky nav after scroll (previous
+    // `color:inherit` went white-on-white when the parent nav text flipped
+    // on scroll). No border, small font, subtle hover tint — feels like a
+    // language preference toggle, not a CTA. Mid-tone purple has acceptable
+    // contrast on both ends of the brand palette.
     var style = document.createElement('style');
     style.textContent =
-      '.lang-switch{display:inline-flex;align-items:center;justify-content:center;' +
-      'padding:6px 10px;margin-right:10px;font:600 12px/1 inherit;' +
-      'letter-spacing:.06em;color:inherit;text-decoration:none;' +
-      'border:1px solid currentColor;border-radius:999px;opacity:.55;' +
-      'transition:opacity .15s ease}' +
-      '.lang-switch:hover,.lang-switch:focus-visible{opacity:1}' +
-      '@media (max-width:480px){.lang-switch{padding:5px 8px;margin-right:6px;font-size:11px}}';
+      '.lang-switch{' +
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'padding:4px 9px;margin-right:8px;' +
+        'font:500 11px/1 inherit;letter-spacing:.08em;' +
+        'color:#8683E5;text-decoration:none;' +
+        'background:transparent;border:0;border-radius:999px;' +
+        'opacity:.7;transition:opacity .15s ease,background .15s ease' +
+      '}' +
+      '.lang-switch:hover,.lang-switch:focus-visible{' +
+        'opacity:1;background:rgba(134,131,229,0.14);outline:none' +
+      '}' +
+      '@media (max-width:480px){' +
+        '.lang-switch{padding:3px 7px;margin-right:5px;font-size:10px}' +
+      '}';
     document.head.appendChild(style);
   }
 
