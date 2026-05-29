@@ -9065,7 +9065,7 @@ fbq('track', 'PageView');
   });
 
   /* ─────────── Methodology hexagon - hover/tap reveals dimension copy ─────────── */
-  const HEX_COPY = {
+  let HEX_COPY = {
     footprint: {
       num:   '01 - Digital Footprint',
       title: 'Can people find you online?',
@@ -9352,6 +9352,38 @@ fbq('track', 'PageView');
       linkedin: 'LinkedIn',
       speaker:  'Speaker-Kit',
       pr:       'PR-Beratung'
+    };
+    HEX_COPY = {
+      footprint: {
+        num:   '01 - Digitale Präsenz',
+        title: 'Findet man Sie online?',
+        body:  'Wir googeln Ihren Namen und sehen uns Ihr LinkedIn an. Stehen Sie auf der ersten Seite? Oder bekommt jemand anderes die ganze Aufmerksamkeit, wenn man Sie sucht?'
+      },
+      clarity: {
+        num:   '02 - Markenklarheit',
+        title: 'Wird klar, was Sie tun?',
+        body:  'Wenn eine fremde Person Ihren Headline liest — versteht sie in einem Satz, was Sie tun? Wir prüfen auch, ob Ihre Worte etwas Konkretes bedeuten und nicht nur generische Floskeln sind.'
+      },
+      authority: {
+        num:   '03 - Autoritätssignale',
+        title: 'Hat jemand öffentlich für Sie gesprochen?',
+        body:  'Pressestimmen, Vorträge, Auszeichnungen, Empfehlungen. Beweise, dass andere bereits für Sie bürgen. Je mehr andere für Sie sprechen, desto weniger müssen Sie es selbst tun.'
+      },
+      cadence: {
+        num:   '04 - Content-Frequenz',
+        title: 'Sind Sie wirklich sichtbar?',
+        body:  'Wir zählen Ihre Beiträge der letzten 90 Tage. Die sichtbarsten Menschen posten nicht häufiger, sondern in besserer Frequenz. Einmal pro Woche schlägt fünf Beiträge an einem Tag und dann monatelang Stille.'
+      },
+      visual: {
+        num:   '05 - Visuelle Identität',
+        title: 'Sieht es ernst aus?',
+        body:  'Ein hochauflösendes Profilbild. Ein echtes Banner. Elemente Ihres Profils, die konsistent zusammenpassen. Ihr Gesicht ist das meistgeklickte Element auf LinkedIn — wir schauen, ob es hart genug arbeitet.'
+      },
+      network: {
+        num:   '06 - Wahrnehmung im Netzwerk',
+        title: 'Ist es jemandem wirklich wichtig?',
+        body:  'Viele Follower, aber kein Engagement — das ist nur eine leere Zahl. Wir gewichten echte Aufmerksamkeit höher als lautes Schweigen.'
+      }
     };
     // Re-render anything that was stamped to the DOM before this override
     // block ran (updateHeroSubhead is the only such initial-render call).
