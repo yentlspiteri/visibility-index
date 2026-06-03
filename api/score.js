@@ -963,7 +963,7 @@ async function fetchApify(linkedinUrl) {
       linkedInProfileUrls: [linkedinUrl],
       linkedinProfileUrl:  linkedinUrl
     })
-  }, 25000);
+  }, 50000);
   if (!r.ok) {
     const text = await r.text().catch(() => '');
     throw new Error(`Apify ${r.status}: ${text.slice(0, 200)}`);
