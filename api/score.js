@@ -34,6 +34,17 @@ const APIFY_API     = 'https://api.apify.com/v2/acts';
 //   - apify~linkedin-profile-scraper       (official, most reliable, priciest)
 // Field mappers below are actor-agnostic - any swap is plug-and-play.
 const APIFY_ACTOR           = process.env.APIFY_LINKEDIN_ACTOR  || 'dev_fusion~Linkedin-Profile-Scraper';
+// Automatic fallback chain. If the primary actor (APIFY_LINKEDIN_ACTOR) fails
+// — non-2xx response, throws, returns empty, returns an error item — fetchApify
+// transparently retries with the next actor in the chain. Belt-and-suspenders
+// for the case where a single actor's proxy goes offline (e.g. supreme_coder's
+// hardcoded proxy at 165.227.202.187:4000 going dark). Override via env
+// APIFY_LINKEDIN_ACTORS as a comma-separated list. Default: primary, then
+// dev_fusion as a known-good fallback.
+const APIFY_ACTOR_CHAIN = (process.env.APIFY_LINKEDIN_ACTORS
+  ? process.env.APIFY_LINKEDIN_ACTORS.split(',').map(s => s.trim()).filter(Boolean)
+  : [APIFY_ACTOR, 'dev_fusion~Linkedin-Profile-Scraper']
+).filter((a, i, arr) => arr.indexOf(a) === i);   // dedupe in case env primary == fallback
 // Post-scraper for LinkedIn posts (the profile actor doesn't return them).
 const APIFY_POSTS_ACTOR     = process.env.APIFY_POSTS_ACTOR     || 'apimaestro~linkedin-profile-posts';
 // Per-platform metrics scrapers. Configurable so you can swap providers without
@@ -935,27 +946,23 @@ function scoreLLMVisibility(parsed, citations) {
   return 0;
 }
 
-async function fetchApify(linkedinUrl) {
-  // Apify "run-sync-get-dataset-items" runs the actor and returns the dataset rows directly.
-  const url = `${APIFY_API}/${APIFY_ACTOR}/run-sync-get-dataset-items`;
+// Single-actor attempt. Throws on any failure mode (HTTP error, empty result,
+// actor-reported error item). Used by the chain runner below.
+async function tryOneApifyActor(actor, linkedinUrl, perCallTimeoutMs) {
+  const url = `${APIFY_API}/${actor}/run-sync-get-dataset-items`;
   const r = await fetchWithTimeout(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${process.env.APIFY_API_TOKEN}`
     },
-    // Different LinkedIn actors use different input shapes:
-    //   • dev_fusion/*   → profileUrls: ["https://..."]                 (string array)
-    //   • supreme_coder* → urls:        ["https://..."]                 (string array)
-    //   • generic Apify  → startUrls:   [{ url: "https://..." }]        (very common pattern)
-    // Sending all shapes is safe - each actor validates only its expected field.
-    // Send EVERY known input shape for LinkedIn-profile actors so we don't need to
-    // hardcode per-actor branching. Each actor validates only its expected field;
-    // ignored fields are harmless.
-    //   • dev_fusion/Linkedin-Profile-Scraper → profileUrls: ["url"]
-    //   • supreme_coder/linkedin-profile-scraper → urls: [{ url: "url" }] (object form)
-    //   • generic Apify scrapers → startUrls: [{ url: "url" }]
-    //   • some actors → linkedInProfileUrls: ["url"]
+    // Send EVERY known input shape for LinkedIn-profile actors so we don't need
+    // to hardcode per-actor branching. Each actor validates only its expected
+    // field; ignored fields are harmless.
+    //   • dev_fusion/Linkedin-Profile-Scraper      → profileUrls: ["url"]
+    //   • supreme_coder/linkedin-profile-scraper   → urls: [{ url: "url" }]
+    //   • generic Apify scrapers                   → startUrls: [{ url: "url" }]
+    //   • some actors                              → linkedInProfileUrls: ["url"]
     body: JSON.stringify({
       profileUrls:         [linkedinUrl],
       urls:                [{ url: linkedinUrl }],
@@ -963,7 +970,7 @@ async function fetchApify(linkedinUrl) {
       linkedInProfileUrls: [linkedinUrl],
       linkedinProfileUrl:  linkedinUrl
     })
-  }, 50000);
+  }, perCallTimeoutMs);
   if (!r.ok) {
     const text = await r.text().catch(() => '');
     throw new Error(`Apify ${r.status}: ${text.slice(0, 200)}`);
@@ -972,31 +979,65 @@ async function fetchApify(linkedinUrl) {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error('Apify returned no items');
   }
-  // Some actors wrap their output (`{ data: {...} }`). Unwrap defensively.
   const raw = items[0].data || items[0];
-
-  // Diagnostic: log the top-level keys + a sample of values so we can see actor shape in Vercel logs
-  console.log('[Apify] actor:', APIFY_ACTOR, 'item keys:', Object.keys(raw || {}).slice(0, 30));
-
-  // If the actor returned an error item (common when rate-limited or LinkedIn blocked), surface it
   if (raw && (raw.error || raw.errorMessage || raw.errorType)) {
     throw new Error(`Apify actor error: ${raw.error || raw.errorMessage || raw.errorType}`);
   }
-
-  // Detect a truly empty payload - no identity fields at all = something went wrong upstream.
-  // The user reported a real profile (yentlspiteri) coming back with 0 followers/connections/headline,
-  // which is what happens when LinkedIn rate-limits the actor and it returns a stub instead of throwing.
-  const hasIdentity =
-    raw && (
-      raw.firstName || raw.first_name || raw.firstname ||
-      raw.fullName  || raw.full_name  || raw.name      ||
-      raw.headline  || raw.headlineText || raw.title
-    );
+  // Detect a truly empty payload — no identity fields at all = something went
+  // wrong upstream (LinkedIn rate-limited and the actor returned a stub).
+  // Throwing here lets the chain move to the next actor instead of returning
+  // a useless empty profile.
+  const hasIdentity = raw && (
+    raw.firstName || raw.first_name || raw.firstname ||
+    raw.fullName  || raw.full_name  || raw.name      ||
+    raw.headline  || raw.headlineText || raw.title
+  );
   if (!hasIdentity) {
-    throw new Error('Apify returned an empty profile - actor likely rate-limited or LinkedIn blocked the request. Try again in 60 seconds.');
+    throw new Error('Apify returned an empty profile - actor likely rate-limited or LinkedIn blocked the request.');
   }
-
   return raw;
+}
+
+async function fetchApify(linkedinUrl) {
+  // Iterate the configured actor chain. First success wins. If every actor
+  // fails, throw the last error so the existing handler error path runs.
+  // Per-call timeout shrinks for fallback attempts to keep total budget within
+  // the 60s Vercel function limit (primary 30s + fallback 25s ≤ 55s).
+  const PRIMARY_TIMEOUT  = 30000;
+  const FALLBACK_TIMEOUT = 25000;
+  let lastErr;
+  for (let i = 0; i < APIFY_ACTOR_CHAIN.length; i++) {
+    const actor = APIFY_ACTOR_CHAIN[i];
+    const timeoutMs = i === 0 ? PRIMARY_TIMEOUT : FALLBACK_TIMEOUT;
+    try {
+      const raw = await tryOneApifyActor(actor, linkedinUrl, timeoutMs);
+      console.log('[Apify] actor:', actor, '✓ item keys:', Object.keys(raw || {}).slice(0, 30));
+      // Tag the profile with which actor succeeded so the handler can surface
+      // it in the response (lets you spot "fallback kicked in" in production
+      // without log-diving). Non-enumerable so downstream JSON serialisation
+      // doesn't include it unless explicitly read.
+      try { Object.defineProperty(raw, '_apifyActor', { value: actor, enumerable: false }); } catch (_) {}
+      if (i > 0) {
+        console.warn(`[Apify] primary actor failed, fallback "${actor}" succeeded`);
+        // Alert ops so we know the primary is degraded — throttled by category
+        // so we don't spam during a sustained outage.
+        notifyOps({
+          category: 'apify-primary-degraded',
+          subject:  `⚠️ Apify primary actor degraded — running on fallback ${actor}`,
+          body:     `The primary LinkedIn actor "${APIFY_ACTOR_CHAIN[0]}" is failing.\nFallback "${actor}" succeeded.\n\nLast error from primary:\n${lastErr?.message?.slice(0, 600) || '(none)'}\n\nCheck the actor's Apify console runs to see if it's a transient burn or needs a permanent swap.`,
+          context:  { primary: APIFY_ACTOR_CHAIN[0], fallback: actor }
+        }).catch(() => {});
+      }
+      return raw;
+    } catch (err) {
+      console.warn(`[Apify] actor "${actor}" failed:`, err?.message?.slice(0, 200));
+      lastErr = err;
+    }
+  }
+  // All actors in the chain failed. Throw the last error so the handler's
+  // existing apify-error catch (which classifies into user-friendly messages
+  // and notifies ops) runs.
+  throw lastErr || new Error('All Apify actors in chain failed');
 }
 
 // Three-tier press classification. Hit weights compound with recency in
