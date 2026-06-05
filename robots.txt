@@ -91,3 +91,12 @@ Disallow: /api/
 
 # Sitemap
 Sitemap: https://index.vonpeach.com/sitemap.xml
+
+# LLM hint files. Emerging convention (https://llmstxt.org/) — Anthropic,
+# Perplexity, Mistral and others have started reading /llms.txt as a
+# structured Markdown summary of the site, hand-tuned for LLM ingestion.
+# We publish both English and German editions so language-routed agents
+# land on the right one.
+LLM-Hint: https://index.vonpeach.com/llms.txt
+LLM-Hint: https://index.vonpeach.com/llms-de.txt
+LLM-Hint: https://index.vonpeach.com/llms-full.txt
