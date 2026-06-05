@@ -7500,6 +7500,146 @@ fbq('track', 'PageView');
       animation: none !important;
     }
   }
+
+  /* ─────────── MOBILE RESULTS-PAGE OVERFLOW DEFENCE ───────────
+     The results section was rendering with content clipped at the right
+     edge on mobile. The section itself has `overflow: hidden` (line ~982),
+     so anything wider than the viewport gets cropped silently rather than
+     producing a horizontal scrollbar — which is why the bug shows up as
+     "cropped" instead of "scrollable sideways".
+
+     Four root-cause categories, all addressed defensively here so the page
+     stays safe even when new cards or longer German strings get added later:
+
+       (A) `.container` has `padding: 0 32px` which steals 64px of the
+           viewport. On a 360px phone the inner area is 296px — enough that
+           the action cards (which themselves have padding + borders) push
+           past their parent. Tightened to 16px each side on mobile inside
+           the results section.
+
+       (B) Several result-area cards (.score-reveal, .findings, .report-
+           strip, .results-split, .personal-card, .gate-card) inherit width
+           from their grid parents but don't enforce `max-width: 100%` or
+           `box-sizing: border-box`, so internal padding + grid columns can
+           push them past the container.
+
+       (C) Long words that can't break (LinkedIn handles, URLs, German
+           compound nouns like "Verwaltungsratsmandate") don't wrap unless
+           `overflow-wrap: anywhere` is set. The browser default `break-
+           word` doesn't always handle long URLs.
+
+       (D) `.score-reveal-ring` and `.personal-hex` use fixed pixel sizes
+           (280px / 320px) that fit a 360px viewport with 32px container
+           padding, but tip past on 320px phones (iPhone SE 1st-gen). Sized
+           to `min(target, 88vw)` so they never exceed viewport width.
+
+     All inside a single ≤720px media query — desktop unaffected.
+     ──────────────────────────────────────────────────────────── */
+  @media (max-width: 720px) {
+
+    /* (A) Tighter container padding inside the results section.
+           !important because .container has higher cascade weight from the
+           earlier mobile @media block. */
+    .results-wrap .container {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* (B) Defensive width caps on every top-level card. box-sizing makes
+           padding + borders subtract from rather than add to the declared
+           width, so a 100%-wide card with padding stays inside its parent. */
+    .results-wrap .score-reveal,
+    .results-wrap .findings,
+    .results-wrap .findings-grid,
+    .results-wrap .report-strip,
+    .results-wrap .results-split,
+    .results-wrap .personal-card,
+    .results-wrap .gate-standalone,
+    .results-wrap .gate-card {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* (C) Long text in result cards wraps instead of pushing the card
+           past its container. `anywhere` is stronger than `break-word`
+           and handles URLs / handles / German compounds correctly. */
+    .results-wrap h1,
+    .results-wrap h2,
+    .results-wrap h3,
+    .results-wrap p,
+    .results-wrap .score-reveal-name,
+    .results-wrap .score-reveal-tier-name,
+    .results-wrap .score-reveal-tier-tagline,
+    .results-wrap .results-summary-title,
+    .results-wrap .results-summary-body,
+    .results-wrap .finding-value,
+    .results-wrap .finding-sub,
+    .results-wrap .finding-headline,
+    .results-wrap .report-gap-label,
+    .results-wrap .report-strip-title,
+    .results-wrap .personal-summary,
+    .results-wrap .tier-name,
+    .results-wrap .tier-blurb {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+
+    /* (D-1) Score-reveal greeting row: long names (e.g. "Yentl Spiteri-Vonpeach")
+            shouldn't overflow the avatar + text inline-flex group. */
+    .score-reveal-greeting {
+      max-width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 0 8px;
+      box-sizing: border-box;
+    }
+    .score-reveal-greeting-text {
+      min-width: 0;
+      flex: 1 1 auto;
+      max-width: calc(100% - 70px); /* leaves room for the 56px avatar + 14px gap */
+    }
+    .score-reveal-name { max-width: 100%; }
+
+    /* (D-2) Ring + hexagon never wider than the viewport. */
+    .score-reveal-ring {
+      width: min(240px, 84vw) !important;
+      height: min(240px, 84vw) !important;
+    }
+    .personal-hex {
+      max-width: min(320px, 84vw) !important;
+    }
+
+    /* (E) Findings cards: in case the JS-injected card content (avatar,
+           link, blockquote) escapes its slot. */
+    .finding-card {
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .finding-card a,
+    .finding-card .finding-sub,
+    .finding-card .toppost-quote {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* (F) Report-strip: tighter internal padding so the inline form +
+           gap rows fit on a 320-360px viewport without their internal
+           gutters pushing them over. */
+    .report-strip {
+      padding: 20px 16px !important;
+    }
+    .report-strip-body { min-width: 0; }
+    .report-gap-text   { min-width: 0; }
+    .lead-inline-row,
+    .lead-inline-email {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+  }
 </style>
 <script src="/lang-switcher.js" defer></script>
 </head>
