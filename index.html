@@ -7396,6 +7396,110 @@ fbq('track', 'PageView');
     #vi-consent-actions { width: 100%; }
     #vi-consent-accept, #vi-consent-decline { flex: 1; text-align: center; }
   }
+
+  /* ─────────── MOBILE-FIRST-SCREEN PERF ───────────
+     Mobile-only optimisations for the hero. Symptoms on /de mobile:
+     scroll lag once you pass the hero, a stutter on the first picker tap,
+     and the hero re-laying out every time the URL bar shows/hides.
+
+     Root causes (in observed-impact order):
+       (1) `nav.top.scrolled` uses `backdrop-filter: blur(18px) saturate(180%)`,
+           which forces the GPU to re-blur the hero gradient under the nav on
+           every scroll frame — by far the most expensive op on the page.
+       (2) `.hero::before` paints a double radial-gradient at 140vw × 140vw —
+           tens of millions of GPU pixels on first frame.
+       (3) `min-height: calc(100vh - 72px)` re-flows the hero each time the
+           mobile address bar collapses/expands.
+       (4) `.action-card` ships a 0-32-80 drop-shadow that's barely visible
+           at mobile scale but expensive to paint behind a card that itself
+           transitions `min-height`.
+       (5) The `picker-pulse` "next field" hint animates a box-shadow for
+           2.8s × 2 iterations, repainting the picker every frame.
+       (6) ~4000 lines of HTML below the fold (methodology, circle, toolkit,
+           FAQ) layout on first paint even though none of it is on-screen.
+
+     Desktop is unaffected — gated behind a single ≤720px media query, with
+     a separate `prefers-reduced-motion` block for users who've opted out.
+     ────────────────────────────────────────────── */
+  @media (max-width: 720px) {
+
+    /* (1) Replace per-frame backdrop-blur on scrolled nav with an opaque
+           cream fill. The visual cue (nav becomes legible against light
+           content sections) still lands, the blur work disappears. This is
+           the largest single scroll-perf win on mobile. */
+    nav.top.scrolled {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background: rgba(250, 250, 250, 0.96);
+    }
+
+    /* (2) Cheaper hero background. Single radial-gradient instead of two,
+           capped at viewport size instead of 140vw × 140vw. Same brand feel
+           (deep-navy glow with a lavender hint) at a fraction of the paint
+           cost. */
+    .hero::before {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% 30%,
+          rgba(63,54,178,0.45) 0%,
+          rgba(63,54,178,0.18) 35%,
+          rgba(11,3,89,0) 70%);
+    }
+
+    /* (3) Use the small-viewport-height unit so the hero is sized as if the
+           URL bar were visible. Browsers that don't support svh fall back
+           to the existing 100vh declaration above. */
+    .hero {
+      min-height: 100svh;
+    }
+
+    /* (4) Trim the action-card drop shadow. The 80px-blur layer is
+           imperceptible at phone scale and re-paints every time the card
+           transitions `min-height` (which it does on every state change). */
+    .action-card {
+      box-shadow: 0 12px 30px rgba(11,3,89,0.32),
+                  0 0 0 1px rgba(134,131,229,0.18);
+    }
+
+    /* (5) Disable the next-field pulse on mobile — the pickers are already
+           full-width and impossible to miss; the animation just costs paint. */
+    .picker-pulse,
+    .madlib-handle-wrap.picker-pulse,
+    .madlib-submit.picker-pulse {
+      animation: none !important;
+    }
+
+    /* (6) Skip layout + paint of below-fold sections until they're near
+           the viewport. `contain-intrinsic-size` reserves the right amount
+           of space so the scrollbar + anchor links land at predictable
+           positions; the section paints just-in-time as the user scrolls.
+           Only applied to sections that are ALWAYS rendered on first load
+           (results / next-moves / content-ideas start `hidden`, so they're
+           already excluded from first-paint cost). */
+    #methodology,
+    #team-audit-callout,
+    #circle,
+    #creative-toolkit,
+    #faq {
+      content-visibility: auto;
+      contain-intrinsic-size: 800px;
+    }
+  }
+
+  /* Respect explicit reduced-motion preference at every viewport — also
+     turns off the just-picked + settle animations for users who've opted
+     out at the OS level. */
+  @media (prefers-reduced-motion: reduce) {
+    .picker-pulse,
+    .madlib-handle-wrap.picker-pulse,
+    .madlib-submit.picker-pulse,
+    .picker-just-picked {
+      animation: none !important;
+    }
+  }
 </style>
 <script src="/lang-switcher.js" defer></script>
 </head>
