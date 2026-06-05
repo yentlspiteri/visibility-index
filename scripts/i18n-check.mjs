@@ -49,6 +49,10 @@ const SWISS_FORBIDDEN_WORDS = [
   'weiss', 'Weiss', 'weisse', 'weissen', 'weisser',
   'Strasse', 'Strassen',
   'dreissig', 'Fuss', 'Füsse',
+  // Compounds that hide behind word boundaries — the bare \b regex won't
+  // catch "Fussabdruck" because the "s" is followed by "a" (no boundary),
+  // so we list common compound forms explicitly.
+  'Fussabdruck', 'Fussabdrucks', 'Fussabdrücke',
   'draussen', 'ausserhalb', 'ausserdem',
   'äusserst', 'äussert', 'äussern',
   'süss', 'süsse',
