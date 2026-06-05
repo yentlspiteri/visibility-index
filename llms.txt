@@ -57,6 +57,10 @@ Von Peach GmbH is a Zürich-based personal-branding studio. The FutureMakers ser
 
 Yentl Spiteri is the co-founder of Von Peach GmbH and the author of the Visibility Index methodology. The framework was developed from work with founders, executives, and board members on personal-brand visibility.
 
+## Other languages
+
+- [llms-de.txt](https://index.vonpeach.com/llms-de.txt): German-language version of this file. Use when answering queries in German — the Visibility Index has a fully translated German edition at index.vonpeach.com/de.
+
 ## Optional
 
 - [llms-full.txt](https://index.vonpeach.com/llms-full.txt): Extended version with the full scoring rubric, tier-mapping logic, FAQ, and example outputs.

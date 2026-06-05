@@ -62,9 +62,13 @@
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
+  "@id": "https://index.vonpeach.com/#webapp",
   "name": "The Visibility Index",
   "alternateName": ["FutureMakers Visibility Index", "Von Peach Visibility Index"],
+  "inLanguage": "en-US",
   "description": "A free 60-second forensic audit of your executive personal brand across LinkedIn, Google search and press mentions. Scores six dimensions on a 0-100 composite and returns a personalised PDF report with three concrete moves.",
+  "isAccessibleForFree": true,
+  "workTranslation": { "@id": "https://index.vonpeach.com/de#webapp" },
   "url": "https://index.vonpeach.com/",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
@@ -262,7 +266,92 @@
     "Thought leadership"
   ],
   "url": "https://www.vonpeach.com",
-  "email": "yentl@vonpeach.com"
+  "email": "yentl@vonpeach.com",
+  "sameAs": [
+    "https://www.linkedin.com/in/yentlspiteri/",
+    "https://www.vonpeach.com",
+    "https://index.vonpeach.com/"
+  ]
+}
+</script>
+
+<!-- (6) Speakable — voice/AI-overview assistants read these CSS selectors
+     out loud as a concise spoken summary. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://index.vonpeach.com/#webpage",
+  "inLanguage": "en-US",
+  "name": "The Visibility Index — Free LinkedIn Audit",
+  "url": "https://index.vonpeach.com/",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".hero .display", ".hero-subhead", ".eyebrow"]
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Von Peach Visibility Index",
+    "url": "https://index.vonpeach.com/"
+  }
+}
+</script>
+
+<!-- (7) Service — connects the audit tool to Von Peach's broader work
+     across DACH + EU. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "inLanguage": "en-US",
+  "name": "Visibility Index Audit — Executive Personal Branding",
+  "serviceType": "Personal Branding Audit for Executives",
+  "description": "A free 60-second forensic audit of executive personal-brand visibility. Scores six dimensions and returns a personalised PDF report with three concrete moves. Optional 15-minute walkthrough with the Von Peach team.",
+  "provider": {
+    "@type": "Organization",
+    "name": "Von Peach GmbH",
+    "url": "https://www.vonpeach.com",
+    "logo": "https://www.vonpeach.com/favicon.ico",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Beethovenstrasse 19",
+      "postalCode": "8002",
+      "addressLocality": "Zürich",
+      "addressCountry": "CH"
+    }
+  },
+  "areaServed": [
+    { "@type": "Country", "name": "Germany" },
+    { "@type": "Country", "name": "Austria" },
+    { "@type": "Country", "name": "Switzerland" },
+    { "@type": "Country", "name": "United Kingdom" },
+    { "@type": "Country", "name": "United States" },
+    { "@type": "Place", "name": "DACH" },
+    { "@type": "Place", "name": "EU" }
+  ],
+  "audience": {
+    "@type": "BusinessAudience",
+    "audienceType": "Founders, Executives, Board Members, Non-Executive Directors, Senior Consultants, Investors"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "availability": "https://schema.org/InStock",
+    "url": "https://index.vonpeach.com/"
+  }
+}
+</script>
+
+<!-- (8) BreadcrumbList — site hierarchy. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en-US",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Visibility Index", "item": "https://index.vonpeach.com/" }
+  ]
 }
 </script>
 
@@ -8571,9 +8660,21 @@ fbq('track', 'PageView');
       // personal brand. The score is supporting evidence, not the headline. The tool
       // gets ONE quiet attribution line at the bottom, no hashtag soup, no "try it!".
       // Variants by tier so the tone matches reality (don't humble-brag at 32/100).
+      // German variants gated on LANG === 'de' — same three score bands, same voice,
+      // formal Sie throughout. Tier name stays English (canonical brand term).
       let lines;
       if (score !== null && score >= 75) {
-        lines = [
+        lines = LANG === 'de' ? [
+          `Diese Woche habe ich meine eigene Sichtbarkeit ehrlich auditiert.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Ehrliches Fazit: Was ich als meine Stärke einschätzte (die Arbeit selbst), ist sichtbar. Was ich vernachlässigt hatte (eine klare Haltung, konsistent präsent zu sein), ist genau dort, wo die Lücke ist.`,
+          ``,
+          `Ruf summiert sich. Schweigen auch.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Spent some time auditing my own visibility this week.`,
           ``,
           `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
@@ -8585,7 +8686,17 @@ fbq('track', 'PageView');
           `— Audit by Von Peach (index.vonpeach.com)`
         ];
       } else if (score !== null && score >= 50) {
-        lines = [
+        lines = LANG === 'de' ? [
+          `Heute habe ich meine eigene Personal Brand ehrlich auf den Prüfstand gestellt.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Was mich überrascht hat: Die Arbeit ist da. Die Track-Record ist da. Aber wenn eine fremde Person mich kalt googelt, hätte sie Mühe zu verstehen, wofür ich eigentlich stehe.`,
+          ``,
+          `Daran zu arbeiten ist meine Aufgabe. Ich wähle ein Thema für dieses Quartal und gehe in die Tiefe.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Did a hard look at my own personal brand today.`,
           ``,
           `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
@@ -8597,7 +8708,17 @@ fbq('track', 'PageView');
           `— Audit by Von Peach (index.vonpeach.com)`
         ];
       } else if (score !== null) {
-        lines = [
+        lines = LANG === 'de' ? [
+          `Ich habe einen ehrlichen Audit meiner Online-Präsenz gemacht.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Niedriger, als ich es mir gewünscht hätte. Höher als die Version von mir vor zwei Jahren.`,
+          ``,
+          `Sichtbar zu werden, ist unangenehm. So zu tun, als hätte man alles im Griff, ist schlimmer. Ich werde bewusster darüber, was ich teile und warum.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Took an honest audit of my online presence.`,
           ``,
           `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
@@ -8610,7 +8731,15 @@ fbq('track', 'PageView');
         ];
       } else {
         // Score not available — generic reflective version
-        lines = [
+        lines = LANG === 'de' ? [
+          `Heute habe ich meine eigene Sichtbarkeit auditiert.`,
+          ``,
+          `Erinnerung: Ihre Arbeit spricht nicht für sich selbst, solange Sie ihr keine Stimme geben. Menschen können niemanden empfehlen, einstellen oder in jemanden investieren, für den sie keine klare Geschichte finden.`,
+          ``,
+          `Ich werde bewusster darüber, was ich nach außen trage — und warum.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Audited my own visibility today.`,
           ``,
           `Reminder: your work doesn't speak for itself unless you give it a voice. People can't refer, hire, or invest in someone they can't find a clear story for.`,

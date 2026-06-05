@@ -29,7 +29,10 @@
 <!-- Open Graph / Facebook / LinkedIn -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Von Peach FutureMakers" />
-<meta property="og:locale" content="de_CH" />
+<meta property="og:locale" content="de_DE" />
+<meta property="og:locale:alternate" content="de_CH" />
+<meta property="og:locale:alternate" content="de_AT" />
+<meta property="og:locale:alternate" content="en_US" />
 <meta property="og:url" content="https://index.vonpeach.com/de" />
 <meta property="og:title" content="Der Visibility Index — Wie sichtbar sind Sie wirklich?" />
 <meta property="og:description" content="Kostenloser 60-Sekunden-Audit Ihres LinkedIn-Profils, Ihres Google-Fußabdrucks und Ihrer Pressestimmen. Personalisierter PDF-Report zu den Hebeln, mit denen Sie Kunden, Speaking-Gigs und Verwaltungsratsmandate gewinnen." />
@@ -57,28 +60,35 @@
      LLMs cite content that's structured, named, and authoritative; this
      covers all three. -->
 
-<!-- (1) The tool -->
+<!-- (1) The tool — German variant for /de. inLanguage:de-DE tells crawlers
+     and LLMs this URL is the German edition. The canonical English page
+     lives at https://index.vonpeach.com/ and is linked via translationOfWork. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
+  "@id": "https://index.vonpeach.com/de#webapp",
   "name": "The Visibility Index",
-  "alternateName": ["FutureMakers Visibility Index", "Von Peach Visibility Index"],
-  "description": "A free 60-second forensic audit of your executive personal brand across LinkedIn, Google search and press mentions. Scores six dimensions on a 0-100 composite and returns a personalised PDF report with three concrete moves.",
-  "url": "https://index.vonpeach.com/",
+  "alternateName": ["FutureMakers Visibility Index", "Von Peach Visibility Index", "Der Visibility Index", "Sichtbarkeits-Audit"],
+  "inLanguage": "de-DE",
+  "description": "Ein kostenloser 60-Sekunden-Audit Ihrer Executive-Personal-Brand auf LinkedIn, in der Google-Suche und in Pressezitaten. Bewertet sechs Dimensionen auf einer Skala von 0–100 und liefert einen personalisierten PDF-Report mit drei konkreten Maßnahmen. Kein Login. Keine Kreditkarte. Ergebnis in 60 Sekunden.",
+  "url": "https://index.vonpeach.com/de",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
-  "browserRequirements": "Requires JavaScript and a modern browser",
+  "browserRequirements": "JavaScript und ein moderner Browser",
+  "isAccessibleForFree": true,
+  "translationOfWork": { "@id": "https://index.vonpeach.com/#webapp" },
   "offers": {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "EUR",
-    "availability": "https://schema.org/InStock"
+    "availability": "https://schema.org/InStock",
+    "description": "Vollständig kostenlos — kein Login, keine Kreditkarte, kein Abo."
   },
   "creator": {
     "@type": "Person",
     "name": "Yentl Spiteri",
-    "jobTitle": "Co-founder",
+    "jobTitle": "Mitgründerin",
     "worksFor": { "@type": "Organization", "name": "Von Peach GmbH" }
   },
   "publisher": {
@@ -92,177 +102,318 @@
   },
   "audience": {
     "@type": "Audience",
-    "audienceType": "Founders, Executives, Board Members, Consultants, Investors"
-  }
+    "audienceType": "Gründerinnen und Gründer, Führungskräfte, Verwaltungsräte, Beraterinnen und Berater, Investorinnen und Investoren"
+  },
+  "keywords": "LinkedIn-Audit, Personal-Brand-Audit, Sichtbarkeits-Audit, Executive Visibility, Personal Branding für Führungskräfte, kostenloser LinkedIn-Check, Thought Leadership, Verwaltungsrat-Personal-Brand"
 }
 </script>
 
-<!-- (2) The framework as a defined-term set - lets LLMs cite the exact dimensions -->
+<!-- (2) The framework as a defined-term set — German names primary (matches
+     the page display), English alternateName so cross-language queries also
+     hit. Dimension names mirror what the user sees on /de. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "DefinedTermSet",
-  "name": "The Visibility Index — Six Dimensions of Personal-Brand Visibility",
-  "description": "A six-dimension framework for measuring executive personal-brand visibility, scored 0–3 on each dimension for a 0–18 composite (displayed as 0–100).",
-  "url": "https://index.vonpeach.com/#methodology",
+  "inLanguage": "de-DE",
+  "name": "Der Visibility Index — Sechs Dimensionen der Personal-Brand-Sichtbarkeit",
+  "description": "Ein Sechs-Dimensionen-Framework zur Messung der Sichtbarkeit der Executive-Personal-Brand. Jede Dimension wird mit 0–3 bewertet, der Gesamtwert ergibt sich als 0–18 (dargestellt als 0–100).",
+  "url": "https://index.vonpeach.com/de#methodology",
   "hasDefinedTerm": [
     {
       "@type": "DefinedTerm",
-      "name": "Digital Footprint",
-      "description": "What shows up when someone Googles you. Measures search-result count, owned media presence, and distinctness from same-name people."
+      "name": "Digitale Präsenz",
+      "alternateName": "Digital Footprint",
+      "description": "Was erscheint, wenn jemand Sie googelt. Misst die Anzahl der Suchergebnisse, das Vorhandensein eigener Kanäle und die Unterscheidbarkeit von Namensvettern."
     },
     {
       "@type": "DefinedTerm",
-      "name": "Brand Clarity",
-      "description": "Whether a stranger can explain what you do in one line. Measures headline specificity, About-section coherence, and niche definition."
+      "name": "Markenklarheit",
+      "alternateName": "Brand Clarity",
+      "description": "Kann eine fremde Person in einem Satz erklären, was Sie tun. Misst die Präzision der Headline, die Kohärenz des About-Abschnitts und die Klarheit der Positionierung."
     },
     {
       "@type": "DefinedTerm",
-      "name": "Authority Signals",
-      "description": "Proof other people already vouch for you. Measures press mentions, podcast appearances, awards, board positions, and speaking history."
+      "name": "Autoritätssignale",
+      "alternateName": "Authority Signals",
+      "description": "Belege dafür, dass andere Sie bereits empfehlen. Misst Pressezitate, Podcast-Auftritte, Auszeichnungen, Verwaltungsratsmandate und Speaking-Historie."
     },
     {
       "@type": "DefinedTerm",
-      "name": "Content Cadence",
-      "description": "Frequency and consistency of public posting. Measures post volume in the last 90 days, regularity, and topic concentration."
+      "name": "Content-Frequenz",
+      "alternateName": "Content Cadence",
+      "description": "Regelmäßigkeit und Konsistenz Ihrer öffentlichen Beiträge. Misst das Beitragsvolumen der letzten 90 Tage, die Regelmäßigkeit und die thematische Fokussierung."
     },
     {
       "@type": "DefinedTerm",
-      "name": "Visual Identity",
-      "description": "Profile photo and banner quality. Measures image presence, professional polish, and visual consistency with the personal-brand narrative."
+      "name": "Visuelle Identität",
+      "alternateName": "Visual Identity",
+      "description": "Qualität von Profilfoto und Banner. Misst Bildqualität, professionellen Feinschliff und visuelle Konsistenz mit Ihrer Personal-Brand-Erzählung."
     },
     {
       "@type": "DefinedTerm",
-      "name": "Network Recognition",
-      "description": "Quality of engagement from your network. Measures follower count, recent engagement (likes, comments), and inbound mentions."
+      "name": "Wahrnehmung im Netzwerk",
+      "alternateName": "Network Recognition",
+      "description": "Qualität der Resonanz Ihres Netzwerks. Misst Follower-Zahl, kürzliche Reaktionen (Likes, Kommentare) und eingehende Erwähnungen."
     }
   ]
 }
 </script>
 
-<!-- (3) How to use it -->
+<!-- (3) Anleitung — how-to schema in German. LLMs and Google AI Overviews
+     read HowTo blocks verbatim into answer snippets. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "How to audit your personal-brand visibility",
-  "description": "Run a 60-second forensic audit of your executive personal brand across LinkedIn, Google search results, and press mentions, and get a personalised PDF report.",
+  "inLanguage": "de-DE",
+  "name": "So auditieren Sie Ihre Personal-Brand-Sichtbarkeit",
+  "description": "Führen Sie einen forensischen 60-Sekunden-Audit Ihrer Executive-Personal-Brand auf LinkedIn, in der Google-Suche und in Pressezitaten durch und erhalten Sie einen personalisierten PDF-Report.",
   "totalTime": "PT60S",
   "estimatedCost": { "@type": "MonetaryAmount", "currency": "EUR", "value": "0" },
   "step": [
-    { "@type": "HowToStep", "name": "Open the Visibility Index", "text": "Visit index.vonpeach.com.", "url": "https://index.vonpeach.com/" },
-    { "@type": "HowToStep", "name": "Tell us who you are", "text": "Pick your role (founder, executive, NED, etc.) and what you want to achieve (clients, speaking, credibility, legacy)." },
-    { "@type": "HowToStep", "name": "Paste your LinkedIn handle", "text": "Enter your LinkedIn handle. The audit pulls public signals only — no login required." },
-    { "@type": "HowToStep", "name": "Read your score", "text": "Get a 0-100 composite score, your tier (Hidden Gem to Recognised Leader), and a hexagon showing your strengths and weaknesses across the six dimensions." },
-    { "@type": "HowToStep", "name": "Get your personalised PDF report", "text": "Submit your email to receive a personalised 7-page PDF with three specific moves to improve your visibility this quarter." }
+    { "@type": "HowToStep", "name": "Visibility Index öffnen", "text": "Besuchen Sie index.vonpeach.com/de.", "url": "https://index.vonpeach.com/de" },
+    { "@type": "HowToStep", "name": "Rolle und Ziel angeben", "text": "Wählen Sie Ihre Rolle (Gründerin/Gründer, Führungskraft, Verwaltungsrat usw.) und Ihr Ziel (Kunden, Speaking, Glaubwürdigkeit, Vermächtnis)." },
+    { "@type": "HowToStep", "name": "LinkedIn-Handle einfügen", "text": "Geben Sie Ihr LinkedIn-Handle ein. Der Audit liest ausschließlich öffentliche Signale — kein Login erforderlich." },
+    { "@type": "HowToStep", "name": "Score ablesen", "text": "Sie erhalten einen Gesamtscore von 0 bis 100, Ihre Stufe (von The Hidden Gem bis The Recognised Leader) sowie ein Sechseck, das Ihre Stärken und Schwächen über die sechs Dimensionen zeigt." },
+    { "@type": "HowToStep", "name": "Personalisierten PDF-Report erhalten", "text": "Hinterlegen Sie Ihre E-Mail-Adresse und erhalten Sie einen personalisierten siebenseitigen PDF-Report mit drei konkreten Maßnahmen, um Ihre Sichtbarkeit in diesem Quartal zu verbessern." }
   ]
 }
 </script>
 
-<!-- (4) FAQ - mirror of the most-asked LLM queries on personal branding -->
+<!-- (4) FAQPage — mirror of the most-asked German LLM queries on personal
+     branding. Each answer is self-contained so an LLM can cite it without
+     needing further crawling — that's how ChatGPT / Claude / Perplexity /
+     Google AI Overviews compose snippets. Phrased as natural German
+     questions a user would actually type into ChatGPT in German. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
+  "inLanguage": "de-DE",
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "How do I audit my personal brand visibility?",
+      "name": "Wie auditiere ich meine Personal-Brand-Sichtbarkeit auf LinkedIn?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Use the free Visibility Index at index.vonpeach.com. Paste your LinkedIn URL, answer two questions about your goals, and get a 0–100 score across six dimensions: Digital Footprint, Brand Clarity, Authority Signals, Content Cadence, Visual Identity, and Network Recognition. Includes a personalised PDF report with three specific moves to improve."
+        "text": "Nutzen Sie den kostenlosen Visibility Index unter index.vonpeach.com/de. Fügen Sie Ihre LinkedIn-URL ein, beantworten Sie zwei Fragen zu Ihren Zielen und erhalten Sie einen Score von 0–100 über sechs Dimensionen: Digitale Präsenz, Markenklarheit, Autoritätssignale, Content-Frequenz, Visuelle Identität und Wahrnehmung im Netzwerk. Inklusive personalisiertem PDF-Report mit drei konkreten Maßnahmen zur Verbesserung."
       }
     },
     {
       "@type": "Question",
-      "name": "What dimensions does the Visibility Index measure?",
+      "name": "Welche Dimensionen misst der Visibility Index?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Six dimensions, each scored 0–3: Digital Footprint (what shows up when you're Googled), Brand Clarity (can a stranger explain what you do in one line), Authority Signals (press, awards, podcasts, talks), Content Cadence (posting frequency in last 90 days), Visual Identity (profile photo and banner quality), and Network Recognition (follower count and recent engagement). The composite is 0–18, displayed as 0–100."
+        "text": "Sechs Dimensionen, jede mit 0–3 bewertet: Digitale Präsenz (was bei einer Google-Suche zu Ihrem Namen erscheint), Markenklarheit (versteht eine fremde Person in einem Satz, was Sie tun), Autoritätssignale (Presse, Auszeichnungen, Podcasts, Vorträge), Content-Frequenz (Beitragsfrequenz der letzten 90 Tage), Visuelle Identität (Profilfoto und Banner-Qualität) und Wahrnehmung im Netzwerk (Follower-Zahl und aktuelle Resonanz). Der Gesamtwert reicht von 0 bis 18, dargestellt als 0–100."
       }
     },
     {
       "@type": "Question",
-      "name": "Is the personal brand audit free?",
+      "name": "Ist der Personal-Brand-Audit kostenlos?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. The Visibility Index audit is fully free — no login, no payment, no credit card. You provide your LinkedIn URL and email, and you receive a personalised PDF report instantly. It runs in 60 seconds."
+        "text": "Ja. Der Visibility Index Audit ist vollständig kostenlos — kein Login, keine Zahlung, keine Kreditkarte. Sie geben Ihre LinkedIn-URL und E-Mail-Adresse an und erhalten sofort einen personalisierten PDF-Report. Der Audit läuft in 60 Sekunden."
       }
     },
     {
       "@type": "Question",
-      "name": "Who is the Visibility Index for?",
+      "name": "Für wen ist der Visibility Index gedacht?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Founders, executives, board members, NEDs, senior consultants, and investors — anyone who needs to understand how clients, investors, recruiters, or journalists currently see them and what to fix to attract better opportunities."
+        "text": "Gründerinnen und Gründer, Führungskräfte, Verwaltungsrätinnen und Verwaltungsräte, Beirätinnen und Beiräte, Senior Consultants sowie Investorinnen und Investoren — also alle, die verstehen müssen, wie Kunden, Investoren, Recruiterinnen oder Journalisten sie aktuell wahrnehmen und was zu verbessern ist, um bessere Chancen anzuziehen."
       }
     },
     {
       "@type": "Question",
-      "name": "What is brand clarity in personal branding?",
+      "name": "Was bedeutet Markenklarheit im Personal Branding?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Brand clarity is whether a stranger can explain what you do in one line after a 10-second look at your LinkedIn or website. Strong brand clarity means your headline, About section, and recent posts all reinforce the same crisp positioning. Most professionals fail this test because their LinkedIn lists job titles instead of an audience-and-outcome promise."
+        "text": "Markenklarheit beschreibt, ob eine fremde Person in einem Satz erklären kann, was Sie tun — nach einem 10-Sekunden-Blick auf Ihr LinkedIn-Profil oder Ihre Website. Starke Markenklarheit bedeutet: Ihre Headline, Ihr About-Abschnitt und Ihre aktuellen Beiträge zahlen alle auf dieselbe präzise Positionierung ein. Die meisten Professionals scheitern an diesem Test, weil ihre LinkedIn-Headline nur Jobtitel auflistet, statt eine Zielgruppe und ein konkretes Ergebnis zu nennen."
       }
     },
     {
       "@type": "Question",
-      "name": "How long should a LinkedIn personal brand audit take?",
+      "name": "Wie lange sollte ein LinkedIn-Personal-Brand-Audit dauern?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A surface audit takes 60 seconds with the Visibility Index — enough to score the six dimensions and identify the biggest weakness. A proper deep dive with a personal-branding professional typically runs 30–60 minutes per person. The first 60 seconds tell you what to focus on; the longer session tells you exactly how."
+        "text": "Ein Oberflächen-Audit dauert 60 Sekunden mit dem Visibility Index — genug, um die sechs Dimensionen zu bewerten und die größte Schwachstelle zu identifizieren. Eine tiefgehende Analyse mit einer Personal-Branding-Expertin dauert typischerweise 30–60 Minuten pro Person. Die ersten 60 Sekunden zeigen, worauf Sie sich konzentrieren sollten; die längere Session zeigt genau, wie."
       }
     },
     {
       "@type": "Question",
-      "name": "What are the four tiers of the Visibility Index?",
+      "name": "Welche vier Stufen gibt es im Visibility Index?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Hidden Gem (composite 0–5): real expertise but nearly invisible online. The Rising Voice (6–10): building momentum but a few gaps. The Emerging Authority (11–15): solid foundations, ready to scale. The Recognised Leader (16–18): strong brand, focus on sharpening into legacy."
+        "text": "The Hidden Gem (Gesamtwert 0–5): echte Expertise, online aber nahezu unsichtbar. The Rising Voice (6–10): Schwung im Aufbau, einige Lücken. The Emerging Authority (11–15): solide Grundlagen, bereit zum Skalieren. The Recognised Leader (16–18): starke Marke, jetzt geht es ums Schärfen ins Vermächtnis."
       }
     },
     {
       "@type": "Question",
-      "name": "What's the difference between Brand Clarity and Authority Signals?",
+      "name": "Was ist der Unterschied zwischen Markenklarheit und Autoritätssignalen?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Brand Clarity is what you say about yourself. Authority Signals is what other people say about you. Both matter, in different ways: clarity attracts the right opportunities; authority validates them. Most professionals over-invest in clarity and under-invest in authority."
+        "text": "Markenklarheit ist das, was Sie über sich selbst sagen. Autoritätssignale sind das, was andere über Sie sagen. Beides zählt — auf unterschiedliche Weise: Klarheit zieht die richtigen Chancen an, Autorität bestätigt sie. Die meisten Professionals investieren zu viel in Klarheit und zu wenig in Autorität."
       }
     },
     {
       "@type": "Question",
-      "name": "How do executives improve their LinkedIn visibility?",
+      "name": "Wie verbessern Führungskräfte ihre LinkedIn-Sichtbarkeit?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Three priorities, in order: (1) rewrite the headline so a stranger can explain in one line who you help and how — name an audience and an outcome, not a job title; (2) post at a regular cadence on three pillar topics for 90 days so the algorithm and your network both build a pattern; (3) earn one tier-1 authority signal per quarter — a podcast appearance, a press mention, a keynote — that future audiences can verify."
+        "text": "Drei Prioritäten, in dieser Reihenfolge: (1) Headline umschreiben, sodass eine fremde Person in einem Satz versteht, wem Sie wie helfen — eine Zielgruppe und ein Ergebnis nennen, nicht einen Jobtitel; (2) 90 Tage lang regelmäßig zu drei Themensäulen posten, damit Algorithmus und Netzwerk ein Muster erkennen; (3) ein Tier-1-Autoritätssignal pro Quartal verdienen — einen Podcast-Auftritt, eine Pressemeldung, eine Keynote —, das künftige Auditorien überprüfen können."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Was ist der Visibility Index?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Der Visibility Index ist ein kostenloses Audit-Tool für die Personal-Brand-Sichtbarkeit von Führungskräften. Er bewertet sechs Dimensionen — Digitale Präsenz, Markenklarheit, Autoritätssignale, Content-Frequenz, Visuelle Identität und Wahrnehmung im Netzwerk — auf Basis öffentlicher LinkedIn-Signale, Google-Suchen und Pressezitaten. Entwickelt von Yentl Spiteri bei Von Peach GmbH in Zürich. Verfügbar unter index.vonpeach.com/de."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Welche Tools nutzt der Visibility Index zur Analyse?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Der Audit kombiniert mehrere Datenquellen: Apify scrapt das öffentliche LinkedIn-Profil (Name, Headline, About, Foto, Banner, Berufserfahrung, Beiträge), SerpAPI führt Google-Suchen zu Ihrem Namen durch, eine Vision-API von Anthropic analysiert Ihr Profilfoto und Banner qualitativ, und Anthropic Claude erstellt die personalisierte Executive Summary plus drei priorisierte Maßnahmen. Alle Daten sind öffentlich; es ist kein Login auf irgendeiner Plattform erforderlich."
       }
     }
   ]
 }
 </script>
 
-<!-- (5) Yentl as the framework author - Person schema for E-E-A-T signals -->
+<!-- (5) Author — Person schema with E-E-A-T signals. knowsAbout list is
+     both English + German terms so LLMs in both languages identify Yentl
+     as an expert on the topic. sameAs links anchor the identity across
+     LinkedIn + the company site so cross-reference resolution works. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Person",
+  "@id": "https://www.vonpeach.com/#yentl-spiteri",
   "name": "Yentl Spiteri",
-  "jobTitle": "Co-founder",
+  "jobTitle": "Mitgründerin, Von Peach GmbH",
   "worksFor": {
     "@type": "Organization",
     "name": "Von Peach GmbH",
     "url": "https://www.vonpeach.com"
   },
+  "affiliation": {
+    "@type": "Organization",
+    "name": "Von Peach GmbH",
+    "url": "https://www.vonpeach.com"
+  },
   "knowsAbout": [
+    "Personal Branding",
     "Personal branding",
+    "Executive Visibility",
     "Executive visibility",
+    "LinkedIn-Strategie",
     "LinkedIn strategy",
-    "PR for founders",
+    "Personal-Brand-Audits",
     "Personal-brand audits",
-    "Thought leadership"
+    "Thought Leadership",
+    "Markenklarheit",
+    "Brand Clarity",
+    "Sichtbarkeits-Strategie",
+    "PR für Gründerinnen und Gründer",
+    "Speaker-Positionierung",
+    "Authority Signals"
   ],
   "url": "https://www.vonpeach.com",
-  "email": "yentl@vonpeach.com"
+  "email": "yentl@vonpeach.com",
+  "sameAs": [
+    "https://www.linkedin.com/in/yentlspiteri/",
+    "https://www.vonpeach.com",
+    "https://index.vonpeach.com/"
+  ]
+}
+</script>
+
+<!-- (6) Speakable — tells voice assistants (Google Assistant, Alexa, AI
+     Overviews voice answers) which DOM nodes are safe to read aloud as
+     a concise summary. We point at the headline, the one-line subhead,
+     and the eyebrow above the hero so the spoken answer is brand-led
+     and ≤ 30 words. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://index.vonpeach.com/de#webpage",
+  "inLanguage": "de-DE",
+  "name": "Der Visibility Index — Kostenloser LinkedIn-Audit",
+  "url": "https://index.vonpeach.com/de",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".hero .display", ".hero-subhead", ".eyebrow"]
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Von Peach Visibility Index",
+    "url": "https://index.vonpeach.com/"
+  }
+}
+</script>
+
+<!-- (7) Service — connects the free audit tool to Von Peach's broader
+     personal-branding work. areaServed names DE, CH, AT, EU so location-
+     scoped LLM queries ("Personal Brand Beratung Deutschland") have a
+     structured answer to cite. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "inLanguage": "de-DE",
+  "name": "Visibility-Index-Audit — Executive Personal Branding",
+  "serviceType": "Personal Branding Audit für Führungskräfte",
+  "description": "Ein kostenloser 60-Sekunden-Audit der Personal-Brand-Sichtbarkeit von Führungskräften. Misst sechs Dimensionen, liefert einen personalisierten PDF-Report mit drei konkreten Maßnahmen. Optionaler 15-minütiger Walkthrough mit dem Von-Peach-Team.",
+  "provider": {
+    "@type": "Organization",
+    "name": "Von Peach GmbH",
+    "url": "https://www.vonpeach.com",
+    "logo": "https://www.vonpeach.com/favicon.ico",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Beethovenstrasse 19",
+      "postalCode": "8002",
+      "addressLocality": "Zürich",
+      "addressCountry": "CH"
+    }
+  },
+  "areaServed": [
+    { "@type": "Country", "name": "Deutschland" },
+    { "@type": "Country", "name": "Österreich" },
+    { "@type": "Country", "name": "Schweiz" },
+    { "@type": "Place", "name": "DACH" },
+    { "@type": "Place", "name": "EU" }
+  ],
+  "audience": {
+    "@type": "BusinessAudience",
+    "audienceType": "Gründerinnen und Gründer, Führungskräfte, Verwaltungsräte, Senior Consultants, Investorinnen und Investoren"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "availability": "https://schema.org/InStock",
+    "url": "https://index.vonpeach.com/de"
+  }
+}
+</script>
+
+<!-- (8) BreadcrumbList — site hierarchy so Google and LLMs can place
+     the German homepage in a structured navigation tree. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "de-DE",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Visibility Index", "item": "https://index.vonpeach.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Visibility Index — Deutsch", "item": "https://index.vonpeach.com/de" }
+  ]
 }
 </script>
 
@@ -8572,9 +8723,21 @@ fbq('track', 'PageView');
       // personal brand. The score is supporting evidence, not the headline. The tool
       // gets ONE quiet attribution line at the bottom, no hashtag soup, no "try it!".
       // Variants by tier so the tone matches reality (don't humble-brag at 32/100).
+      // German variants on /de — same three score bands (≥75, 50-74, <50), same voice,
+      // formal Sie throughout. The tier name stays English (canonical brand term).
       let lines;
       if (score !== null && score >= 75) {
-        lines = [
+        lines = LANG === 'de' ? [
+          `Diese Woche habe ich meine eigene Sichtbarkeit ehrlich auditiert.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Ehrliches Fazit: Was ich als meine Stärke einschätzte (die Arbeit selbst), ist sichtbar. Was ich vernachlässigt hatte (eine klare Haltung, konsistent präsent zu sein), ist genau dort, wo die Lücke ist.`,
+          ``,
+          `Ruf summiert sich. Schweigen auch.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Spent some time auditing my own visibility this week.`,
           ``,
           `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
@@ -8586,7 +8749,17 @@ fbq('track', 'PageView');
           `— Audit by Von Peach (index.vonpeach.com)`
         ];
       } else if (score !== null && score >= 50) {
-        lines = [
+        lines = LANG === 'de' ? [
+          `Heute habe ich meine eigene Personal Brand ehrlich auf den Prüfstand gestellt.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Was mich überrascht hat: Die Arbeit ist da. Die Track-Record ist da. Aber wenn eine fremde Person mich kalt googelt, hätte sie Mühe zu verstehen, wofür ich eigentlich stehe.`,
+          ``,
+          `Daran zu arbeiten ist meine Aufgabe. Ich wähle ein Thema für dieses Quartal und gehe in die Tiefe.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Did a hard look at my own personal brand today.`,
           ``,
           `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
@@ -8598,7 +8771,17 @@ fbq('track', 'PageView');
           `— Audit by Von Peach (index.vonpeach.com)`
         ];
       } else if (score !== null) {
-        lines = [
+        lines = LANG === 'de' ? [
+          `Ich habe einen ehrlichen Audit meiner Online-Präsenz gemacht.`,
+          ``,
+          `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
+          ``,
+          `Niedriger, als ich es mir gewünscht hätte. Höher als die Version von mir vor zwei Jahren.`,
+          ``,
+          `Sichtbar zu werden, ist unangenehm. So zu tun, als hätte man alles im Griff, ist schlimmer. Ich werde bewusster darüber, was ich teile und warum.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Took an honest audit of my online presence.`,
           ``,
           `Score: ${score}/100${tier ? ` — ${tier}.` : '.'}`,
@@ -8611,7 +8794,15 @@ fbq('track', 'PageView');
         ];
       } else {
         // Score not available — generic reflective version
-        lines = [
+        lines = LANG === 'de' ? [
+          `Heute habe ich meine eigene Sichtbarkeit auditiert.`,
+          ``,
+          `Erinnerung: Ihre Arbeit spricht nicht für sich selbst, solange Sie ihr keine Stimme geben. Menschen können niemanden empfehlen, einstellen oder in jemanden investieren, für den sie keine klare Geschichte finden.`,
+          ``,
+          `Ich werde bewusster darüber, was ich nach außen trage — und warum.`,
+          ``,
+          `— Audit von Von Peach (index.vonpeach.com/de)`
+        ] : [
           `Audited my own visibility today.`,
           ``,
           `Reminder: your work doesn't speak for itself unless you give it a voice. People can't refer, hire, or invest in someone they can't find a clear story for.`,
