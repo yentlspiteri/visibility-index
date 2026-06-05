@@ -559,9 +559,10 @@ function buildEmailHTML({ firstName, total, tierName, hasPdf, lang = 'en' }) {
   const tierKey  = (tierName || '').toLowerCase();
 
   // Localized chrome + tier-aware playful body copy. Honest about where they
-  // are, generous about where they're going. Match the existing English voice
-  // in German (formal Sie, Swiss "ss" not "ß"). German strings are DRAFT —
-  // pending native-speaker review per the project rule.
+  // are, generous about where they're going. Match the English voice in
+  // German (formal Sie, standard German orthography with "ß"). German
+  // strings are DRAFT — pending native-speaker review per the project rule.
+  // Body lede + CTA copy revised 2026-06 from reviewer feedback.
   const T = isDe ? {
     title:        'Ihr Visibility Index Report',
     eyebrow:      'Von Peach &middot; FutureMakers &middot; Der Visibility Index',
@@ -572,11 +573,11 @@ function buildEmailHTML({ firstName, total, tierName, hasPdf, lang = 'en' }) {
     risingVoice:  'Sie haben etwas zu sagen. Ihre Marke verstärkt es nur noch nicht. Drei kleine Schritte, und Sie spüren, wie sich etwas bewegt.',
     emerging:     'Sie machen schon mehr richtig als die meisten. Jetzt geht es um Konsistenz &ndash; damit aus Aufwand Anerkennung wird.',
     recognised:   'Sie haben echte Autorität aufgebaut. Zeit, die Handschrift zu schärfen und sie auf Legacy-Niveau zu heben.',
-    defaultCopy:  'Sie sind auf dem richtigen Weg. Drei Schritte stehen zwischen dem, wo Sie sind, und dem, wo Sie hinwollen.',
-    ledeHasPdf:   'Ihr vollständiger Audit ist soeben in Ihrem Posteingang gelandet. Eine lohnenswerte Lektüre &ndash; nehmen Sie sich zehn Minuten, wenn Sie können.',
+    defaultCopy:  'Sie sind auf dem richtigen Weg. Zwischen Ihrem heutigen Stand und Ihrem Ziel liegen nur drei konkrete Schritte.',
+    ledeHasPdf:   'Ihr vollständiges Audit wurde soeben an Ihre E-Mail-Adresse gesendet. Nehmen Sie sich zehn Minuten Zeit, um die Ergebnisse und Empfehlungen in Ruhe durchzugehen.',
     ledeNoPdf:    'Bei uns gab es einen kleinen Schluckauf &ndash; das PDF ist unterwegs. Ihr Ergebnis sehen Sie unten.',
-    ctaText:      'Lassen Sie uns darüber sprechen',
-    ctaCaption:   '15 Minuten. Kein Verkaufsgespräch. Wir gehen Ihren Audit gemeinsam durch.',
+    ctaText:      'Lassen Sie uns gemeinsam einen Blick darauf werfen',
+    ctaCaption:   '15 Minuten. Kein Pitch. Wir gehen Ihr Audit gemeinsam durch.',
     footer:       'Von Peach GmbH &middot; FutureMakers &middot; 2026',
     repliesPre:   'Antworten willkommen &mdash;'
   } : {

@@ -8233,7 +8233,7 @@ fbq('track', 'PageView');
             <div class="perk-icon">02</div>
             <div>
               <strong>The Black Book</strong>
-              <span>Curated directory of the operators we trust — ghostwriters, photographers, podcast bookers, video producers.</span>
+              <span>Curated directory of the operators we trust — copywriters, photographers, podcast bookers, video producers.</span>
             </div>
           </div>
           <div class="perk">
@@ -8890,12 +8890,25 @@ fbq('track', 'PageView');
   })();
 
   /* ────────── METHODOLOGY HINT — touch-aware copy ────────── */
+  /* This block was hard-coding English here AFTER the inline German on the
+     element, so /de saw the English fallback as soon as JS ran. Now it
+     reads document.documentElement.lang (set to "de" on /de pages by the
+     server) and chooses the matching string. Tap variant is mobile-only,
+     swapped by CSS @media (hover: none) on .method-hint::before. */
   (function () {
     const hint = document.getElementById('method-hint');
     if (!hint) return;
-    hint.setAttribute('data-hover-text', 'Hover any point to see what we measure');
-    hint.setAttribute('data-tap-text',   'Tap any point to explore');
-    // The actual copy swap is done via CSS @media (hover: none) on .method-hint::before
+    const isDe = (document.documentElement.lang || '').toLowerCase().startsWith('de');
+    hint.setAttribute(
+      'data-hover-text',
+      isDe ? 'Fahren Sie mit der Maus über einen beliebigen Punkt, um zu sehen, was wir messen'
+           : 'Hover any point to see what we measure'
+    );
+    hint.setAttribute(
+      'data-tap-text',
+      isDe ? 'Tippen Sie einen beliebigen Punkt an, um ihn zu erkunden'
+           : 'Tap any point to explore'
+    );
   })();
 
   /* ────────── SCROLL EFFECTS — nav state + mobile progress bar ────────── */
