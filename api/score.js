@@ -380,7 +380,7 @@ export default async function handler(req, res) {
         console.error('Claude analysis failed:', err);
         return {
           clarityScore: 1, clarityRationale: 'Fallback heuristic - LLM unavailable.',
-          executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: []
+          executiveSummary: '', dimensionCommentary: {}, moves: [], tierRoadmap: [], roadmap: null
         };
       })
     ]);
@@ -471,6 +471,7 @@ export default async function handler(req, res) {
       dimensionCommentary: analysis.dimensionCommentary,
       moves:               analysis.moves,
       tierRoadmap:         analysis.tierRoadmap,
+      roadmap:             analysis.roadmap || null,     // 90-day structured roadmap (new)
       contentIdeas:        analysis.contentIdeas || [],     // legacy
       writingIdeas:        analysis.writingIdeas || [],     // 3 writing prompts
       videoIdeas:          analysis.videoIdeas   || [],     // 3 video prompts
@@ -1996,6 +1997,46 @@ YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose arou
     "<max 10 words, punchy>",
     "<max 10 words>","<max 10 words>","<max 10 words>","<max 10 words>"
   ],
+  "// roadmap": "A structured 90-day roadmap rendered as a dedicated section in the PDF. Personalised by THIS user's score, tier, weakest dimensions, role, and goal. Self-directed (no mentor, no submissions) — confident executive tone, no fluff. Each weekly action is one specific verb-led move (≤14 words). Each milestone is checkable (≤16 words). The endState is one sentence (≤30 words) describing the concrete state at day 90.",
+  "roadmap": {
+    "focus": "<the SINGLE dimension this roadmap centers on — pick the user's WEAKEST sub-score. Use the exact dimension display name in the response language (e.g. 'Brand Clarity' / 'Markenklarheit', 'Authority Signals' / 'Autoritätssignale').>",
+    "endState": "<one sentence describing where the user will be at the end of 90 days IF they execute. ≤30 words. Concrete, name the dimension that shifts. Goal-aware: if goal='speaking', reference one booked keynote; 'credibility', one tier-1 press; 'clients', better-fit inbound; 'legacy', a published asset.>",
+    "months": [
+      {
+        "title": "<short month title — ≤6 words, e.g. 'Foundation — fix the gap' / 'Grundlagen — Lücke schließen'. References Month 1's theme.>",
+        "theme": "<one-sentence theme line ≤22 words. Names what this month is FOR, not a list.>",
+        "weeks": [
+          "<Week 1 action — one verb-led specific move. ≤14 words. References something real from the audit (their headline, their follower count, a detected platform, a specific press hit, or a specific dimension stat).>",
+          "<Week 2 action — ≤14 words, verb-led, specific.>",
+          "<Week 3 action — ≤14 words, verb-led, specific.>",
+          "<Week 4 action — ≤14 words, verb-led, specific.>"
+        ],
+        "milestone": "<by end of Month 1, the user should be able to point at: ___. ≤16 words. Checkable — yes/no.>"
+      },
+      {
+        "title": "<Month 2 title, ≤6 words. Theme moves from foundation to RHYTHM. Examples: 'Cadence — three posts a week' / 'Rhythmus — drei Beiträge pro Woche'.>",
+        "theme": "<≤22 words. Names what Month 2 is FOR.>",
+        "weeks": [
+          "<Week 5 action>",
+          "<Week 6 action>",
+          "<Week 7 action>",
+          "<Week 8 action>"
+        ],
+        "milestone": "<by end of Month 2, ___. ≤16 words.>"
+      },
+      {
+        "title": "<Month 3 title, ≤6 words. Theme moves from rhythm to COMPOUND/PROOF. Examples: 'Compound — first authority pitch' / 'Verstärkung — erster Authority-Pitch'.>",
+        "theme": "<≤22 words. Names what Month 3 is FOR.>",
+        "weeks": [
+          "<Week 9 action>",
+          "<Week 10 action>",
+          "<Week 11 action>",
+          "<Week 12 action>"
+        ],
+        "milestone": "<by end of Month 3, ___. ≤16 words. Should connect to the goal directly.>"
+      }
+    ]
+  },
   "writingIdeas": [
     {
       "title":"<6-12 word post title — concrete, references their actual industry/role/expertise>",
@@ -2157,7 +2198,8 @@ FORMAT REQUIREMENTS (very important — affects parsing):
     executiveSummary: '',
     dimensionCommentary: {},
     moves: [],
-    tierRoadmap: []
+    tierRoadmap: [],
+    roadmap: null
   };
   if (!match) {
     // Log a short prefix of the raw text on parse-extraction failure so the
@@ -2211,6 +2253,24 @@ FORMAT REQUIREMENTS (very important — affects parsing):
       tierRoadmap: Array.isArray(p.tierRoadmap)
         ? p.tierRoadmap.slice(0, 5).map(t => String(t).slice(0, 160))
         : [],
+      // 90-day roadmap structure — extends the report with a dedicated
+      // "Your 90-Day Roadmap" page. Three months × four weekly actions +
+      // a milestone gate per month + an end-state line. Defensively sliced
+      // so an over-eager Claude response (e.g. 5 months, 6 weeks per month)
+      // can never blow the PDF layout. Empty-shape on absence so the PDF
+      // renderer can quietly skip the page rather than crash.
+      roadmap: (p.roadmap && typeof p.roadmap === 'object' && Array.isArray(p.roadmap.months)) ? {
+        focus:    String(p.roadmap.focus    || '').slice(0, 120),
+        endState: String(p.roadmap.endState || '').slice(0, 360),
+        months:   p.roadmap.months.slice(0, 3).map(m => ({
+          title:     String(m?.title || '').slice(0, 80),
+          theme:     String(m?.theme || '').slice(0, 200),
+          weeks:     Array.isArray(m?.weeks)
+                       ? m.weeks.slice(0, 4).map(w => String(w || '').slice(0, 180))
+                       : [],
+          milestone: String(m?.milestone || '').slice(0, 200)
+        }))
+      } : null,
       // Legacy contentIdeas — kept for backward compat with cached deploys / old PDFs.
       // New flow uses writingIdeas + videoIdeas below.
       contentIdeas: Array.isArray(p.contentIdeas)
