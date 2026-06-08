@@ -13,5 +13,25 @@
   "crons": [
     { "path": "/api/cron/monthly-rescore", "schedule": "0 9 1 * *" },
     { "path": "/api/cron/monthly-digest",  "schedule": "30 9 1 * *" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.(css|js|mjs|svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "source": "/(llms.*\\.txt|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=0, must-revalidate, stale-while-revalidate=86400" }
+      ]
+    }
   ]
 }
