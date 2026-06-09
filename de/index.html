@@ -11378,8 +11378,8 @@ fbq('track', 'PageView');
     if (titleEl) {
       const fn = (lastProfile?.firstName || '').trim();
       titleEl.textContent = fn
-        ? `${fn}, three tips to apply now.`
-        : 'Three tips to apply now.';
+        ? `${fn}, drei Hebel, die Sie jetzt umsetzen.`
+        : 'Drei Hebel, die Sie jetzt umsetzen.';
     }
 
     // Render move cards (sample-pill audits use lastMoves which may be empty if no API call ran)
@@ -11407,7 +11407,7 @@ fbq('track', 'PageView');
         stepWrap.className = 'move-step';
         const stepLabel = document.createElement('span');
         stepLabel.className = 'move-step-label';
-        stepLabel.textContent = 'Start:';
+        stepLabel.textContent = 'Erster Schritt:';
         const stepText = document.createElement('span');
         stepText.textContent = m.firstStep || '';
         stepWrap.appendChild(stepLabel);
@@ -11415,7 +11415,7 @@ fbq('track', 'PageView');
 
         const service = document.createElement('span');
         service.className = 'move-service';
-        service.textContent = SERVICE_LABELS[m.service] || 'Brand strategy';
+        service.textContent = SERVICE_LABELS[m.service] || 'Markenstrategie';
 
         card.appendChild(num);
         card.appendChild(title);
@@ -11835,20 +11835,24 @@ fbq('track', 'PageView');
   }
 
   // Fallbacks for the sample-pill demo path (no API call → no live moves/roadmap)
+  // AND for the live-audit path when Claude returns empty moves (rate-limit, parse
+  // fail, etc.). Pre-2026-06 these contained English literals — German users on /de
+  // saw English fallback content when the live API path degraded. Now German Sie-
+  // form, standard orthography. Tier names + "Tier-1" stay English (canonical).
   function fallbackMoves() {
     return [
-      { title: 'Rewrite your headline around an audience.', why: 'Your headline names what you do but not who you help. Top-tier executives in your cohort name the audience explicitly.', firstStep: 'Open LinkedIn → headline → write three audience-specific drafts.', service: 'strategy' },
-      { title: 'Set a weekly posting cadence.', why: 'Cadence outperforms volume. A reliable rhythm signals a serious operator; sporadic posting reads as an afterthought.', firstStep: 'Block 60 minutes Friday morning. Write next Tuesday’s post.', service: 'content' },
-      { title: 'Pitch one tier-1 publication this quarter.', why: 'External authority signals are the single biggest gap between Emerging Authority and Recognised Leader.', firstStep: 'Pick one outlet. Identify the editor. Draft a 200-word pitch by EOD.', service: 'pr' }
+      { title: 'Schreiben Sie Ihre Headline um — mit klarer Zielgruppe.', why: 'Ihre Headline benennt, was Sie tun, aber nicht, wem Sie helfen. Top-Führungskräfte in Ihrer Branche nennen die Zielgruppe explizit.', firstStep: 'LinkedIn öffnen → Headline → drei zielgruppenspezifische Varianten schreiben.', service: 'strategy' },
+      { title: 'Setzen Sie eine wöchentliche Posting-Frequenz.', why: 'Frequenz schlägt Menge. Ein verlässlicher Rhythmus signalisiert Professionalität; sporadische Beiträge wirken wie ein Nachgedanke.', firstStep: 'Freitagvormittag 60 Minuten blockieren. Den Beitrag für Dienstag schreiben.', service: 'content' },
+      { title: 'Pitchen Sie ein Tier-1-Medium in diesem Quartal.', why: 'Externe Autoritätssignale sind die größte Lücke zwischen The Emerging Authority und The Recognised Leader.', firstStep: 'Ein Medium auswählen. Die Redakteurin identifizieren. Heute einen 200-Wörter-Pitch entwerfen.', service: 'pr' }
     ];
   }
   function fallbackRoadmap() {
     return [
-      'Publish weekly. The platform doesn’t matter; the rhythm does.',
-      'Land one tier-1 press mention. We’ll tell you which five outlets your peers pitch first.',
-      'Refresh your About to lead with a thesis, not a CV summary.',
-      'Quote yourself: a one-line POV you can repeat across three platforms.',
-      'Schedule the one keynote. Tier-1 founders book speaking six months out.'
+      'Wöchentlich veröffentlichen. Die Plattform spielt keine Rolle — der Rhythmus schon.',
+      'Eine Tier-1-Pressemeldung landen. Wir sagen Ihnen, welche fünf Medien Ihre Peers zuerst pitchen.',
+      'Den About-Abschnitt überarbeiten. Mit einer These beginnen, nicht mit einer Lebenslauf-Zusammenfassung.',
+      'Sich selbst zitieren: eine Ein-Satz-Haltung, die Sie auf drei Plattformen wiederholen können.',
+      'Eine Keynote buchen. Tier-1-Gründerinnen und -Gründer buchen Speaking-Auftritte sechs Monate im Voraus.'
     ];
   }
 
