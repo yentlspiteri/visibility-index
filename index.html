@@ -12029,6 +12029,11 @@ fbq('track', 'PageView');
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
+          // CRITICAL: /api/lead defaults `lang` to 'en' if absent (api/lead.js:96).
+          // Without this field the German user gets an English email (subject +
+          // body) — the buildEmailHTML T-map picks the EN branch. Same flag we
+          // pass to /api/score above so the server stays consistent end-to-end.
+          lang:                LANG,
           goal:                lastGoal,
           role:                lastRole,
           score:               lastScore,
