@@ -1964,9 +1964,7 @@ TIER-SPECIFIC MOVE DIRECTIVE (read carefully — moves MUST match this tier's st
 ${tierDirective || 'Pick three concrete moves that fit the user\'s evident stage.'}
 
 YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose around it:
-${lang === 'de' ? `
-ALL string values in the JSON below must be in formal German (Sie-form, never du/dich/dein). Pay special attention to PROSE fields (executiveSummary, move.why, move.firstStep, move.weekOne, move.month1, roadmap.endState, roadmap.months[].weeks[]) — these drift to English most often. JSON keys and enum values (service tokens, outreach types, tier names) stay English.
-` : ''}
+
 {
   "clarityScore": 0|1|2|3,
   "clarityRationale": "<8-12 words max>",
