@@ -1890,7 +1890,7 @@ CRITICAL: keep all JSON keys, "service" tokens (strategy/content/video/photo/lin
     ? `Position #${ranking.topPosition} for own name; ${ranking.ownedTop10 || 0} of top-10 are about them`
     : 'Does not appear in top 10 for own name';
 
-  const prompt = `You are a brand strategist running a personalised visibility audit for an executive based on their LinkedIn profile. The audit scores six dimensions on 0-3 each, summed to 0-18.
+  const prompt = `You are a brand strategist running a personalised visibility audit for an executive based on their LinkedIn profile. The audit scores six dimensions on 0-3 each, summed to 0-18.${langDirective}
 
 PROFILE DATA:
 - First name: ${firstName}
@@ -2141,7 +2141,7 @@ SERVICES KEY (use exact lowercase tokens for the "service" field):
 - photo    = Personal photoshoot & visual branding
 - linkedin = LinkedIn & platform optimisation
 - speaker  = Keynote speaking kit + public-speaking coaching
-- pr       = PR advisory${langDirective}
+- pr       = PR advisory
 
 FORMAT REQUIREMENTS (very important — affects parsing):
 - Return ONLY the raw JSON object specified above. Begin directly with \`{\` and end with \`}\`.
@@ -2167,11 +2167,16 @@ FORMAT REQUIREMENTS (very important — affects parsing):
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        // Tuned to 2800. Was 3500; profile testing showed Claude reliably finishes
-        // the schema in ~2200-2500 tokens. The 300-token buffer prevents truncation
-        // while shaving ~2-3s off the critical-path latency. If the moves array
-        // ever comes back empty post-Anthropic-update, bump back to 3500.
-        max_tokens: 3500,
+        // Bumped 3500 → 5000 after observing /de audits intermittently returning
+        // empty moves/executiveSummary/roadmap. Root cause: German output is
+        // ~30% longer than English (longer compounds, longer verbs, different
+        // word order). The full schema in DE was overflowing 3500 tokens mid-
+        // JSON, leaving an unparseable response, the regex extractor failing,
+        // and the empty-fallback shape being returned to the SPA. 5000 gives
+        // a ~30% safety margin over the longest observed DE response. Cost
+        // is ~1-2s extra latency in the (rare) case where the response is
+        // actually that long; Claude stops at its real natural completion.
+        max_tokens: 5000,
         messages: [{ role: 'user', content: prompt }]
       })
     }, 45000);
