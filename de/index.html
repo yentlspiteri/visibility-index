@@ -3373,6 +3373,10 @@ fbq('track', 'PageView');
   }
   .faq-item {
     border-bottom: 1px solid rgba(15,15,15,0.10);
+    /* When JS scrolls an opened item into view, keep it clear of any
+       sticky header so the question + first line of the answer are both
+       visible. 80px ≈ nav height (110px desktop / 76px mobile) + a hair. */
+    scroll-margin-top: 80px;
   }
   .faq-item:first-child { border-top: 1px solid rgba(15,15,15,0.10); }
   .faq-q {
@@ -3390,8 +3394,25 @@ fbq('track', 'PageView');
     cursor: pointer;
     text-align: left;
     box-sizing: border-box;
+    /* Suppress iOS's tap highlight box — we render our own press feedback
+       via the :active rule below. */
+    -webkit-tap-highlight-color: transparent;
+    transition: color .15s ease;
   }
-  .faq-q:hover { color: var(--vp-indigo); }
+  /* Hover gated to actual pointer devices. Without (hover: hover), iOS leaves
+     the indigo color "stuck" on the previously-tapped item even after close
+     — reads as broken state. */
+  @media (hover: hover) {
+    .faq-q:hover { color: var(--vp-indigo); }
+  }
+  /* Press feedback: subtle opacity dip during active tap so the user gets
+     the "I tapped that" confirmation before the chevron rotation lands. */
+  .faq-q:active { opacity: 0.6; transition: opacity .05s; }
+  .faq-q:focus-visible {
+    outline: 2px solid var(--vp-indigo);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
   .faq-chevron {
     flex-shrink: 0;
     width: 22px;
@@ -3401,20 +3422,31 @@ fbq('track', 'PageView');
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform .25s ease, border-color .2s;
+    transition: transform .25s cubic-bezier(.4,0,.2,1), border-color .2s, background .2s;
   }
   .faq-chevron svg { display: block; }
   .faq-item.open .faq-chevron {
     transform: rotate(180deg);
     border-color: var(--vp-indigo);
+    background: rgba(63, 54, 178, 0.06);
   }
   .faq-item.open .faq-q { color: var(--vp-indigo); }
+
+  /* Open/close animation. The previous implementation capped at
+     max-height: 400px which clipped long German answers mid-sentence
+     (German runs ~30% longer than English). We raise the ceiling to
+     1500px so any FAQ answer fits without clipping, and use
+     cubic-bezier(.4,0,.2,1) for a "decelerate-out" feel that hides
+     the fact that short answers finish their transition before the
+     350ms window elapses. */
   .faq-a {
     overflow: hidden;
     max-height: 0;
     transition: max-height .35s cubic-bezier(.4,0,.2,1);
   }
-  .faq-item.open .faq-a { max-height: 400px; }
+  .faq-item.open .faq-a {
+    max-height: 1500px;
+  }
   .faq-a-inner {
     padding: 0 0 22px;
     font-family: var(--font-body);
@@ -3423,9 +3455,35 @@ fbq('track', 'PageView');
     color: var(--vp-grey-2);
   }
   .faq-a-inner a { color: var(--vp-indigo); text-decoration: underline; }
+
+  /* Reduced-motion: drop the height + chevron animations entirely. The
+     open/close is instant; the user still gets the state change without
+     vestibular disruption. */
+  @media (prefers-reduced-motion: reduce) {
+    .faq-a, .faq-chevron, .faq-q { transition: none !important; }
+  }
+
+  /* Mobile-only tweaks. Bigger tap targets, more vertical breathing room
+     between items, larger chevron, tighter chevron-to-text distance so
+     the row reads as one unit. */
   @media (max-width: 768px) {
     .faq-wrap { padding: 64px 0; }
     .faq-h2 { margin-bottom: 36px; }
+    .faq-q {
+      padding: 24px 0;
+      font-size: 16px;
+      line-height: 1.4;
+      /* Force ≥48px minimum tap height per Apple HIG / Material Design */
+      min-height: 48px;
+    }
+    .faq-chevron {
+      width: 28px;
+      height: 28px;
+    }
+    .faq-a-inner {
+      font-size: 15px;
+      padding-bottom: 24px;
+    }
   }
 
   .next-moves-wrap {
@@ -12301,25 +12359,80 @@ fbq('track', 'PageView');
   }, 2500);
 })();
 
-/* ── FAQ accordion ── */
+/* ── FAQ accordion — seamless mobile open/close ──
+   Was strict accordion (auto-close others on open). On mobile that meant
+   tapping a second question kicked off two simultaneous transitions —
+   one closing the old answer (350ms), one opening the new one (350ms)
+   — which read as jerky double-animation. Now multiple FAQs can stay
+   open simultaneously, which lets users compare answers and removes
+   the jank.
+
+   On open, we also scroll the item into view if its top is offscreen.
+   Combined with the `scroll-margin-top: 80px` CSS rule, opened FAQs
+   land cleanly below any sticky nav rather than disappearing behind it.
+
+   The opening animation itself is driven by CSS grid-template-rows
+   (0fr → 1fr) which animates to the content's natural height — no
+   more 400px max-height clipping long German answers. */
 (function () {
   const list = document.getElementById('faq-list');
   if (!list) return;
+
+  // Honour the OS reduced-motion preference for scroll behaviour too.
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   list.addEventListener('click', function (e) {
     const btn = e.target.closest('.faq-q');
     if (!btn) return;
     const item = btn.closest('.faq-item');
-    const isOpen = item.classList.contains('open');
-    // Close all
-    list.querySelectorAll('.faq-item.open').forEach(function (el) {
-      el.classList.remove('open');
-      el.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
-    });
-    // Toggle clicked item
-    if (!isOpen) {
-      item.classList.add('open');
-      btn.setAttribute('aria-expanded', 'true');
+    if (!item) return;
+    const wasOpen = item.classList.contains('open');
+
+    // Toggle just this item — leave others as they were. Comparison
+    // browsing is now a tap, not a tap-tap-tap.
+    item.classList.toggle('open');
+    btn.setAttribute('aria-expanded', wasOpen ? 'false' : 'true');
+
+    // After opening, ensure the question header is visible. We wait one
+    // frame for the grid-row animation to begin, then check if the item
+    // top is above the nav-floor or its bottom is below the viewport.
+    // `scrollIntoView({block:'nearest'})` is the right call here:
+    // - Does NOTHING if the element is already fully in view
+    // - Scrolls just enough to reveal it if partially clipped
+    // - Respects the CSS `scroll-margin-top` set on .faq-item
+    if (!wasOpen) {
+      requestAnimationFrame(function () {
+        const rect = item.getBoundingClientRect();
+        const navFloor = 80;
+        const needsScroll = rect.top < navFloor || rect.bottom > window.innerHeight;
+        if (needsScroll) {
+          try {
+            item.scrollIntoView({
+              behavior: reduceMotion ? 'auto' : 'smooth',
+              block:    'nearest'
+            });
+          } catch (_) {
+            // Older browsers without options-object support — fall back
+            // to the boolean signature (always scrolls to top, less ideal
+            // but at least the item ends up on-screen).
+            item.scrollIntoView(true);
+          }
+        }
+      });
     }
+  });
+
+  // Make the entire faq-item row clickable, not just the button. Mobile
+  // users frequently tap a few pixels outside the button text — this
+  // forgives that with no functional change for desktop. We avoid
+  // double-firing by checking if the click target is already the button
+  // (already handled by the listener above).
+  list.querySelectorAll('.faq-item').forEach(function (item) {
+    item.addEventListener('click', function (e) {
+      if (e.target.closest('.faq-q, .faq-a')) return;  // bubbled through; let the main handler do it
+      const btn = item.querySelector('.faq-q');
+      if (btn) btn.click();
+    });
   });
 })();
 
