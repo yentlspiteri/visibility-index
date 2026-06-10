@@ -4301,6 +4301,50 @@ fbq('track', 'PageView');
     pointer-events: none;
     transition: opacity .25s ease;
   }
+  /* Below-hero sections — hide while audit is running. Symptoms reported:
+     on mobile during a /de audit, the methodology section was visible
+     just below the loading panel. The hex graphics behind the loading
+     chips' translucent backgrounds (rgba(15,15,15,0.04)) showed through
+     as horizontal lines crossing the chip text, reading as accidental
+     strikethrough; and the methodology dimension cards rendered
+     immediately under the last chip, in English (HEX_COPY runs through
+     a JS override on /de but the static methodology paragraph below
+     the hex was already in view). The audit-locked state was correctly
+     locking scroll but not hiding these sections, so they remained
+     in the viewport on tall mobile screens.
+
+     Solution: every section that's NOT the hero / action-card gets
+     display:none while the audit is in flight. The hero alone fills
+     the viewport. After audit completes (audit-locked removed), the
+     normal flow resumes — and audit-complete hides nav.top + .hero
+     + .action-card + .scroll-hint via the existing inline JS path. */
+  body.audit-locked .method-wrap,
+  body.audit-locked .pillars,
+  body.audit-locked .next-moves-wrap,
+  body.audit-locked .results-wrap,
+  body.audit-locked .content-ideas-wrap,
+  body.audit-locked .toolkit-wrap,
+  body.audit-locked .circle-wrap,
+  body.audit-locked .team-audit-wrap,
+  body.audit-locked .case-wrap,
+  body.audit-locked .faq-wrap,
+  body.audit-locked .howitworks-wrap,
+  body.audit-locked footer {
+    display: none !important;
+  }
+  /* During audit on mobile, the hero takes the full viewport so the
+     loading panel feels centered + intentional. Previously the hero
+     min-height was 100svh from PR #51, which left a tail of empty
+     space below the action card on tall screens — not a bug, but the
+     audit state should feel anchored. Switch to dvh during audit-
+     locked so the hero adapts to keyboard / URL-bar changes too. */
+  @media (max-width: 768px) {
+    body.audit-locked .hero {
+      min-height: 100dvh;
+      padding-top: 32px;
+      padding-bottom: 32px;
+    }
+  }
 
   /* ── "Here's what we found" findings strip ──
      Sits between the score reveal and the hexagon. Pulls real scraped data into
