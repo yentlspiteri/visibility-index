@@ -1964,24 +1964,7 @@ TIER-SPECIFIC MOVE DIRECTIVE (read carefully — moves MUST match this tier's st
 ${tierDirective || 'Pick three concrete moves that fit the user\'s evident stage.'}
 
 YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose around it:
-${lang === 'de' ? `
-GERMAN OUTPUT REMINDER (re-read before generating each field): The schema field descriptions below are written in English, but every string VALUE you generate MUST be in formal German (Sie form, never du). This applies to:
-- executiveSummary (full prose in German)
-- dimensionCommentary values (German)
-- moves[].title (German imperative, ≤45 chars: "Headline schärfen", "Banner neu gestalten")
-- moves[].why / firstStep / weekOne / month1 / successMetric (all German)
-- moves[].timeInvest (German units: "20 Min", "1 Std", "wöchentlich 1 Std", "30 Min")
-- moves[].outreach.subject / body (German)
-- tierRoadmap[] (German, one-liners)
-- roadmap.endState (German, the day-90 statement)
-- roadmap.months[].title / theme (German)
-- roadmap.months[].weeks[] (every weekly action in German, verb-led, ≤14 German words)
-- roadmap.months[].milestone (German, checkable statement)
-- writingIdeas[].title / hook / angle (German)
-- videoIdeas[].title / hook / angle / format / shotIn (German, e.g. format "60 Sek Talking Head", shotIn "15 Min, ohne Schnitt")
-- pressTargets[].outlet / why / pitch (German)
-JSON KEYS stay English exactly as shown. ENUM values stay English: "service" tokens (strategy/content/video/photo/linkedin/speaker/pr), outreach "type" (press/podcast/speaker/board/advisor/partner/investor). Tier "name" values stay English (The Hidden Gem → The Recognised Leader). Everything else is German.
-` : ''}
+
 {
   "clarityScore": 0|1|2|3,
   "clarityRationale": "<8-12 words max>",
