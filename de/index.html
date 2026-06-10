@@ -10205,6 +10205,32 @@ fbq('track', 'PageView');
     const old = document.getElementById('demand-card');
     if (old) old.remove();
 
+    // Localised copy for the high-demand waitlist card. LANG-branched
+    // so /de users see German throughout (initial card, in-flight button,
+    // success state). Pre-fix the entire card was hard-coded English even
+    // on /de — same gap as the snag-card next door.
+    const DEMAND = LANG === 'de' ? {
+      eyebrow:        'Hohe Nachfrage',
+      title:          'Aktuell laufen viele Audits gleichzeitig.',
+      sub:            'Hinterlassen Sie Ihre E-Mail-Adresse — wir melden uns, sobald wieder Kapazität frei ist.',
+      emailPlaceholder: 'sie@firma.com',
+      submitBtn:      'Sobald frei ist, benachrichtigen →',
+      savingBtn:      'Wird gespeichert…',
+      successEyebrow: 'Sie stehen auf der Liste',
+      successTitle:   'Sie stehen auf der Liste. Wir melden uns in etwa 10 Minuten.',
+      successSub:     'Schauen Sie ins Postfach — und falls nichts ankommt, bitte auch im Spam-Ordner.'
+    } : {
+      eyebrow:        'High demand',
+      title:          "We're running a lot of audits right now.",
+      sub:            "Leave your email — we'll ping you as soon as a slot opens.",
+      emailPlaceholder: 'you@company.com',
+      submitBtn:      "Ping me when it's up →",
+      savingBtn:      'Saving…',
+      successEyebrow: "You're on the list",
+      successTitle:   "You're on the list. We'll ping you in ~10 minutes.",
+      successSub:     "Watch your inbox — check spam if it doesn't arrive."
+    };
+
     const card = document.createElement('div');
     card.id = 'demand-card';
     card.className = 'demand-card';
@@ -10213,13 +10239,13 @@ fbq('track', 'PageView');
     card.innerHTML = `
       <div class="demand-header">
         <span class="demand-pulse"></span>
-        <span class="demand-eyebrow">High demand</span>
+        <span class="demand-eyebrow">${DEMAND.eyebrow}</span>
       </div>
-      <p class="demand-title">We're running a lot of audits right now.</p>
-      <p class="demand-sub">Leave your email — we'll ping you as soon as a slot opens.</p>
+      <p class="demand-title">${DEMAND.title}</p>
+      <p class="demand-sub">${DEMAND.sub}</p>
       <form class="demand-form" novalidate>
-        <input type="email" placeholder="you@company.com" required autocomplete="email" inputmode="email" />
-        <button type="submit">Ping me when it's up →</button>
+        <input type="email" placeholder="${DEMAND.emailPlaceholder}" required autocomplete="email" inputmode="email" />
+        <button type="submit">${DEMAND.submitBtn}</button>
       </form>
     `;
     actionCard.parentNode.insertBefore(card, actionCard.nextSibling);
@@ -10231,7 +10257,7 @@ fbq('track', 'PageView');
       if (!email || !email.includes('@')) { input.focus(); return; }
       const btn = card.querySelector('button[type="submit"]');
       btn.disabled = true;
-      btn.textContent = 'Saving…';
+      btn.textContent = DEMAND.savingBtn;
       try {
         await fetch('/api/waitlist', {
           method: 'POST',
@@ -10242,10 +10268,10 @@ fbq('track', 'PageView');
       card.innerHTML = `
         <div class="demand-header">
           <span class="demand-pulse" style="background:#22c55e;animation:none"></span>
-          <span class="demand-eyebrow">You're on the list</span>
+          <span class="demand-eyebrow">${DEMAND.successEyebrow}</span>
         </div>
-        <p class="demand-title">You're on the list. We'll ping you in ~10 minutes.</p>
-        <p class="demand-sub">Watch your inbox — check spam if it doesn't arrive.</p>
+        <p class="demand-title">${DEMAND.successTitle}</p>
+        <p class="demand-sub">${DEMAND.successSub}</p>
       `;
     });
 
@@ -10259,6 +10285,35 @@ fbq('track', 'PageView');
       if (el) el.remove();
     });
 
+    // Localised copy for the snag (true network failure) card.
+    // LANG-branched so /de gets German throughout: the initial card,
+    // the in-flight "Saving…" button text, AND the success state
+    // after the user submits their email. Pre-fix the entire card
+    // was hard-coded English even on /de.
+    const SNAG = LANG === 'de' ? {
+      eyebrow:        'Etwas ist schiefgelaufen',
+      title:          'Unser Server war nicht erreichbar — das liegt an uns.',
+      sub:            'Hinterlassen Sie Ihre E-Mail-Adresse und wir führen Ihren Audit aus und senden Ihnen die vollständigen Ergebnisse direkt zu. Meist innerhalb einer Stunde.',
+      emailPlaceholder: 'sie@firma.com',
+      submitBtn:      'Ergebnisse an mich senden →',
+      retryBtn:       'oder jetzt erneut versuchen',
+      savingBtn:      'Wird gespeichert…',
+      successEyebrow: 'Alles klar',
+      successTitle:   'Wir haben Ihre Angaben gespeichert.',
+      successSub:     'Wir führen Ihren Audit aus und senden Ihnen die Ergebnisse per E-Mail — meist innerhalb einer Stunde. Falls nichts ankommt, schauen Sie bitte auch im Spam-Ordner nach.'
+    } : {
+      eyebrow:        'We hit a snag',
+      title:          "Our server couldn't be reached — that's on us.",
+      sub:            "Drop your email and we'll run your audit and send the full results directly. Usually within the hour.",
+      emailPlaceholder: 'you@company.com',
+      submitBtn:      'Send me my results →',
+      retryBtn:       'or try again now',
+      savingBtn:      'Saving…',
+      successEyebrow: 'Got it',
+      successTitle:   "We've saved your details.",
+      successSub:     "We'll run your audit and email you the results — usually within the hour. Check spam if you don't hear from us."
+    };
+
     const card = document.createElement('div');
     card.id = 'snag-card';
     card.className = 'demand-card snag-card';
@@ -10267,15 +10322,15 @@ fbq('track', 'PageView');
     card.innerHTML = `
       <div class="demand-header">
         <span class="demand-pulse" style="background:#F59E0B;animation:none"></span>
-        <span class="demand-eyebrow">We hit a snag</span>
+        <span class="demand-eyebrow">${SNAG.eyebrow}</span>
       </div>
-      <p class="demand-title">Our server couldn't be reached — that's on us.</p>
-      <p class="demand-sub">Drop your email and we'll run your audit and send the full results directly. Usually within the hour.</p>
+      <p class="demand-title">${SNAG.title}</p>
+      <p class="demand-sub">${SNAG.sub}</p>
       <form class="demand-form" novalidate>
-        <input type="email" placeholder="you@company.com" required autocomplete="email" inputmode="email" />
-        <button type="submit">Send me my results →</button>
+        <input type="email" placeholder="${SNAG.emailPlaceholder}" required autocomplete="email" inputmode="email" />
+        <button type="submit">${SNAG.submitBtn}</button>
       </form>
-      <button type="button" class="snag-retry">or try again now</button>
+      <button type="button" class="snag-retry">${SNAG.retryBtn}</button>
     `;
     actionCard.parentNode.insertBefore(card, actionCard.nextSibling);
 
@@ -10286,7 +10341,7 @@ fbq('track', 'PageView');
       if (!email || !email.includes('@')) { input.focus(); return; }
       const btn = card.querySelector('button[type="submit"]');
       btn.disabled = true;
-      btn.textContent = 'Saving…';
+      btn.textContent = SNAG.savingBtn;
       try {
         await fetch('/api/waitlist', {
           method: 'POST',
@@ -10297,10 +10352,10 @@ fbq('track', 'PageView');
       card.innerHTML = `
         <div class="demand-header">
           <span class="demand-pulse" style="background:#22c55e;animation:none"></span>
-          <span class="demand-eyebrow">Got it</span>
+          <span class="demand-eyebrow">${SNAG.successEyebrow}</span>
         </div>
-        <p class="demand-title">We've saved your details.</p>
-        <p class="demand-sub">We'll run your audit and email you the results — usually within the hour. Check spam if you don't hear from us.</p>
+        <p class="demand-title">${SNAG.successTitle}</p>
+        <p class="demand-sub">${SNAG.successSub}</p>
       `;
     });
 
