@@ -506,6 +506,43 @@
           );
         }
       }
+
+      // ── LinkedIn Insight Tag — conversion events for retargeting audiences ──
+      //
+      // For each milestone event we fire a separate LinkedIn conversion, so
+      // Campaign Manager can build matched-audience segments from them. The
+      // retargeting target is `audit_completed` (the score landed in the
+      // browser; user has not yet given their email). Build a custom audience
+      // in LinkedIn from this conversion event, then run a re-engagement ad
+      // saying "complete your audit → get your full report PDF".
+      //
+      // ONE-TIME SETUP (LinkedIn Campaign Manager):
+      //   1. Open Campaign Manager → Account assets → Conversions → Create
+      //   2. Create FOUR conversions (one per event below), name them clearly:
+      //        - "VI Audit Started"
+      //        - "VI Audit Completed"      ← retargeting target
+      //        - "VI Lead Captured"
+      //        - "VI Walkthrough Booked"
+      //   3. Conversion type "Lead" or "Sign-up" is fine. Conversion method:
+      //      "Insight Tag" (not URL-based). LinkedIn auto-generates a
+      //      conversion_id (8-digit number).
+      //   4. Paste each conversion_id into LI_CONV below.
+      //
+      // Until LI_CONV values are filled, lintrk() calls are silently no-ops —
+      // safe to deploy now and backfill the IDs later from Campaign Manager.
+      if (typeof window.lintrk === 'function') {
+        const LI_CONV = {
+          audit_started:      null,  // TODO: fill from Campaign Manager
+          audit_completed:    null,  // TODO: fill from Campaign Manager (retargeting target)
+          lead_captured:      null,  // TODO: fill from Campaign Manager
+          walkthrough_booked: null   // TODO: fill from Campaign Manager
+        };
+        const conversionId = LI_CONV[name];
+        if (conversionId) {
+          window.lintrk('track', { conversion_id: conversionId });
+        }
+      }
+
       if (window.location.hostname === 'localhost') console.log('[track]', name, enriched);
       return eventId;
     } catch (_) { return null; }
