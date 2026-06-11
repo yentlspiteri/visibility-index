@@ -56,7 +56,11 @@ const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
 
 const RATE_LIMIT = new Map();
-const RATE_LIMIT_PER_HOUR = parseInt(process.env.RATE_LIMIT_PER_HOUR || '5', 10);
+// 15 audits per IP per hour. Bumped 5 → 15 for the public launch so one
+// curious user can audit a handful of profiles (themselves + 2-3 references)
+// in a single sitting without hitting the cap. Override at runtime by
+// setting RATE_LIMIT_PER_HOUR in Vercel env vars if abuse appears in logs.
+const RATE_LIMIT_PER_HOUR = parseInt(process.env.RATE_LIMIT_PER_HOUR || '15', 10);
 const HOUR_MS = 3_600_000;
 
 // In-memory result cache. When the SAME LinkedIn URL + role + goal combination
