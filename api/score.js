@@ -1964,7 +1964,12 @@ TIER-SPECIFIC MOVE DIRECTIVE (read carefully — moves MUST match this tier's st
 ${tierDirective || 'Pick three concrete moves that fit the user\'s evident stage.'}
 
 YOUR JOB - return JSON with EVERY field below. No markdown fences, no prose around it:
-
+${lang === 'de' ? `
+DE OUTPUT BUDGET (CRITICAL for /de — read carefully):
+1. For writingIdeas, videoIdeas, and pressTargets: RETURN EMPTY ARRAYS ([]). Do not generate any items. The PDF builder has localised fallback content for these.
+2. For ALL OTHER string values, use formal German (Sie-form, never du). Pay special attention to PROSE: executiveSummary, move.why, move.firstStep, move.weekOne, move.month1, roadmap.endState, roadmap.months[].weeks[]. These drift to English most often.
+3. JSON keys + enum values (service tokens, outreach types) + tier "name" values stay English exactly as specified.
+` : ''}
 {
   "clarityScore": 0|1|2|3,
   "clarityRationale": "<8-12 words max>",
