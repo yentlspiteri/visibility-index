@@ -8719,29 +8719,13 @@ fbq('track', 'PageView');
   <!-- Decorative PEACH wordmark removed per request -->
 </footer>
 
-<!-- ─────────── TEMPORARY BUG REPORT BUTTON + MODAL ───────────
-     Bottom-LEFT floating bug. Click opens a modal, comments POST to /api/feedback
-     which emails yentl@vonpeach.com via Resend. Hidden on mobile. -->
-<button type="button" class="bug-report" id="bug-report"
-        title="Report a bug" aria-label="Report a bug" aria-controls="bug-modal" aria-expanded="false">🐛</button>
+<!-- Temporary bug-report button + modal removed for the German public
+     launch. Was only intended for the testing phase. CSS rules
+     (.bug-report, .bug-modal*, .bug-form*) left in the stylesheet —
+     they're dead with no matching elements but make it trivial to
+     re-introduce the button for a future testing round just by
+     restoring the HTML below. -->
 
-<div class="bug-modal" id="bug-modal" role="dialog" aria-modal="true" aria-labelledby="bug-modal-title" hidden>
-  <div class="bug-modal-backdrop" data-bug-close></div>
-  <div class="bug-modal-card" role="document">
-    <button type="button" class="bug-modal-close" data-bug-close aria-label="Close">×</button>
-    <h2 class="bug-modal-title" id="bug-modal-title">Report a bug</h2>
-    <p class="bug-modal-sub">What went wrong? The more detail the better. We'll add page context automatically.</p>
-    <form id="bug-form" class="bug-form" novalidate>
-      <textarea id="bug-message" name="message" rows="5" placeholder="What broke? What did you expect to see?" required></textarea>
-      <input id="bug-email" name="email" type="email" placeholder="Your email (optional, so we can follow up)" autocomplete="email" />
-      <div class="bug-actions">
-        <button type="button" class="bug-cancel" data-bug-close>Cancel</button>
-        <button type="submit" class="bug-submit">Send report</button>
-      </div>
-      <div class="bug-status" id="bug-status" aria-live="polite"></div>
-    </form>
-  </div>
-</div>
 
 <!-- ─────────── JS ─────────── -->
 <script>
@@ -8978,69 +8962,9 @@ fbq('track', 'PageView');
     });
   })();
 
-  /* ────────── BUG REPORT — modal opens, POSTs to /api/feedback ────────── */
-  (function () {
-    const btn   = document.getElementById('bug-report');
-    const modal = document.getElementById('bug-modal');
-    const form  = document.getElementById('bug-form');
-    const msg   = document.getElementById('bug-message');
-    const email = document.getElementById('bug-email');
-    const status = document.getElementById('bug-status');
-    if (!btn || !modal) return;
-
-    function open() {
-      modal.hidden = false;
-      btn.setAttribute('aria-expanded', 'true');
-      setTimeout(() => msg && msg.focus(), 80);
-    }
-    function close() {
-      modal.hidden = true;
-      btn.setAttribute('aria-expanded', 'false');
-      if (status) { status.textContent = ''; status.className = 'bug-status'; }
-    }
-    btn.addEventListener('click', open);
-    modal.addEventListener('click', (e) => {
-      if (e.target.matches('[data-bug-close]')) close();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.hidden) close();
-    });
-    if (form) form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const message = (msg.value || '').trim();
-      if (!message) { msg.focus(); return; }
-      const submitBtn = form.querySelector('.bug-submit');
-      submitBtn.disabled = true;
-      const orig = submitBtn.textContent;
-      submitBtn.textContent = 'Sending…';
-      status.className = 'bug-status';
-      status.textContent = '';
-      try {
-        const res = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message,
-            email:    (email.value || '').trim() || null,
-            url:      window.location.href,
-            viewport: `${window.innerWidth}x${window.innerHeight}`,
-            ua:       navigator.userAgent,
-            time:     new Date().toISOString()
-          })
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        status.className = 'bug-status success';
-        status.textContent = 'Thanks - sent. We\'ll take a look.';
-        form.reset();
-        setTimeout(close, 1500);
-      } catch (err) {
-        status.className = 'bug-status error';
-        status.textContent = 'Could not send. Email hello@vonpeach.com directly?';
-        submitBtn.disabled = false;
-        submitBtn.textContent = orig;
-      }
-    });
-  })();
+  /* Bug-report modal JS removed — the button + modal HTML was removed
+     for the German public launch. /api/feedback still exists; if the
+     button is restored, the handler can be reinstated from git history. */
 
   /* ────────── ANALYTICS — Calendly click delegation (catches every CTA) ────────── */
   document.addEventListener('click', (e) => {
