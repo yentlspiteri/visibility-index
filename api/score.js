@@ -1053,12 +1053,16 @@ async function fetchApify(linkedinUrl) {
       if (i > 0) {
         console.warn(`[Apify] primary actor failed, fallback "${actor}" succeeded`);
         // Alert ops so we know the primary is degraded — throttled by category
-        // so we don't spam during a sustained outage.
+        // so we don't spam during a sustained outage. Body now includes the
+        // FULL parsed chain so an alert reader can spot env var parsing
+        // issues at a glance (e.g. a stray quote or wrong-name env var
+        // would make the chain a single weird entry instead of N actor IDs).
+        const chainSummary = APIFY_ACTOR_CHAIN.map((a, idx) => `  ${idx === 0 ? '→' : ' '} [${idx}] ${a}`).join('\n');
         notifyOps({
           category: 'apify-primary-degraded',
           subject:  `⚠️ Apify primary actor degraded — running on fallback ${actor}`,
-          body:     `The primary LinkedIn actor "${APIFY_ACTOR_CHAIN[0]}" is failing.\nFallback "${actor}" succeeded.\n\nLast error from primary:\n${lastErr?.message?.slice(0, 600) || '(none)'}\n\nCheck the actor's Apify console runs to see if it's a transient burn or needs a permanent swap.`,
-          context:  { primary: APIFY_ACTOR_CHAIN[0], fallback: actor }
+          body:     `The primary LinkedIn actor "${APIFY_ACTOR_CHAIN[0]}" is failing.\nFallback "${actor}" succeeded.\n\nFull parsed actor chain (${APIFY_ACTOR_CHAIN.length} actors):\n${chainSummary}\n\nLast error from primary:\n${lastErr?.message?.slice(0, 600) || '(none)'}\n\nCheck the actor's Apify console runs to see if it's a transient burn or needs a permanent swap.`,
+          context:  { primary: APIFY_ACTOR_CHAIN[0], fallback: actor, chainLength: APIFY_ACTOR_CHAIN.length, chain: APIFY_ACTOR_CHAIN }
         }).catch(() => {});
       }
       return raw;
