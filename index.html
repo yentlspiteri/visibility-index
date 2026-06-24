@@ -2704,6 +2704,35 @@ fbq('track', 'PageView');
   .audit-input:focus { color: var(--vp-deep-black, #0c0b09); border-bottom-color: var(--vp-deep-black, #0c0b09); }
   .audit-input::placeholder { color: rgba(63,54,178,0.5); font-weight: 500; }
 
+  /* ── Inline validation: invalid LinkedIn handle ──────────────────────────
+     Surfaces when the user submits something that doesn't look like a
+     LinkedIn URL (empty input, a non-LinkedIn URL, garbage with spaces).
+     Replaces the previous flow where any input shipped to the server and
+     the user waited ~50s for the audit to fail with a generic error.
+     Red bottom-border on the input, small red hint paragraph below, both
+     cleared the moment the user types again. */
+  /* :focus is also (0,2,0) specificity — add an explicit focus override so
+     the red border stays visible while the user clicks back to fix the
+     handle. Otherwise focus would re-apply the indigo border. */
+  .audit-input.is-invalid,
+  .audit-input.is-invalid:focus,
+  .audit-input.is-invalid:hover { border-bottom-color: #b8364c; color: #b8364c; }
+  .audit-input.is-invalid::placeholder { color: rgba(184,54,76,0.55); }
+  .audit-hint {
+    margin: 10px 0 0;
+    padding: 0;
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.4;
+    color: #b8364c;
+    animation: audit-hint-in 0.2s ease both;
+  }
+  .audit-hint[hidden] { display: none; }
+  @keyframes audit-hint-in {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   .audit-submit {
     margin-top: 40px;
     display: inline-flex;
@@ -8039,8 +8068,14 @@ fbq('track', 'PageView');
 
         <label class="mobile-label" for="input-linkedin">LinkedIn</label>
         <div class="audit-prose">
-          <span class="prose-text">You can find me at&nbsp;</span><span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" name="linkedin-handle" placeholder="your-handle" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" data-1p-ignore data-lpignore="true" data-form-type="other" />
+          <span class="prose-text">You can find me at&nbsp;</span><span class="audit-prefix">linkedin.com/in/</span><input type="text" class="audit-input" id="input-linkedin" name="linkedin-handle" placeholder="your-handle" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" data-1p-ignore data-lpignore="true" data-form-type="other" aria-describedby="linkedin-hint" />
         </div>
+        <!-- Inline validation hint. Hidden by default; shown by JS when the
+             user submits an empty handle or one that doesn't look like a
+             LinkedIn URL. Replaces the previous behaviour where any input
+             was sent to the server and the user waited ~50s for the audit
+             to fail before being told the URL was wrong. -->
+        <p class="audit-hint" id="linkedin-hint" role="alert" hidden></p>
 
         <button type="button" class="audit-submit" id="btn-calculate">Calculate my score</button>
 
@@ -9260,20 +9295,37 @@ fbq('track', 'PageView');
 
   /* ────────── URL NORMALISATION ────────── */
   // Accept: linkedin.com/in/x | https://linkedin.com/in/x | www.linkedin.com/in/x | @x | x
+  //
+  // Returns the normalised "linkedin.com/in/<handle>" string on success, or
+  // null when the input is obviously not a LinkedIn URL/handle. The post-
+  // normalisation regex is the gate that catches garbage early — previously
+  // any input (e.g. "https://google.com" or "hello world") was prefixed with
+  // "linkedin.com/in/" and shipped to the server, where the audit failed
+  // after ~50s with a generic "couldn't fetch that LinkedIn profile" error.
+  // Returning null here lets the caller surface inline feedback BEFORE the
+  // audit runs.
   function normaliseLinkedIn(raw) {
     if (!raw) return null;
     let s = raw.trim().toLowerCase();
     // Strip protocol + www
     s = s.replace(/^https?:\/\//, '').replace(/^www\./, '');
-    // If the user pasted just a handle / @handle, prefix
+    // If the user pasted just a handle / @handle, prefix.
+    // Only prefix if the input looks like a bare handle (no path separators
+    // other than the optional leading "@") — protects against someone pasting
+    // a URL from a different domain like "google.com/foo".
     if (!s.includes('linkedin.com')) {
       s = s.replace(/^@/, '');
-      // if it has slashes treat as relative path
-      if (!s.startsWith('in/')) s = 'in/' + s;
-      s = 'linkedin.com/' + s;
+      // If the input contains a dot or slash, it's probably a URL from
+      // another domain — fail rather than munge it into a fake LinkedIn URL.
+      if (s.includes('.') || s.includes('/')) return null;
+      s = 'linkedin.com/in/' + s;
     }
     // Strip trailing slash + query
     s = s.split('?')[0].replace(/\/$/, '');
+    // Final shape check: must be linkedin.com/in/<3+ valid handle chars>.
+    // Permitted handle chars match LinkedIn's actual handle rules:
+    // alphanumeric, hyphens, underscores, percent-encoded unicode.
+    if (!/^linkedin\.com\/in\/[a-z0-9\-_%]{3,}$/.test(s)) return null;
     return s;
   }
 
@@ -9632,7 +9684,40 @@ fbq('track', 'PageView');
         _pulsedSubmit = true;
         pulseNext(document.querySelector('.madlib-submit'));
       }
+      // Clear any inline-validation error the moment the user types again.
+      // Without this the red border + hint stick around even after the user
+      // has corrected the input.
+      if (linkInput.classList.contains('is-invalid')) clearLinkedinHintError();
     });
+  }
+
+  /* ────────── Inline LinkedIn-URL validation helpers ──────────
+     Driven by startAudit() — see normaliseLinkedIn() above for the regex.
+     Two reasons surface:
+       - 'empty'   → user hit submit with the input empty
+       - 'invalid' → user submitted something that doesn't normalise to
+                     a valid linkedin.com/in/<handle> URL (a non-LinkedIn
+                     URL, a pasted website, garbage with spaces, etc.)
+     LANG-branched: German on /de, English on /. */
+  function showLinkedinHintError(reason) {
+    const hint = document.getElementById('linkedin-hint');
+    if (!hint || !linkInput) return;
+    linkInput.classList.add('is-invalid');
+    hint.textContent = LANG === 'de'
+      ? (reason === 'empty'
+          ? 'Bitte geben Sie zuerst Ihren LinkedIn-Handle ein.'
+          : 'Das sieht nicht nach einem LinkedIn-Profil aus. Versuchen Sie z. B. „yentlspiteri" oder „linkedin.com/in/yentlspiteri".')
+      : (reason === 'empty'
+          ? 'Enter your LinkedIn handle first.'
+          : 'That doesn\'t look like a LinkedIn profile. Try e.g. "yentlspiteri" or "linkedin.com/in/yentlspiteri".');
+    hint.hidden = false;
+  }
+  function clearLinkedinHintError() {
+    const hint = document.getElementById('linkedin-hint');
+    if (!hint || !linkInput) return;
+    linkInput.classList.remove('is-invalid');
+    hint.hidden = true;
+    hint.textContent = '';
   }
 
   // Goal-aware hero subhead - updates whenever role or goal changes.
@@ -9849,13 +9934,22 @@ fbq('track', 'PageView');
       if (!handle) {
         linkInput.focus();
         linkInput.placeholder = 'drop your handle here…';
+        showLinkedinHintError('empty');
         return;
       }
     }
 
     const raw = linkInput.value.trim();
-    const normalised = normaliseLinkedIn(raw) || 'demo-profile';
-    lastNormalised = normalised;
+    const normalised = normaliseLinkedIn(raw);
+    // Invalid URL/handle (e.g. user pasted a non-LinkedIn URL or garbage
+    // input). Surface inline feedback BEFORE the ~50s audit runs.
+    if (!opts.override && !normalised) {
+      linkInput.focus();
+      showLinkedinHintError('invalid');
+      return;
+    }
+    clearLinkedinHintError();
+    lastNormalised = normalised || 'demo-profile';
 
     // Arm the slow-audit nudge. If the audit isn't done in 60s, slide in the
     // email capture strip. Reset any leftover state from a previous run first.
