@@ -9051,7 +9051,7 @@ fbq('track', 'PageView');
       /ResizeObserver loop/i,                            // benign Chrome warning
       /Non-Error promise rejection captured/i,           // Sentry-style noise
       /chrome-extension:\/\//i,                          // browser-extension exceptions
-      /^Object Not Found Matching Id/i,                  // Outlook safelink scanner
+      /Object Not Found Matching Id/i,                   // Outlook SafeLinks scanner — drop ^ so it matches when wrapped as "unhandled promise rejection: Object Not Found..."
       /\[Calendly\]/i,                                   // Calendly's own console warnings (not actionable)
       /widget\.calendly\.com/i,
       /assets\.calendly\.com/i,
