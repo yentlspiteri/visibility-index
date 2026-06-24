@@ -33,7 +33,18 @@ const APIFY_API     = 'https://api.apify.com/v2/acts';
 //   - harvestapi~linkedin-profile-scraper  (rich, slightly cheaper)
 //   - apify~linkedin-profile-scraper       (official, most reliable, priciest)
 // Field mappers below are actor-agnostic - any swap is plug-and-play.
-const APIFY_ACTOR           = process.env.APIFY_LINKEDIN_ACTOR  || 'dev_fusion~Linkedin-Profile-Scraper';
+// Defensive: accept a comma-list in EITHER env var name. There's a confusing
+// pair — APIFY_LINKEDIN_ACTOR (singular, original) and APIFY_LINKEDIN_ACTORS
+// (plural, added when the fallback chain shipped). When ops accidentally
+// sets the comma-list on the singular var, the code used to treat the whole
+// string as one actor name → "actor not found" 404 → silent fallback to the
+// hardcoded second actor → confusing ops alerts on every audit. Splitting
+// here lets the singular env var hold a list too, so either spelling works.
+const APIFY_ACTOR_LIST_SINGULAR = (process.env.APIFY_LINKEDIN_ACTOR || 'dev_fusion~Linkedin-Profile-Scraper')
+  .split(',').map(s => s.trim()).filter(Boolean);
+// First actor only, for any legacy single-actor code paths (logs, ops-alert
+// context, etc.). The chain below uses the full list when applicable.
+const APIFY_ACTOR           = APIFY_ACTOR_LIST_SINGULAR[0];
 // Automatic fallback chain. If the primary actor (APIFY_LINKEDIN_ACTOR) fails
 // — non-2xx response, throws, returns empty, returns an error item — fetchApify
 // transparently retries with the next actor in the chain. Belt-and-suspenders
@@ -43,7 +54,10 @@ const APIFY_ACTOR           = process.env.APIFY_LINKEDIN_ACTOR  || 'dev_fusion~L
 // dev_fusion as a known-good fallback.
 const APIFY_ACTOR_CHAIN = (process.env.APIFY_LINKEDIN_ACTORS
   ? process.env.APIFY_LINKEDIN_ACTORS.split(',').map(s => s.trim()).filter(Boolean)
-  : [APIFY_ACTOR, 'dev_fusion~Linkedin-Profile-Scraper']
+  // Singular env var path: use the FULL singular list (already split above)
+  // plus the hardcoded dev_fusion safety-net. Dedupe below catches the
+  // common case where someone listed dev_fusion in the singular too.
+  : [...APIFY_ACTOR_LIST_SINGULAR, 'dev_fusion~Linkedin-Profile-Scraper']
 ).filter((a, i, arr) => arr.indexOf(a) === i);   // dedupe in case env primary == fallback
 // Post-scraper for LinkedIn posts (the profile actor doesn't return them).
 const APIFY_POSTS_ACTOR     = process.env.APIFY_POSTS_ACTOR     || 'apimaestro~linkedin-profile-posts';
