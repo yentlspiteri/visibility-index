@@ -9233,7 +9233,13 @@ fbq('track', 'PageView');
     const params = new URLSearchParams(window.location.search);
     const URL_KEYS = [
       'utm_source','utm_medium','utm_campaign','utm_content','utm_term',
-      'gclid','fbclid','li_fat_id','ttclid','msclkid'
+      'gclid','fbclid','li_fat_id','ttclid','msclkid',
+      // Mailchimp campaign + per-recipient IDs. mc_cid duplicates
+      // utm_campaign for newsletter-driven traffic; mc_eid is the unique
+      // recipient identifier — captures WHICH subscriber from a newsletter
+      // landed on the page. Useful for cohort analysis in GA4 / Meta
+      // (audience size by newsletter campaign vs unique recipients).
+      'mc_cid','mc_eid'
     ];
     // Pull from URL if present, fall back to previously-stored value (so a
     // user who clicked an ad yesterday and converts today still attributes correctly).
@@ -10499,7 +10505,12 @@ fbq('track', 'PageView');
         score_18: total,
         tier:     tierName,
         role:     lastRole || (roleSelect && roleSelect.value),
-        goal:     lastGoal || (goalSelect && goalSelect.value)
+        goal:     lastGoal || (goalSelect && goalSelect.value),
+        // Mailchimp newsletter attribution — flows to GA4, Meta Pixel,
+        // LinkedIn conversion params. Lets us build retargeting audiences
+        // segmented by Mailchimp campaign or per-recipient ID.
+        mc_cid:   ATTRIBUTION?.mc_cid || '',
+        mc_eid:   ATTRIBUTION?.mc_eid || ''
       });
     }
 
@@ -12423,6 +12434,11 @@ fbq('track', 'PageView');
         intent:       action,
         utm_source:   ATTRIBUTION?.utm_source   || '',
         utm_campaign: ATTRIBUTION?.utm_campaign || '',
+        // Mailchimp campaign + per-recipient IDs — flow to GA4 + Meta + LinkedIn
+        // so newsletter-converting leads can be filtered downstream by exact
+        // newsletter recipient.
+        mc_cid:       ATTRIBUTION?.mc_cid       || '',
+        mc_eid:       ATTRIBUTION?.mc_eid       || '',
         event_id:     leadEventId    // Meta uses this for browser-pixel dedup vs CAPI
       });
 
