@@ -59,6 +59,18 @@ const APIFY_ACTOR_CHAIN = (process.env.APIFY_LINKEDIN_ACTORS
   // common case where someone listed dev_fusion in the singular too.
   : [...APIFY_ACTOR_LIST_SINGULAR, 'dev_fusion~Linkedin-Profile-Scraper']
 ).filter((a, i, arr) => arr.indexOf(a) === i);   // dedupe in case env primary == fallback
+
+// Module-init log so we can see the resolved chain in Vercel logs without
+// triggering an audit. Fires once per warm function container at cold-start.
+// Useful for confirming whether an env var change has propagated and for
+// debugging "the alert says X but I changed the env var to Y" mysteries.
+console.log('[Apify chain init]', JSON.stringify({
+  chainLength:        APIFY_ACTOR_CHAIN.length,
+  chain:              APIFY_ACTOR_CHAIN,
+  envSingularLength:  (process.env.APIFY_LINKEDIN_ACTOR  || '').length,
+  envPluralSet:       !!process.env.APIFY_LINKEDIN_ACTORS,
+  envPluralLength:    (process.env.APIFY_LINKEDIN_ACTORS || '').length
+}));
 // Post-scraper for LinkedIn posts (the profile actor doesn't return them).
 const APIFY_POSTS_ACTOR     = process.env.APIFY_POSTS_ACTOR     || 'apimaestro~linkedin-profile-posts';
 // Per-platform metrics scrapers. Configurable so you can swap providers without
