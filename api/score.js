@@ -1020,10 +1020,24 @@ async function tryOneApifyActor(actor, linkedinUrl, perCallTimeoutMs) {
 async function fetchApify(linkedinUrl) {
   // Iterate the configured actor chain. First success wins. If every actor
   // fails, throw the last error so the existing handler error path runs.
-  // Per-call timeout shrinks for fallback attempts to keep total budget within
-  // the 60s Vercel function limit (primary 30s + fallback 25s ≤ 55s).
-  const PRIMARY_TIMEOUT  = 30000;
-  const FALLBACK_TIMEOUT = 25000;
+  //
+  // Per-call timeouts scale with chain length to stay within the 60s Vercel
+  // function budget (the audit also needs ~10s of headroom for Claude
+  // analysis at the end). The fixed (30s, 25s) pair was correct for 2-actor
+  // chains but broke when the chain grew to 3+: total worst-case budget was
+  // 30+25+25 = 80s, blowing past the 60s function cap and 504-ing real
+  // users. Now scales by chain length:
+  //
+  //   N = 1 → primary 50s (just one shot, use the whole budget)
+  //   N = 2 → primary 30s, fallback 25s (= 55s worst case, original)
+  //   N = 3 → primary 22s, fallback 18s each (= 58s worst case)
+  //   N ≥ 4 → primary 16s, fallback 14s each (= 58s for 4 actors)
+  //
+  // We give the primary a slightly larger slice on the assumption it's the
+  // user-preferred actor and most-often-successful.
+  const N = APIFY_ACTOR_CHAIN.length;
+  const PRIMARY_TIMEOUT  = N <= 1 ? 50000 : N === 2 ? 30000 : N === 3 ? 22000 : 16000;
+  const FALLBACK_TIMEOUT = N <= 1 ? 50000 : N === 2 ? 25000 : N === 3 ? 18000 : 14000;
   let lastErr;
   for (let i = 0; i < APIFY_ACTOR_CHAIN.length; i++) {
     const actor = APIFY_ACTOR_CHAIN[i];
