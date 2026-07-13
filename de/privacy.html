@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- Contentsquare UX analytics -->
-<script src="https://t.contentsquare.net/uxa/1797a4bbbff27.js" async></script>
+<!-- Consent-gated analytics loader (Contentsquare + Meta Pixel on /de and /). Fires only after user grants cookie consent — see /consent-loader.js. TTDSG §25 / GDPR compliance. -->
+<script src="/consent-loader.js" defer></script>
 <title>Datenschutz &amp; Nutzungsbedingungen — Visibility Index | Von Peach</title>
 <meta name="description" content="Datenschutzerklärung und Nutzungsbedingungen für den Visibility-Index-Audit unter index.vonpeach.com." />
 <meta name="robots" content="index, follow" />
@@ -108,6 +108,12 @@
       <li><strong>Meta</strong> (Pixel + Conversions API) — für Werbeattribution und Kampagnenoptimierung. <a href="https://www.facebook.com/policy.php" target="_blank" rel="noopener">Meta-Datenschutz</a></li>
       <li><strong>Google</strong> (Analytics + Ads) — für Nutzungsanalyse und Werbeattribution. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google-Datenschutz</a></li>
       <li><strong>Vercel</strong> — unser Hosting-Anbieter. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel-Datenschutz</a></li>
+      <li><strong>Supabase</strong> (auf AWS) — speichert Anmelde- und Team-Audit-Daten, falls Sie das Team-Audit-Feature nutzen (Manager-E-Mail-Adresse, Magic-Link-Tokens, LinkedIn-URLs der Team-Mitglieder, Zustimmungs-Tokens, monatliche Score-Snapshots). Diese Daten werden nur erhoben, wenn Sie sich aktiv als Team-Manager registrieren. Row-Level Security (RLS) ist aktiviert; nur unsere Server-Funktionen können die Daten lesen. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase-Datenschutz</a></li>
+      <li><strong>Anthropic</strong> — betreibt die KI, die Ihre Executive Summary, Dimensionskommentare und Empfehlungen erstellt. Wir senden Ihre öffentlichen Profildaten (Name, Headline, About-Abschnitt, Follower-Zahl, Rolle, Ziel) an Anthropics Claude-API. Kein Training auf Ihren Daten laut Anthropics Datenschutzrichtlinie. <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Anthropic-Datenschutz</a></li>
+      <li><strong>Apify</strong> — scrapt Ihr öffentliches LinkedIn-Profil im Rahmen des Audits. Wir übergeben Apify Ihre LinkedIn-URL; Apify liefert die öffentlich einsehbaren Profildaten zurück. <a href="https://apify.com/privacy-policy" target="_blank" rel="noopener">Apify-Datenschutz</a></li>
+      <li><strong>SerpAPI</strong> — führt Google-Suchen zu Ihrem Namen durch, um Pressezitate und Erwähnungen zu finden. Wir übergeben nur Ihren Namen als Suchanfrage. <a href="https://serpapi.com/legal/privacy-policy" target="_blank" rel="noopener">SerpAPI-Datenschutz</a></li>
+      <li><strong>Contentsquare</strong> — misst UX-Metriken (Klickpfade, Scrolltiefe, Formularabbrüche) für Produktverbesserungen. Wird ausschließlich <em>nach Ihrer Zustimmung</em> im Cookie-Banner geladen. <a href="https://contentsquare.com/privacy-and-security/" target="_blank" rel="noopener">Contentsquare-Datenschutz</a></li>
+      <li><strong>LinkedIn</strong> (Insight Tag) — für Retargeting-Zwecke in Werbekampagnen. Wird ausschließlich <em>nach Ihrer Zustimmung</em> im Cookie-Banner geladen. <a href="https://www.linkedin.com/legal/privacy-policy" target="_blank" rel="noopener">LinkedIn-Datenschutz</a></li>
     </ul>
     <p>Keiner dieser Dienstleister wird von uns dafür bezahlt, Ihre Daten für eigene Marketingzwecke zu verwenden. Wir verkaufen Ihre Daten an niemanden.</p>
 

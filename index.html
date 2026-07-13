@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-<!-- Contentsquare UX analytics -->
-<script src="https://t.contentsquare.net/uxa/1797a4bbbff27.js" async></script>
+<!-- Consent-gated analytics loader (Contentsquare + Meta Pixel on /de and /). Fires only after user grants cookie consent — see /consent-loader.js. TTDSG §25 / GDPR compliance. -->
+<script src="/consent-loader.js" defer></script>
 
 <!-- ─────────── SEO + SOCIAL ───────────
      Title is keyword-led ("free LinkedIn audit") + brand to win both branded and
@@ -568,33 +568,17 @@
 })();
 </script>
 
-<!-- ─────────── META PIXEL (Facebook + Instagram ads) ───────────
-     Pixel ID: 1714917946519921 (Von Peach business account).
-     PageView fires automatically on load. Conversion events (Lead, Schedule,
-     etc.) are routed through window.track() above so we get the same data
-     in both GA4 and Meta Events Manager from a single call site. -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1714917946519921');
-// Revoke Meta consent by default; granted by cookie banner on accept.
-// fbq still fires PageView - Meta uses it for reach/frequency even without consent.
-try {
-  var _viC = JSON.parse(localStorage.getItem('__vi_consent') || 'null');
-  if (!(_viC && _viC.granted)) fbq('consent', 'revoke');
-} catch(_) {}
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=1714917946519921&ev=PageView&noscript=1"
-  alt="" /></noscript>
-<!-- End Meta Pixel Code -->
+<!-- ─────────── META PIXEL — now consent-gated ───────────
+     Pixel ID 1714917946519921 loads via /consent-loader.js AFTER the user
+     grants cookie consent. Was inlined here and firing PageView on load
+     (with a fbq('consent', 'revoke') fallback), which under TTDSG §25
+     and GDPR still sent an IP-carrying request to connect.facebook.net
+     and set the _fbp cookie before any consent decision was made — a
+     real risk for the Germany launch. Now: pixel-loading is deferred
+     until the user explicitly clicks "Accept" in the cookie banner.
+     Conversion events (Lead, Schedule, CompleteRegistration) still
+     route through window.track() further down, which no-ops if fbq
+     isn't loaded yet. -->
 
 <!-- ─────────── LINKEDIN INSIGHT TAG ───────────
      Partner ID is set below. Get yours from LinkedIn Campaign Manager →
@@ -12519,10 +12503,15 @@ fbq('track', 'PageView');
           personalization_storage: 'granted'
         });
       }
-      // Meta
+      // Meta Pixel — load the script + fire PageView (deferred until now
+      // for TTDSG §25 / GDPR compliance) then grant consent for future events.
+      if (typeof loadMetaPixel === 'function') loadMetaPixel();
       if (typeof fbq === 'function') fbq('consent', 'grant');
-      // LinkedIn — inject tag now
+      // LinkedIn Insight Tag — inject tag now
       if (typeof loadLinkedInTag === 'function') loadLinkedInTag();
+      // Contentsquare session recording — load now (was previously eagerly
+      // loaded on every page; now consent-gated via /consent-loader.js).
+      if (typeof loadContentsquare === 'function') loadContentsquare();
     }
 
     function declineConsent() {
