@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- Contentsquare UX analytics -->
-<script src="https://t.contentsquare.net/uxa/1797a4bbbff27.js" async></script>
+<!-- Consent-gated analytics loader (Contentsquare + Meta Pixel on /de and /). Fires only after user grants cookie consent — see /consent-loader.js. TTDSG §25 / GDPR compliance. -->
+<script src="/consent-loader.js" defer></script>
 <title>Privacy &amp; Terms — Visibility Index | Von Peach</title>
 <meta name="description" content="Privacy notice and terms of use for the Visibility Index audit at index.vonpeach.com." />
 <meta name="robots" content="index, follow" />
@@ -109,6 +109,12 @@
       <li><strong>Meta</strong> (Pixel + Conversions API) — for ad attribution and optimisation. <a href="https://www.facebook.com/policy.php" target="_blank" rel="noopener">Meta privacy</a></li>
       <li><strong>Google</strong> (Analytics + Ads) — for usage analytics and ad attribution. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google privacy</a></li>
       <li><strong>Vercel</strong> — our hosting provider. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel privacy</a></li>
+      <li><strong>Supabase</strong> (on AWS) — stores sign-in and team-audit data if you use the team-audit feature (manager email addresses, magic-link tokens, team-member LinkedIn URLs, consent tokens, monthly score snapshots). This data is only collected if you actively register as a team manager. Row-Level Security (RLS) is enabled; only our server functions can read the data. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase privacy</a></li>
+      <li><strong>Anthropic</strong> — runs the AI that produces your executive summary, dimension commentary, and recommendations. We send your public profile data (name, headline, About section, follower count, role, goal) to Anthropic's Claude API. No training on your data per Anthropic's privacy policy. <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Anthropic privacy</a></li>
+      <li><strong>Apify</strong> — scrapes your public LinkedIn profile as part of the audit. We pass Apify your LinkedIn URL; Apify returns the publicly visible profile data. <a href="https://apify.com/privacy-policy" target="_blank" rel="noopener">Apify privacy</a></li>
+      <li><strong>SerpAPI</strong> — runs Google searches for your name to find press mentions and citations. We only pass your name as the search query. <a href="https://serpapi.com/legal/privacy-policy" target="_blank" rel="noopener">SerpAPI privacy</a></li>
+      <li><strong>Contentsquare</strong> — measures UX metrics (click paths, scroll depth, form abandonment) for product improvement. Loaded <em>only after you consent</em> in the cookie banner. <a href="https://contentsquare.com/privacy-and-security/" target="_blank" rel="noopener">Contentsquare privacy</a></li>
+      <li><strong>LinkedIn</strong> (Insight Tag) — for retargeting in ad campaigns. Loaded <em>only after you consent</em> in the cookie banner. <a href="https://www.linkedin.com/legal/privacy-policy" target="_blank" rel="noopener">LinkedIn privacy</a></li>
     </ul>
     <p>None of these are paid by us to use your data for their own marketing. We do not sell your data to anyone.</p>
 
