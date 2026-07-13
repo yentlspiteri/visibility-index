@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- Consent-gated analytics loader (Contentsquare + Meta Pixel on /de and /). Fires only after user grants cookie consent — see /consent-loader.js. TTDSG §25 / GDPR compliance. -->
+<script src="/consent-loader.js" defer></script>
+<title>Cookie preferences — Visibility Index | Von Peach</title>
+<meta name="description" content="What cookies we set, what we use them for, and how to change your cookie preference at any time." />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="canonical" href="https://index.vonpeach.com/cookies" />
+<link rel="alternate" hreflang="en" href="https://index.vonpeach.com/cookies" />
+<link rel="alternate" hreflang="de" href="https://index.vonpeach.com/de/cookies" />
+<link rel="alternate" hreflang="x-default" href="https://index.vonpeach.com/cookies" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='40%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%238683E5'/><stop offset='100%25' stop-color='%233F36B2'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/></svg>" />
+<meta name="theme-color" content="#3F36B2" />
+
+<link rel="preconnect" href="https://api.fontshare.com" />
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/article-style.css" />
+<link rel="stylesheet" href="/shared-chrome.css?v=3" />
+<script src="/lang-switcher.js" defer></script>
+<style>
+  .cookie-status-card {
+    background: #fff;
+    border: 1px solid rgba(15,15,15,0.10);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin: 24px 0 40px;
+  }
+  .cookie-status-card .cookie-status-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 16px;
+  }
+  .cookie-status-card .cookie-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #d1d5db;
+    flex-shrink: 0;
+  }
+  .cookie-status-card.granted .cookie-status-dot { background: #22c55e; }
+  .cookie-status-card.denied  .cookie-status-dot { background: #b8364c; }
+  .cookie-status-card .cookie-status-explain {
+    color: rgba(15,15,15,0.65);
+    font-size: 14.5px;
+    line-height: 1.55;
+    margin: 0 0 18px;
+  }
+  .cookie-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .cookie-actions button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: opacity .15s, background .15s;
+  }
+  .cookie-actions .cookie-btn-accept {
+    background: #3F36B2;
+    color: #fff;
+    border: 0;
+  }
+  .cookie-actions .cookie-btn-accept:hover { background: #352db5; }
+  .cookie-actions .cookie-btn-decline {
+    background: transparent;
+    color: rgba(15,15,15,0.65);
+    border: 1px solid rgba(15,15,15,0.16);
+  }
+  .cookie-actions .cookie-btn-decline:hover { color: rgba(15,15,15,0.85); border-color: rgba(15,15,15,0.35); }
+  .cookie-toast {
+    display: inline-block;
+    color: #22c55e;
+    font-size: 14px;
+    font-weight: 600;
+    margin-left: 6px;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity .2s, transform .2s;
+  }
+  .cookie-toast.shown { opacity: 1; transform: translateY(0); }
+
+  .cookie-table-wrap { overflow-x: auto; margin: 12px 0 22px; }
+  table.cookie-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  table.cookie-table th,
+  table.cookie-table td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(15,15,15,0.08);
+    vertical-align: top;
+  }
+  table.cookie-table th {
+    background: rgba(63,54,178,0.04);
+    font-weight: 600;
+    color: rgba(15,15,15,0.75);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  table.cookie-table code {
+    font-family: 'Menlo', 'Monaco', monospace;
+    font-size: 13px;
+    background: rgba(63,54,178,0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #3F36B2;
+    white-space: nowrap;
+  }
+  .cookie-cat {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .cookie-cat-necessary  { background: rgba(15,15,15,0.08);   color: rgba(15,15,15,0.75); }
+  .cookie-cat-analytics  { background: rgba(63,54,178,0.10);  color: #3F36B2; }
+  .cookie-cat-marketing  { background: rgba(234,88,12,0.10);  color: #c2410c; }
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="container">
+    <a href="/" class="brand">Von Peach · Visibility Index</a>
+    <a href="/" class="cta">Start audit →</a>
+  </div>
+</nav>
+
+<header class="hero with-divider">
+  <div class="container">
+    <p class="breadcrumb"><a href="/">Visibility Index</a> &nbsp;›&nbsp; Cookie preferences</p>
+    <div class="eyebrow">LEGAL · LAST UPDATED JUNE 2026</div>
+    <h1>Cookie preferences.</h1>
+    <p class="lede">What cookies we set, what we use them for, and how to change your preference at any time.</p>
+  </div>
+</header>
+
+<main class="container">
+  <article>
+
+    <h2>Your current preference</h2>
+
+    <div class="cookie-status-card" id="cookie-status-card">
+      <div class="cookie-status-line">
+        <span class="cookie-status-dot"></span>
+        <span id="cookie-status-text">Loading…</span>
+        <span class="cookie-toast" id="cookie-toast">Saved</span>
+      </div>
+      <p class="cookie-status-explain" id="cookie-status-explain"></p>
+      <div class="cookie-actions">
+        <button type="button" class="cookie-btn-accept"  id="cookie-btn-accept">Accept all</button>
+        <button type="button" class="cookie-btn-decline" id="cookie-btn-decline">Necessary only</button>
+      </div>
+    </div>
+
+    <h2>What are cookies?</h2>
+    <p>Cookies are small text files a website stores on your device. They help the site remember your preferences, understand how visitors use the site, and show you relevant content. Some cookies are required for basic functionality; others we only set when you consent.</p>
+
+    <h2>Categories</h2>
+
+    <h3>Necessary cookies</h3>
+    <p>These cookies are set as soon as you visit the site. They're required for the site to work (e.g. to remember your cookie choice) and can't be disabled.</p>
+    <div class="cookie-table-wrap">
+      <table class="cookie-table">
+        <thead>
+          <tr><th>Name</th><th>Provider</th><th>Purpose</th><th>Duration</th><th>Category</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>__vi_consent</code></td>
+            <td>Von Peach</td>
+            <td>Stores your cookie preference (accepted / declined) in your browser's local storage.</td>
+            <td>Persistent until you clear it</td>
+            <td><span class="cookie-cat cookie-cat-necessary">Necessary</span></td>
+          </tr>
+          <tr>
+            <td><code>vi_session</code></td>
+            <td>Von Peach</td>
+            <td>Authenticates team managers when you sign into the team-audit feature. Only set if you use the team audit.</td>
+            <td>30 days</td>
+            <td><span class="cookie-cat cookie-cat-necessary">Necessary</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Analytics cookies</h3>
+    <p>These are set <strong>only if you consent</strong>. They help us understand how visitors use the site so we can improve it. Without your consent we use Google Analytics in privacy-friendly "Consent Mode v2" (no cookies) for aggregate stats only.</p>
+    <div class="cookie-table-wrap">
+      <table class="cookie-table">
+        <thead>
+          <tr><th>Name</th><th>Provider</th><th>Purpose</th><th>Duration</th><th>Category</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>_ga</code>, <code>_ga_*</code></td>
+            <td>Google Analytics</td>
+            <td>Measures user behaviour (page views, time on page, bounce rate) for product improvement.</td>
+            <td>Up to 2 years</td>
+            <td><span class="cookie-cat cookie-cat-analytics">Analytics</span></td>
+          </tr>
+          <tr>
+            <td><code>_cs_id</code>, <code>_cs_s</code>, <code>_uxa</code></td>
+            <td>Contentsquare</td>
+            <td>Measures UX metrics (click paths, scroll depth, form abandonment) for product improvement.</td>
+            <td>Up to 13 months</td>
+            <td><span class="cookie-cat cookie-cat-analytics">Analytics</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Marketing cookies</h3>
+    <p>These are set <strong>only if you consent</strong>. They enable retargeting campaigns on Facebook / Instagram and LinkedIn — in case you'd like to see ads from us later that reference your visit.</p>
+    <div class="cookie-table-wrap">
+      <table class="cookie-table">
+        <thead>
+          <tr><th>Name</th><th>Provider</th><th>Purpose</th><th>Duration</th><th>Category</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>_fbp</code></td>
+            <td>Meta (Facebook / Instagram)</td>
+            <td>Meta Pixel — retargeting and campaign optimisation for Facebook and Instagram ads.</td>
+            <td>90 days</td>
+            <td><span class="cookie-cat cookie-cat-marketing">Marketing</span></td>
+          </tr>
+          <tr>
+            <td><code>li_sugr</code>, <code>_lipt</code>, <code>bcookie</code>, <code>lidc</code>, <code>UserMatchHistory</code>, <code>AnalyticsSyncHistory</code></td>
+            <td>LinkedIn</td>
+            <td>LinkedIn Insight Tag — conversion measurement and retargeting for LinkedIn ad campaigns.</td>
+            <td>30–180 days</td>
+            <td><span class="cookie-cat cookie-cat-marketing">Marketing</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>How we implement your consent</h2>
+    <p>When you first visit our site, only necessary cookies are set. Meta Pixel, Contentsquare, and the LinkedIn Insight Tag are loaded <strong>only after you consent</strong> in the cookie banner — before that there are no network requests to those services. For Google Analytics we use Consent Mode v2: without consent only anonymised signals (no cookies) are sent; only after your consent do full analytics cookies get set.</p>
+
+    <p>Your preference is stored locally in your browser (not on our servers). You can change it at any time above by clicking "Accept all" or "Necessary only". We'll set or remove the corresponding cookies accordingly.</p>
+
+    <p>If you want to fully remove all cookies you can also do that directly in your browser settings — most browsers have a "Clear cookies" menu option.</p>
+
+    <h2>Who runs this site</h2>
+    <p>The Visibility Index at <a href="https://index.vonpeach.com">index.vonpeach.com</a> is operated by <strong>Von Peach GmbH</strong>, Beethovenstrasse 19, 8002 Zürich, Switzerland. You can reach us at <a href="mailto:hello@vonpeach.com">hello@vonpeach.com</a>.</p>
+
+    <p>For more details on how we handle your data, see our <a href="/privacy.html">privacy policy</a>.</p>
+
+  </article>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-legal-row">
+      <div>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/cookies.html">Cookie preferences</a>
+        <a href="https://www.vonpeach.com/termsandconditions" target="_blank" rel="noopener">Terms and conditions</a>
+        <a href="https://www.vonpeach.com/impressum" target="_blank" rel="noopener">Impressum</a>
+      </div>
+      <div>Von Peach GmbH 2026</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── Consent status + reset controls ───────────────────────────────────────
+     Reads __vi_consent from localStorage, displays current state, and lets
+     the user change their mind. On Accept/Decline click we write to
+     localStorage and immediately load or don't-load the tracking scripts
+     via the shared consent-loader.js functions. */
+  (function () {
+    var CONSENT_KEY = '__vi_consent';
+    var card    = document.getElementById('cookie-status-card');
+    var text    = document.getElementById('cookie-status-text');
+    var explain = document.getElementById('cookie-status-explain');
+    var toast   = document.getElementById('cookie-toast');
+    var btnAcc  = document.getElementById('cookie-btn-accept');
+    var btnDec  = document.getElementById('cookie-btn-decline');
+
+    function readConsent() {
+      try { return JSON.parse(localStorage.getItem(CONSENT_KEY) || 'null'); }
+      catch (_) { return null; }
+    }
+
+    function render(state) {
+      card.classList.remove('granted', 'denied');
+      if (state === 'granted') {
+        card.classList.add('granted');
+        text.textContent = 'Cookies accepted';
+        explain.textContent = 'Analytics and marketing cookies are active. You can change your preference below at any time.';
+      } else if (state === 'denied') {
+        card.classList.add('denied');
+        text.textContent = 'Necessary cookies only';
+        explain.textContent = 'Analytics and marketing cookies are disabled. You can change your preference below at any time.';
+      } else {
+        text.textContent = 'No preference set';
+        explain.textContent = "You haven't set a cookie preference yet. Next time you visit the homepage the cookie banner will appear.";
+      }
+    }
+
+    function showToast() {
+      toast.classList.add('shown');
+      setTimeout(function () { toast.classList.remove('shown'); }, 1600);
+    }
+
+    function grant() {
+      try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ granted: true, ts: Date.now() })); } catch (_) {}
+      if (typeof window.loadContentsquare === 'function') window.loadContentsquare();
+      if (typeof window.loadMetaPixel      === 'function') window.loadMetaPixel();
+      if (typeof gtag === 'function') {
+        gtag('consent', 'update', {
+          ad_storage:              'granted',
+          analytics_storage:       'granted',
+          ad_user_data:            'granted',
+          ad_personalization:      'granted',
+          functionality_storage:   'granted',
+          personalization_storage: 'granted'
+        });
+      }
+      render('granted');
+      showToast();
+    }
+
+    function decline() {
+      try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ granted: false, ts: Date.now() })); } catch (_) {}
+      render('denied');
+      showToast();
+    }
+
+    btnAcc.addEventListener('click', grant);
+    btnDec.addEventListener('click', decline);
+
+    // Initial render
+    var c = readConsent();
+    render(c ? (c.granted ? 'granted' : 'denied') : 'none');
+  })();
+</script>
+
+</body>
+</html>
